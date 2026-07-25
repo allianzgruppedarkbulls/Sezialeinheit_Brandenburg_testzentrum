@@ -3,594 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Bulls - Land 1 (ELO Rechner)</title>
+    <title>Dark Bulls - ELO Rechner Land 1</title>
     <style>
         :root {
-            --bg-color: #0b0b0b;
-            --panel-bg: #141414;
-            --border-color: #ff1a1a;
-            --text-main: #f0f0f0;
-            --text-muted: #aaaaaa;
-            --neon-red: #ff0033;
-            --neon-glow: 0 0 10px rgba(255, 0, 51, 0.6), 0 0 20px rgba(255, 0, 51, 0.3);
-            --tab-active-bg: #ff0033;
-            --tab-inactive-bg: #1f1f1f;
-            --green-btn: #2ecc71;
-            --green-hover: #27ae60;
-            --red-btn: #ff4d4d;
-            --red-hover: #cc0000;
-            --red-bg: #331111;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --danger: #ef4444;
         }
-        
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
         }
-
         .container {
-            max-width: 1300px;
+            max-width: 1200px;
             margin: 0 auto;
         }
-
         h1, h2 {
-            text-align: center;
-            color: var(--neon-red);
-            text-shadow: var(--neon-glow);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            color: var(--accent);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
         }
-
-        /* Haupt-Navigation / Reiter oben */
-        .main-nav {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            background: #111;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #333;
-        }
-
-        .tab-btn {
-            background-color: var(--tab-inactive-bg);
-            color: var(--text-main);
-            border: 1px solid #444;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .tab-btn:hover {
-            border-color: var(--neon-red);
-        }
-
-        .tab-btn.active {
-            background-color: var(--tab-active-bg);
-            color: white;
-            border-color: var(--neon-red);
-            box-shadow: var(--neon-glow);
-        }
-
         .card {
-            background-color: var(--panel-bg);
+            background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            box-shadow: var(--neon-glow);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-
-        .top-bar {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 15px;
-            margin-bottom: 10px;
         }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-        }
-
         label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            display: block;
             margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
         }
-
         select, input {
-            background-color: #1f1f1f;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
             color: var(--text-main);
-            border: 1px solid #444;
-            padding: 8px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 1rem;
         }
-
-        select:focus, input:focus {
-            border-color: var(--neon-red);
-            outline: none;
-            box-shadow: 0 0 5px var(--neon-red);
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            font-size: 0.95rem;
         }
-
         th, td {
-            border: 1px solid #333;
+            border: 1px solid var(--border-color);
             padding: 10px;
             text-align: left;
         }
-
         th {
-            background-color: #1a0000;
-            color: var(--neon-red);
-            border-bottom: 2px solid var(--neon-red);
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
         }
-
-        tr:nth-child(even) {
-            background-color: #111111;
-        }
-
-        .editable {
-            background-color: #1c2b1c;
-            border: 1px dashed #2ecc71;
-            color: #fff;
-            text-align: center;
-        }
-
-        .btn {
-            background-color: var(--neon-red);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: var(--neon-glow);
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #ff1a4d;
-        }
-
-        .btn-green {
-            background-color: var(--green-btn);
-            box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
-            margin-top: 15px;
-            display: inline-block;
-        }
-        .btn-green:hover {
-            background-color: var(--green-hover);
-        }
-
-        .btn-red-small {
-            background-color: var(--red-btn);
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-        .btn-red-small:hover {
-            background-color: var(--red-hover);
-        }
-
-        .warning-box {
-            background-color: var(--red-bg);
-            border: 1px solid var(--neon-red);
-            color: #ff9999;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        .footer-note {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 30px;
+        .highlight-green {
+            background-color: rgba(34, 197, 94, 0.15);
+            border: 1px solid var(--success);
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Dark Bulls Alliance Dashboard</h1>
+    <h1>Dark Bulls - Allianz ELO Rechner (Land 1)</h1>
     
-    <!-- ZENTRALE NAVIGATION -->
-    <div class="main-nav">
-        <a href="Elo_uebersicht.html" class="tab-btn">📊 Übersicht</a>
-        <a href="Elo_land1.html" class="tab-btn active">Land 1</a>
-        <a href="Elo_land2.html" class="tab-btn">Land 2</a>
-        <a href="Elo_land3.html" class="tab-btn">Land 3</a>
-        <a href="Elo_land4.html" class="tab-btn">Land 4</a>
-        <a href="Elo_land5.html" class="tab-btn">Land 5</a>
-        <a href="Elo_land6.html" class="tab-btn">Land 6</a>
-        <a href="Elo_map.html" class="tab-btn">🗺️ Map</a>
-        <a href="Elo_feinde.html" class="tab-btn" style="border-color: #ff4d4d; color: #ff9999;">⚠️ Feinde</a>
-    </div>
-
-    <!-- Allgemeine Einstellungen -->
-    <div class="card">
-        <div class="top-bar">
-            <div class="control-group">
-                <label>Land auswählen</label>
-                <select id="landSelect">
-                    <option value="Deutschland">Deutschland</option>
-                    <option value="Frankreich">Frankreich</option>
-                    <option value="Grossbritannien">Großbritannien</option>
-                    <option value="Schweden" selected>Schweden</option>
-                    <option value="Ukraine">Ukraine</option>
+    <!-- Konfiguration & Länderauswahl -->
+    <div class="card highlight-green">
+        <h2>Länder- & Basis-Konfiguration</h2>
+        <div class="grid">
+            <div>
+                <label for="countrySelect">Land auswählen:</label>
+                <select id="countrySelect" onchange="updateCountryData()">
+                    <!-- Wird dynamisch befüllt -->
                 </select>
             </div>
-            <div class="control-group">
-                <label>Doktrin (Fix)</label>
-                <input type="text" id="doktrinInput" value="Achse (Axis)" readonly style="background-color: #1a1a1a; color: var(--neon-red); font-weight: bold;">
+            <div>
+                <label for="doctrineDisplay">Erkannte Doktrin:</label>
+                <input type="text" id="doctrineDisplay" readonly style="font-weight: bold; color: var(--accent);">
             </div>
-            <div class="control-group">
-                <label>Moral / Tag</label>
-                <select id="moralSelect" onchange="calculateBalance()">
-                    <option value="0.70">Tag 1 (70% Moral)</option>
-                    <option value="0.78" selected>Tag 2 (78% Moral)</option>
-                    <option value="0.88">Tag 3 (88% Moral)</option>
-                    <option value="1.00">Tag 4 (100% Moral)</option>
+            <div>
+                <label for="gameDay">Spieltag / Moral:</label>
+                <select id="gameDay" onchange="calculateResources()">
+                    <option value="1">Tag 1 (70% Moral)</option>
+                    <option value="2">Tag 2 (78% Moral)</option>
+                    <option value="3">Tag 3 (88% Moral)</option>
+                    <option value="4">Tag 4 (100% Moral)</option>
                 </select>
             </div>
-            <div class="control-group">
-                <label>Premium-Account</label>
-                <select id="premiumSelect">
-                    <option value="aktiv" selected>Aktiv</option>
-                    <option value="inaktiv">Nicht aktiv</option>
+            <div>
+                <label for="premiumToggle">Warbond Premium aktiv?</label>
+                <select id="premiumToggle" onchange="calculateResources()">
+                    <option value="true">Ja (1500/h)</option>
+                    <option value="false">Nein (1200/h)</option>
                 </select>
             </div>
         </div>
     </div>
 
-    <!-- Ressourcen Tagesbilanz -->
+    <!-- Live Ressourcen-Bilanz -->
     <div class="card">
-        <h2>Ressourcen & Bilanz</h2>
+        <h2>Tagesproduktion (24h) & Startressourcen</h2>
         <table>
             <thead>
                 <tr>
                     <th>Ressource</th>
-                    <th>Startbestand</th>
-                    <th>Zuwachs (24H)</th>
-                    <th>Reale Bilanz (Zuwachs - Kosten)</th>
+                    <th>Startressourcen</th>
+                    <th>Tagesproduktion (24h)</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>Getreide</td>
-                    <td>15000</td>
-                    <td id="valZuwachsGetreide">10307</td>
-                    <td id="valBilanzGetreide" style="color: #2ecc71; font-weight: bold;">+ 6176</td>
-                </tr>
-                <tr>
-                    <td>Stahl</td>
-                    <td>15000</td>
-                    <td id="valZuwachsStahl">11600</td>
-                    <td id="valBilanzStahl" style="color: #2ecc71; font-weight: bold;">+ 7048</td>
-                </tr>
-                <tr>
-                    <td>Öl</td>
-                    <td>15000</td>
-                    <td id="valZuwachsOel">11600</td>
-                    <td id="valBilanzOel" style="color: #ff4d4d; font-weight: bold;">- 3765</td>
-                </tr>
-                <tr>
-                    <td>Helme</td>
-                    <td>12000</td>
-                    <td id="valZuwachsHelme">7588</td>
-                    <td id="valBilanzHelme" style="color: #2ecc71; font-weight: bold;">+ 1218</td>
-                </tr>
-                <tr>
-                    <td>Geld</td>
-                    <td>80000</td>
-                    <td id="valZuwachsGeld">36080</td>
-                    <td id="valBilanzGeld" style="color: #2ecc71; font-weight: bold;">+ 6692</td>
-                </tr>
+            <tbody id="resourceTableBody">
+                <!-- Dynamisch -->
             </tbody>
         </table>
-    </div>
-
-    <!-- Gebäude -->
-    <div class="card">
-        <h2>1. Gebäude-Verwaltung</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">Errichte hier deine Gebäude, um die Einheitenproduktion unten freizuschalten.</p>
-        <table id="buildingTable">
-            <thead>
-                <tr>
-                    <th>Gebäude-Typ</th>
-                    <th>Stufe / Anzahl</th>
-                    <th>Getreide</th>
-                    <th>Stahl</th>
-                    <th>Öl</th>
-                    <th>Geld</th>
-                </tr>
-            </thead>
-            <tbody id="buildingBody">
-                <tr>
-                    <td>
-                        <select class="editable" style="width: 100%;" onchange="updateAll()">
-                            <option value="Panzerwerk" selected>Panzerwerk</option>
-                            <option value="Flugzeugfabrik">Flugzeugfabrik</option>
-                            <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
-                            <option value="Hafen">Hafen</option>
-                            <option value="Industrie">Industrie</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
-                        <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
-                    </td>
-                    <td>0</td>
-                    <td>2100</td>
-                    <td>1500</td>
-                    <td>3600</td>
-                </tr>
-                <tr>
-                    <td>
-                        <select class="editable" style="width: 100%;" onchange="updateAll()">
-                            <option value="Panzerwerk">Panzerwerk</option>
-                            <option value="Flugzeugfabrik" selected>Flugzeugfabrik</option>
-                            <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
-                            <option value="Hafen">Hafen</option>
-                            <option value="Industrie">Industrie</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
-                        <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
-                    </td>
-                    <td>1250</td>
-                    <td>0</td>
-                    <td>2350</td>
-                    <td>3600</td>
-                </tr>
-            </tbody>
-        </table>
-        <button class="btn btn-green" onclick="addBuildingRow()">+ Gebäude hinzufügen</button>
-    </div>
-
-    <!-- Einheitenproduktion -->
-    <div class="card">
-        <h2>2. Einheiten-Produktion</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">Einheiten erfordern das entsprechende Gebäude oben. Automatische Synchronisation mit der Forschung.</p>
-        
-        <table id="unitTable">
-            <thead>
-                <tr>
-                    <th>Einheit</th>
-                    <th>Gewünschtes Level & Stückzahl</th>
-                    <th>Benötigtes Gebäude</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="unitBody">
-                <tr>
-                    <td>
-                        <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
-                            <option value="Leichter Panzer" selected>Leichter Panzer</option>
-                            <option value="Taktischer Bomber">Taktischer Bomber</option>
-                            <option value="Infanterie">Infanterie</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
-                            <option value="1" selected>Lvl 1</option>
-                            <option value="2">Lvl 2</option>
-                            <option value="3">Lvl 3</option>
-                        </select>
-                        <input type="number" class="editable unit-count" value="20" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
-                        <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
-                    </td>
-                    <td class="unit-req">Panzerwerk (Stufe ≥ 1)</td>
-                    <td class="unit-status" style="font-weight: bold; color: #2ecc71;">Bereit</td>
-                </tr>
-            </tbody>
-        </table>
-        <button class="btn btn-green" onclick="addUnitRow()">+ Einheit hinzufügen</button>
-
-        <div id="errorWarning" class="warning-box">
-            ⚠️ <strong>Fehler:</strong> Mindestens eine Einheit erfordert ein Gebäude, das oben noch nicht gebaut wurde!
-        </div>
-    </div>
-
-    <!-- Forschung (Automatisch generiert) -->
-    <div class="card">
-        <h2>3. Forschung (Automatisch generiert)</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">Dieser Bereich wird vollautomatisch durch deine Einheiten-Auswahl oben gesteuert.</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Erforderliche Tech / Einheit</th>
-                    <th>Ziel-Level</th>
-                    <th>Auslöser</th>
-                    <th>Getreide</th>
-                    <th>Stahl</th>
-                    <th>Öl</th>
-                    <th>Geld</th>
-                </tr>
-            </thead>
-            <tbody id="researchBody">
-                <!-- Wird dynamisch befüllt -->
-            </tbody>
-        </table>
-    </div>
-
-    <div class="footer-note">
-        Dark Bulls Alliance Control Panel &bull; Elo_land1 v1.0
     </div>
 </div>
 
 <script>
-    function addBuildingRow() {
-        const tbody = document.getElementById('buildingBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <select class="editable" style="width: 100%;" onchange="updateAll()">
-                    <option value="Panzerwerk">Panzerwerk</option>
-                    <option value="Flugzeugfabrik">Flugzeugfabrik</option>
-                    <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
-                    <option value="Hafen">Hafen</option>
-                    <option value="Industrie">Industrie</option>
-                </select>
-            </td>
-            <td>
-                <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
-                <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
-            </td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-        `;
-        tbody.appendChild(row);
-        updateAll();
+    // Originale Basisdaten aus der Google Tabelle
+    const countryDatabase = {
+        "Ägypten": { doctrine: "Alliierte", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Algerien": { doctrine: "Alliierte", prod: { Getreide: 10410, Metal: 10410, Öl: 9250, Helme: 6810, Geld: 32380 } },
+        "Deutschland": { doctrine: "Achse", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Frankreich": { doctrine: "Alliierte", prod: { Getreide: 10410, Metal: 9250, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Grossbritannien": { doctrine: "Alliierte", prod: { Getreide: 10410, Metal: 9250, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Finnland": { doctrine: "Achse", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Rumänien": { doctrine: "Komi", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Italien": { doctrine: "Achse", prod: { Getreide: 10410, Metal: 10410, Öl: 9250, Helme: 6810, Geld: 32380 } },
+        "Jugoslawien": { doctrine: "Komi", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Komm. Russland": { doctrine: "Komi", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Lybien": { doctrine: "Pan", prod: { Getreide: 10410, Metal: 9250, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Marokko": { doctrine: "Alliierte", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Polen": { doctrine: "Komi", prod: { Getreide: 10410, Metal: 10410, Öl: 9250, Helme: 6810, Geld: 32380 } },
+        "Russ. Kaiserreich": { doctrine: "Pan", prod: { Getreide: 10410, Metal: 10410, Öl: 9250, Helme: 6810, Geld: 32380 } },
+        "Schweden": { doctrine: "Achse", prod: { Getreide: 10410, Metal: 10410, Öl: 9250, Helme: 6810, Geld: 32380 } },
+        "Türkei": { doctrine: "Komi", prod: { Getreide: 10410, Metal: 10410, Öl: 9250, Helme: 6810, Geld: 32380 } },
+        "Spanien": { doctrine: "Achse", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Kaukasus": { doctrine: "Komi", prod: { Getreide: 10410, Metal: 9250, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Ukraine": { doctrine: "Achse", prod: { Getreide: 9250, Metal: 10410, Öl: 10410, Helme: 6810, Geld: 32380 } },
+        "Nord USA": { doctrine: "Alliierte", prod: { Getreide: 0, Metal: 0, Öl: 0, Helme: 0, Geld: 0 } },
+        "Süd USA": { doctrine: "Pan", prod: { Getreide: 0, Metal: 0, Öl: 0, Helme: 0, Geld: 0 } },
+        "Kanada": { doctrine: "Alliierte", prod: { Getreide: 0, Metal: 0, Öl: 0, Helme: 0, Geld: 0 } },
+        "Frei": { doctrine: "Keine", prod: { Getreide: 0, Metal: 0, Öl: 0, Helme: 0, Geld: 0 } }
+    };
+
+    const startResources = { Getreide: 15000, Metal: 15000, Öl: 15000, Helme: 12500, Geld: 80000 };
+    const dayMultipliers = { 1: 1.0, 2: 1.1142857, 3: 1.2571428, 4: 1.4 };
+
+    function initCountrySelect() {
+        const select = document.getElementById('countrySelect');
+        for (let country in countryDatabase) {
+            let opt = document.createElement('option');
+            opt.value = country;
+            opt.textContent = country;
+            if (country === "Deutschland") opt.selected = true;
+            select.appendChild(opt);
+        }
+        updateCountryData();
     }
 
-    function removeBuildingRow(btn) {
-        btn.closest('tr').remove();
-        updateAll();
+    function updateCountryData() {
+        const country = document.getElementById('countrySelect').value;
+        const data = countryDatabase[country];
+        document.getElementById('doctrineDisplay').value = data.doctrine;
+        calculateResources();
     }
 
-    function addUnitRow() {
-        const tbody = document.getElementById('unitBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
-                    <option value="Leichter Panzer">Leichter Panzer</option>
-                    <option value="Taktischer Bomber">Taktischer Bomber</option>
-                    <option value="Infanterie">Infanterie</option>
-                </select>
-            </td>
-            <td>
-                <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
-                    <option value="1" selected>Lvl 1</option>
-                    <option value="2">Lvl 2</option>
-                    <option value="3">Lvl 3</option>
-                </select>
-                <input type="number" class="editable unit-count" value="10" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
-                <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
-            </td>
-            <td class="unit-req">-</td>
-            <td class="unit-status" style="font-weight: bold; color: #2ecc71;">Bereit</td>
-        `;
-        tbody.appendChild(row);
-        updateAll();
-    }
+    function calculateResources() {
+        const country = document.getElementById('countrySelect').value;
+        const baseProd = countryDatabase[country].prod;
+        const day = document.getElementById('gameDay').value;
+        const mult = dayMultipliers[day];
 
-    function removeUnitRow(btn) {
-        btn.closest('tr').remove();
-        updateAll();
-    }
+        const tbody = document.getElementById('resourceTableBody');
+        tbody.innerHTML = '';
 
-    function updateAll() {
-        const buildingRows = document.querySelectorAll('#buildingBody tr');
-        let builtBuildings = [];
-        buildingRows.forEach(row => {
-            const select = row.querySelector('select');
-            const levelInput = row.querySelector('input[type="number"]');
-            if (select && levelInput && parseInt(levelInput.value) > 0) {
-                builtBuildings.push(select.value);
-            }
-        });
-
-        const unitRows = document.querySelectorAll('#unitBody tr');
-        const researchBody = document.getElementById('researchBody');
-        researchBody.innerHTML = "";
-
-        let hasError = false;
-        const warningBox = document.getElementById('errorWarning');
-
-        unitRows.forEach(row => {
-            const unitSelect = row.querySelector('.unit-select');
-            const unitLevel = row.querySelector('.unit-level').value;
-            const unitCount = parseInt(row.querySelector('.unit-count').value) || 0;
-            const reqCell = row.querySelector('.unit-req');
-            const statusCell = row.querySelector('.unit-status');
-
-            const unitName = unitSelect.value;
-            let requiredBuilding = "";
-            let costG = 0, costS = 0, costO = 0, costM = 0;
-
-            if (unitName === "Leichter Panzer") {
-                requiredBuilding = "Panzerwerk";
-                costS = 1900; costO = 1700; costM = 5700;
-            } else if (unitName === "Taktischer Bomber") {
-                requiredBuilding = "Flugzeugfabrik";
-                costS = 2200; costO = 2400; costM = 6000;
-            } else if (unitName === "Infanterie") {
-                requiredBuilding = "Rekrutierungsbüro";
-                costG = 500; costS = 500; costM = 1500;
-            }
-
-            reqCell.innerText = `${requiredBuilding} (Stufe ≥ 1)`;
-
-            if (unitCount > 0 && requiredBuilding && !builtBuildings.includes(requiredBuilding)) {
-                statusCell.innerText = `Gesperrt (Fehlt: ${requiredBuilding}!)`;
-                statusCell.style.color = "#ff4d4d";
-                hasError = true;
-            } else {
-                statusCell.innerText = "Bereit";
-                statusCell.style.color = "#2ecc71";
-
-                if (unitCount > 0) {
-                    const researchRow = document.createElement('tr');
-                    researchRow.innerHTML = `
-                        <td>${unitName} (Tech)</td>
-                        <td>Stufe ${unitLevel}</td>
-                        <td>Aus Einheit (${unitName})</td>
-                        <td>${costG}</td>
-                        <td>${costS}</td>
-                        <td>${costO}</td>
-                        <td>${costM}</td>
-                    `;
-                    researchBody.appendChild(researchRow);
-                }
-            }
-        });
-
-        if (hasError) {
-            warningBox.style.display = 'block';
-        } else {
-            warningBox.style.display = 'none';
+        for (let res in startResources) {
+            let currentProd = Math.round(baseProd[res] * mult);
+            let row = `<tr>
+                <td><strong>${res}</strong></td>
+                <td>${startResources[res].toLocaleString()}</td>
+                <td>${currentProd.toLocaleString()}</td>
+            </tr>`;
+            tbody.innerHTML += row;
         }
     }
 
-    function calculateBalance() {
-        const moral = parseFloat(document.getElementById('moralSelect').value);
-        document.getElementById('valZuwachsGetreide').innerText = Math.round(13200 * moral);
-        document.getElementById('valZuwachsStahl').innerText = Math.round(14870 * moral);
-    }
-
-    window.onload = function() {
-        updateAll();
-    };
+    window.onload = initCountrySelect;
 </script>
 
 </body>
