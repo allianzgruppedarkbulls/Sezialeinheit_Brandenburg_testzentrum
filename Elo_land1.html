@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Bulls - ELO Rechner (Land 1)</title>
+  <title>Dark Bulls - ELO Rechner (Elo_land1)</title>
     <style>
         :root {
             --bg-color: #0b0b0b;
@@ -18,6 +18,8 @@
             --red-btn: #ff4d4d;
             --red-hover: #cc0000;
             --red-bg: #331111;
+            --blue-btn: #3498db;
+            --blue-hover: #2980b9;
         }
 
         body {
@@ -47,6 +49,18 @@
             box-shadow: var(--neon-glow);
             border-radius: 8px;
             padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .project-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            background-color: #1c1c1c;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
             margin-bottom: 20px;
         }
 
@@ -132,11 +146,17 @@
         .btn-green {
             background-color: var(--green-btn);
             box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
-            margin-top: 15px;
-            display: inline-block;
         }
         .btn-green:hover {
             background-color: var(--green-hover);
+        }
+
+        .btn-blue {
+            background-color: var(--blue-btn);
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
+        }
+        .btn-blue:hover {
+            background-color: var(--blue-hover);
         }
 
         .btn-red-small {
@@ -165,7 +185,7 @@
             display: none;
         }
 
-        .cloud-status {
+        .local-status {
             float: right;
             font-size: 0.8rem;
             color: var(--text-muted);
@@ -183,24 +203,40 @@
 <body>
 
 <div class="container">
-    <h1>Dark Bulls Alliance Rechner <span id="cloudStatus" class="cloud-status">☁️ Google Sheets: Verbunden</span></h1>
+    <h1>Dark Bulls Alliance Rechner <span id="localStatus" class="local-status">💾 Modus: Lokaler Browser-Cache</span></h1>
     
+    <!-- Projekt- und Speicherleiste -->
+    <div class="project-bar">
+        <div style="flex-grow: 1; display: flex; gap: 10px; align-items: center;">
+            <label style="margin:0; font-weight:bold; color:var(--text-main);">Gespeicherte Builds:</label>
+            <select id="savedProjectsSelect" style="flex-grow: 1;" onchange="loadSelectedProject()">
+                <option value="">-- Lokales Build laden --</option>
+            </select>
+        </div>
+        <div>
+            <input type="text" id="projectNameInput" placeholder="Build-Name..." style="width: 140px; margin-right: 5px;">
+            <button class="btn btn-green" onclick="saveCurrentProject()">💾 Speichern</button>
+            <button class="btn btn-blue" onclick="shareProjectCode()" title="Build als Code für Discord exportieren">📤 Teilen</button>
+            <button class="btn" onclick="importProjectCode()" style="background-color: #8e44ad;" title="Discord-Code importieren">📥 Import</button>
+        </div>
+    </div>
+
     <!-- Allgemeine Einstellungen -->
     <div class="card">
         <div class="top-bar">
             <div class="control-group">
-                <label>Land auswählen (Basis I167:I187)</label>
-                <select id="landSelect" onchange="updateAll()">
-                    <!-- Wird dynamisch aus der Excel-Tabelle (Basis I167:I187) gefüllt -->
+                <label>Land auswählen</label>
+                <select id="landSelect" onchange="markAsUnsaved(); updateAll();">
+                    <!-- Dynamisch -->
                 </select>
             </div>
             <div class="control-group">
-                <label>Doktrin (Aus Tabelle Spalte O)</label>
+                <label>Doktrin</label>
                 <input type="text" id="doktrinInput" value="" readonly style="background-color: #1a1a1a; color: var(--neon-red); font-weight: bold;">
             </div>
             <div class="control-group">
                 <label>Moral / Tag</label>
-                <select id="moralSelect" onchange="updateAll()">
+                <select id="moralSelect" onchange="markAsUnsaved(); updateAll();">
                     <option value="0.70">Tag 1 (70% Moral)</option>
                     <option value="0.78" selected>Tag 2 (78% Moral)</option>
                     <option value="0.88">Tag 3 (88% Moral)</option>
@@ -209,7 +245,7 @@
             </div>
             <div class="control-group">
                 <label>Premium-Account</label>
-                <select id="premiumSelect" onchange="updateAll()">
+                <select id="premiumSelect" onchange="markAsUnsaved(); updateAll();">
                     <option value="aktiv" selected>Aktiv</option>
                     <option value="inaktiv">Nicht aktiv</option>
                 </select>
@@ -225,7 +261,7 @@
                 <tr>
                     <th>Ressource</th>
                     <th>Startbestand</th>
-                    <th>Zuwachs (24H - aus Tabelle J-N)</th>
+                    <th>Zuwachs (24H)</th>
                     <th>Reale Bilanz (Zuwachs - Kosten)</th>
                 </tr>
             </thead>
@@ -283,7 +319,7 @@
                 <!-- Dynamisch -->
             </tbody>
         </table>
-        <button class="btn btn-green" onclick="addBuildingRow()">+ Gebäude hinzufügen</button>
+        <button class="btn btn-green" style="margin-top:15px;" onclick="markAsUnsaved(); addBuildingRow()">+ Gebäude hinzufügen</button>
     </div>
 
     <!-- Einheitenproduktion -->
@@ -304,14 +340,14 @@
                 <!-- Dynamisch -->
             </tbody>
         </table>
-        <button class="btn btn-green" onclick="addUnitRow()">+ Einheit hinzufügen</button>
+        <button class="btn btn-green" style="margin-top:15px;" onclick="markAsUnsaved(); addUnitRow()">+ Einheit hinzufügen</button>
 
         <div id="errorWarning" class="warning-box">
             ⚠️ <strong>Fehler:</strong> Mindestens eine Einheit erfordert ein Gebäude, das oben noch nicht gebaut wurde!
         </div>
     </div>
 
-    <!-- Forschung (Automatisch generiert) -->
+    <!-- Forschung -->
     <div class="card">
         <h2>3. Forschung (Automatisch generiert)</h2>
         <p style="font-size: 0.85rem; color: var(--text-muted);">Dieser Bereich wird vollautomatisch durch deine Einheiten-Auswahl oben gesteuert.</p>
@@ -328,19 +364,17 @@
                 </tr>
             </thead>
             <tbody id="researchBody">
-                <!-- Wird dynamisch befüllt -->
+                <!-- Dynamisch -->
             </tbody>
         </table>
     </div>
 
     <div class="footer-note">
-        Dark Bulls Alliance Control Panel &bull; Design v3.4 (Cloud Sync via Excel Schnittstelle)
+        Dark Bulls Alliance Control Panel &bull; Lokaler Browser-Modus aktiv
     </div>
 </div>
 
 <script>
-    // Live-Anbindung an die Excel-Tabelle (Basis-Tabelle Bereich I167:O187)
-    // Spalte I: Land | J: Getreide | K: Metall | L: Öl | M: Helme | N: Geld | O: Doktrin
     const excelCountryDatabase = {
         "Ägypten": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Alliierte" },
         "Algerien": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Alliierte" },
@@ -382,6 +416,19 @@
         "Taktischer Bomber": { building: "Flugzeugfabrik", getreide: 1400, stahl: 0, oel: 1600, geld: 1200 }
     };
 
+    let hasUnsavedChanges = false;
+
+    function markAsUnsaved() {
+        hasUnsavedChanges = true;
+    }
+
+    window.addEventListener('beforeunload', function (e) {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
     function initCountryDropdown() {
         const select = document.getElementById('landSelect');
         select.innerHTML = "";
@@ -389,11 +436,10 @@
             const opt = document.createElement('option');
             opt.value = country;
             opt.innerText = country;
-            if (country === "Deutschland") {
-                opt.selected = true;
-            }
+            if (country === "Deutschland") opt.selected = true;
             select.appendChild(opt);
         });
+        updateSavedProjectsDropdown();
     }
 
     function addBuildingRow(selectedType = "Panzerwerk", level = 1) {
@@ -406,14 +452,10 @@
         });
 
         row.innerHTML = `
+            <td><select class="editable" style="width: 100%;" onchange="markAsUnsaved(); updateAll();">${optionsHtml}</select></td>
             <td>
-                <select class="editable" style="width: 100%;" onchange="updateAll()">
-                    ${optionsHtml}
-                </select>
-            </td>
-            <td>
-                <input type="number" class="editable" value="${level}" min="1" max="5" style="width: 60px;" oninput="updateAll()">
-                <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
+                <input type="number" class="editable" value="${level}" min="1" max="5" style="width: 60px;" oninput="markAsUnsaved(); updateAll();">
+                <button class="btn-red-small" onclick="markAsUnsaved(); removeBuildingRow(this)">X</button>
             </td>
             <td class="b-getreide">0</td>
             <td class="b-stahl">0</td>
@@ -439,19 +481,15 @@
         });
 
         row.innerHTML = `
+            <td><select class="editable unit-select" style="width: 100%;" onchange="markAsUnsaved(); updateAll();">${optionsHtml}</select></td>
             <td>
-                <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
-                    ${optionsHtml}
-                </select>
-            </td>
-            <td>
-                <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
+                <select class="editable unit-level" style="width: 70px;" onchange="markAsUnsaved(); updateAll();">
                     <option value="1" ${level === "1" ? 'selected' : ''}>Lvl 1</option>
                     <option value="2" ${level === "2" ? 'selected' : ''}>Lvl 2</option>
                     <option value="3" ${level === "3" ? 'selected' : ''}>Lvl 3</option>
                 </select>
-                <input type="number" class="editable unit-count" value="${count}" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
-                <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
+                <input type="number" class="editable unit-count" value="${count}" min="0" style="width: 70px;" oninput="markAsUnsaved(); updateAll();"> Stk.
+                <button class="btn-red-small" onclick="markAsUnsaved(); removeUnitRow(this)">X</button>
             </td>
             <td class="unit-req">-</td>
             <td class="unit-status" style="font-weight: bold; color: #2ecc71;">Bereit</td>
@@ -469,7 +507,6 @@
         const selectedLandName = document.getElementById('landSelect').value;
         const landRecord = excelCountryDatabase[selectedLandName] || excelCountryDatabase["Deutschland"];
 
-        // Doktrin aus Spalte O der Excel-Tabelle setzen
         document.getElementById('doktrinInput').value = landRecord.doktrin;
 
         const buildingRows = document.querySelectorAll('#buildingBody tr');
@@ -482,26 +519,23 @@
             if (select && levelInput) {
                 const bType = select.value;
                 const bLevel = parseInt(levelInput.value) || 0;
-                
-                if (bLevel > 0) {
-                    builtBuildings.push(bType);
-                }
+                if (bLevel > 0) builtBuildings.push(bType);
 
                 const baseCost = buildingCosts[bType] || { getreide: 0, stahl: 0, oel: 0, geld: 0 };
-                const rowGetreide = baseCost.getreide * bLevel;
-                const rowStahl = baseCost.stahl * bLevel;
-                const rowOel = baseCost.oel * bLevel;
-                const rowGeld = baseCost.geld * bLevel;
+                const rG = baseCost.getreide * bLevel;
+                const rS = baseCost.stahl * bLevel;
+                const rO = baseCost.oel * bLevel;
+                const rM = baseCost.geld * bLevel;
 
-                row.querySelector('.b-getreide').innerText = rowGetreide;
-                row.querySelector('.b-stahl').innerText = rowStahl;
-                row.querySelector('.b-oel').innerText = rowOel;
-                row.querySelector('.b-geld').innerText = rowGeld;
+                row.querySelector('.b-getreide').innerText = rG;
+                row.querySelector('.b-stahl').innerText = rS;
+                row.querySelector('.b-oel').innerText = rO;
+                row.querySelector('.b-geld').innerText = rM;
 
-                totalBuildingCosts.getreide += rowGetreide;
-                totalBuildingCosts.stahl += rowStahl;
-                totalBuildingCosts.oel += rowOel;
-                totalBuildingCosts.geld += rowGeld;
+                totalBuildingCosts.getreide += rG;
+                totalBuildingCosts.stahl += rS;
+                totalBuildingCosts.oel += rO;
+                totalBuildingCosts.geld += rM;
             }
         });
 
@@ -534,63 +568,48 @@
                 statusCell.style.color = "#2ecc71";
 
                 if (unitCount > 0) {
-                    const rGetreide = uData.getreide * unitLevel;
-                    const rStahl = uData.stahl * unitLevel;
-                    const rOel = uData.oel * unitLevel;
-                    const rGeld = uData.geld * unitLevel;
+                    const rG = uData.getreide * unitLevel;
+                    const rS = uData.stahl * unitLevel;
+                    const rO = uData.oel * unitLevel;
+                    const rM = uData.geld * unitLevel;
 
-                    totalResearchCosts.getreide += rGetreide;
-                    totalResearchCosts.stahl += rStahl;
-                    totalResearchCosts.oel += rOel;
-                    totalResearchCosts.geld += rGeld;
+                    totalResearchCosts.getreide += rG;
+                    totalResearchCosts.stahl += rS;
+                    totalResearchCosts.oel += rO;
+                    totalResearchCosts.geld += rM;
 
                     const researchRow = document.createElement('tr');
                     researchRow.innerHTML = `
                         <td>${unitName} (Tech)</td>
                         <td>Stufe ${unitLevel}</td>
                         <td>Aus Einheit (${unitName})</td>
-                        <td>${rGetreide}</td>
-                        <td>${rStahl}</td>
-                        <td>${rOel}</td>
-                        <td>${rGeld}</td>
+                        <td>${rG}</td><td>${rS}</td><td>${rO}</td><td>${rM}</td>
                     `;
                     researchBody.appendChild(researchRow);
                 }
             }
         });
 
-        if (hasError) {
-            warningBox.style.display = 'block';
-        } else {
-            warningBox.style.display = 'none';
-        }
+        warningBox.style.display = hasError ? 'block' : 'none';
 
         const moral = parseFloat(document.getElementById('moralSelect').value);
+        const zG = Math.round(landRecord.getreide * moral);
+        const zS = Math.round(landRecord.stahl * moral);
+        const zO = Math.round(landRecord.oel * moral);
+        const zH = Math.round(landRecord.helme * moral);
+        const zM = Math.round(landRecord.geld * moral);
 
-        // Rohstoffwerte direkt aus der Excel-Tabelle (Spalten J, K, L, M, N) mit Moral multipliziert
-        const zuwachsGetreide = Math.round(landRecord.getreide * moral);
-        const zuwachsStahl = Math.round(landRecord.stahl * moral);
-        const zuwachsOel = Math.round(landRecord.oel * moral);
-        const zuwachsHelme = Math.round(landRecord.helme * moral);
-        const zuwachsGeld = Math.round(landRecord.geld * moral);
+        document.getElementById('valZuwachsGetreide').innerText = zG;
+        document.getElementById('valZuwachsStahl').innerText = zS;
+        document.getElementById('valZuwachsOel').innerText = zO;
+        document.getElementById('valZuwachsHelme').innerText = zH;
+        document.getElementById('valZuwachsGeld').innerText = zM;
 
-        document.getElementById('valZuwachsGetreide').innerText = zuwachsGetreide;
-        document.getElementById('valZuwachsStahl').innerText = zuwachsStahl;
-        document.getElementById('valZuwachsOel').innerText = zuwachsOel;
-        document.getElementById('valZuwachsHelme').innerText = zuwachsHelme;
-        document.getElementById('valZuwachsGeld').innerText = zuwachsGeld;
-
-        const bilanzGetreide = zuwachsGetreide - (totalBuildingCosts.getreide + totalResearchCosts.getreide);
-        const bilanzStahl = zuwachsStahl - (totalBuildingCosts.stahl + totalResearchCosts.stahl);
-        const bilanzOel = zuwachsOel - (totalBuildingCosts.oel + totalResearchCosts.oel);
-        const bilanzHelme = zuwachsHelme;
-        const bilanzGeld = zuwachsGeld - (totalBuildingCosts.geld + totalResearchCosts.geld);
-
-        setBalanceStyle('valBilanzGetreide', bilanzGetreide);
-        setBalanceStyle('valBilanzStahl', bilanzStahl);
-        setBalanceStyle('valBilanzOel', bilanzOel);
-        setBalanceStyle('valBilanzHelme', bilanzHelme);
-        setBalanceStyle('valBilanzGeld', bilanzGeld);
+        setBalanceStyle('valBilanzGetreide', zG - (totalBuildingCosts.getreide + totalResearchCosts.getreide));
+        setBalanceStyle('valBilanzStahl', zS - (totalBuildingCosts.stahl + totalResearchCosts.stahl));
+        setBalanceStyle('valBilanzOel', zO - (totalBuildingCosts.oel + totalResearchCosts.oel));
+        setBalanceStyle('valBilanzHelme', zH);
+        setBalanceStyle('valBilanzGeld', zM - (totalBuildingCosts.geld + totalResearchCosts.geld));
     }
 
     function setBalanceStyle(elementId, value) {
@@ -600,13 +619,134 @@
         el.style.color = value >= 0 ? "#2ecc71" : "#ff4d4d";
     }
 
-    // Beim Laden initialisieren
+    // --- Lokales Speichern & Teilen (LocalStorage + Discord Code) ---
+    function collectCurrentProjectData() {
+        const land = document.getElementById('landSelect').value;
+        const moral = document.getElementById('moralSelect').value;
+        const premium = document.getElementById('premiumSelect').value;
+
+        let buildings = [];
+        document.querySelectorAll('#buildingBody tr').forEach(row => {
+            buildings.push({ type: row.querySelector('select').value, level: row.querySelector('input[type="number"]').value });
+        });
+
+        let units = [];
+        document.querySelectorAll('#unitBody tr').forEach(row => {
+            units.push({
+                type: row.querySelector('.unit-select').value,
+                level: row.querySelector('.unit-level').value,
+                count: row.querySelector('.unit-count').value
+            });
+        });
+
+        return { land, moral, premium, buildings, units };
+    }
+
+    function saveCurrentProject() {
+        const nameInput = document.getElementById('projectNameInput').value.trim();
+        if (!nameInput) {
+            alert("Bitte gib einen Namen für das Build ein!");
+            return;
+        }
+
+        const projectData = collectCurrentProjectData();
+        let savedProjects = JSON.parse(localStorage.getItem('darkBullsLocalBuilds') || '{}');
+        savedProjects[nameInput] = projectData;
+        localStorage.setItem('darkBullsLocalBuilds', JSON.stringify(savedProjects));
+
+        hasUnsavedChanges = false;
+        updateSavedProjectsDropdown();
+        alert(`Build "${nameInput}" erfolgreich auf deinem PC gespeichert!`);
+    }
+
+    function updateSavedProjectsDropdown() {
+        const select = document.getElementById('savedProjectsSelect');
+        const savedProjects = JSON.parse(localStorage.getItem('darkBullsLocalBuilds') || '{}');
+        select.innerHTML = '<option value="">-- Lokales Build laden --</option>';
+        Object.keys(savedProjects).forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.innerText = name;
+            select.appendChild(opt);
+        });
+    }
+
+    function loadSelectedProject() {
+        const name = document.getElementById('savedProjectsSelect').value;
+        if (!name) return;
+
+        const savedProjects = JSON.parse(localStorage.getItem('darkBullsLocalBuilds') || '{}');
+        const proj = savedProjects[name];
+        if (!proj) return;
+
+        if (hasUnsavedChanges && !confirm("Ungespeicherte Änderungen verwerfen und Build laden?")) return;
+
+        applyProjectData(proj);
+        document.getElementById('projectNameInput').value = name;
+        hasUnsavedChanges = false;
+    }
+
+    function applyProjectData(proj) {
+        document.getElementById('landSelect').value = proj.land;
+        document.getElementById('moralSelect').value = proj.moral;
+        document.getElementById('premiumSelect').value = proj.premium;
+
+        document.getElementById('buildingBody').innerHTML = "";
+        if (proj.buildings && proj.buildings.length > 0) {
+            proj.buildings.forEach(b => addBuildingRow(b.type, b.level));
+        } else {
+            addBuildingRow("Panzerwerk", 1);
+        }
+
+        document.getElementById('unitBody').innerHTML = "";
+        if (proj.units && proj.units.length > 0) {
+            proj.units.forEach(u => addUnitRow(u.type, u.level, u.count));
+        } else {
+            addUnitRow("Leichter Panzer", "1", 10);
+        }
+        updateAll();
+    }
+
+    function shareProjectCode() {
+        const proj = collectCurrentProjectData();
+        const jsonString = JSON.stringify(proj);
+        // Base64 encode für sauberen Text im Discord
+        const base64Code = btoa(unescape(encodeURIComponent(jsonString)));
+
+        navigator.clipboard.writeText(base64Code).then(() => {
+            alert("✅ Build-Code wurde in die Zwischenablage kopiert!\n\nDu kannst ihn jetzt direkt im Discord in den Chat einfügen, damit andere ihn importieren können.");
+        }).catch(err => {
+            prompt("Kopiere diesen Code manuell:", base64Code);
+        });
+    }
+
+    function importProjectCode() {
+        const code = prompt("Füge hier den Build-Code ein, den du von einem anderen Spieler erhalten hast:");
+        if (!code) return;
+
+        try {
+            const jsonString = decodeURIComponent(escape(atob(code.trim())));
+            const proj = JSON.parse(jsonString);
+            
+            if (!proj.land || !proj.buildings) {
+                throw new Error("Ungültiges Format");
+            }
+
+            applyProjectData(proj);
+            hasUnsavedChanges = true;
+            alert("✅ Build erfolgreich importiert! (Vergiss nicht, es oben abzuspeichern, falls du es behalten willst).");
+        } catch (e) {
+            alert("❌ Fehler: Der eingegebene Code ist ungültig oder beschädigt.");
+        }
+    }
+
     window.onload = function() {
         initCountryDropdown();
         addBuildingRow("Panzerwerk", 1);
         addBuildingRow("Rekrutierungsbüro", 1);
         addUnitRow("Leichter Panzer", "1", 10);
         updateAll();
+        hasUnsavedChanges = false;
     };
 </script>
 
