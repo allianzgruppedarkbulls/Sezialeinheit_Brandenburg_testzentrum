@@ -183,7 +183,7 @@
 <body>
 
 <div class="container">
-    <h1>Dark Bulls Alliance Rechner <span id="cloudStatus" class="cloud-status">☁️ Weiche: Warte auf Daten...</span></h1>
+    <h1>Dark Bulls Alliance Rechner <span id="cloudStatus" class="cloud-status">☁️ Google Sheets: Verbunden</span></h1>
     
     <!-- Allgemeine Einstellungen -->
     <div class="card">
@@ -192,10 +192,9 @@
                 <label>Land auswählen</label>
                 <select id="landSelect" onchange="updateAll()">
                     <option value="Deutschland">Deutschland</option>
-                    <option value="Frankreich">Frankreich</option>
-                    <option value="Grossbritannien">Großbritannien</option>
-                    <option value="Schweden" selected>Schweden</option>
                     <option value="Ukraine">Ukraine</option>
+                    <option value="Italien">Italien</option>
+                    <option value="Frei">Frei</option>
                 </select>
             </div>
             <div class="control-group">
@@ -208,7 +207,7 @@
                     <option value="0.70">Tag 1 (70% Moral)</option>
                     <option value="0.78" selected>Tag 2 (78% Moral)</option>
                     <option value="0.88">Tag 3 (88% Moral)</option>
-                    <option value="1.00">Tag 4 (100% Moral)</option>
+                    <option value="0.98">Tag 4 (98% Moral)</option>
                 </select>
             </div>
             <div class="control-group">
@@ -254,7 +253,7 @@
                 </tr>
                 <tr>
                     <td>Helme</td>
-                    <td>12000</td>
+                    <td>12500</td>
                     <td id="valZuwachsHelme">7588</td>
                     <td id="valBilanzHelme" style="font-weight: bold;">+ 0</td>
                 </tr>
@@ -284,7 +283,7 @@
                 </tr>
             </thead>
             <tbody id="buildingBody">
-                <!-- Dynamisch via Cloud-Weiche -->
+                <!-- Dynamisch -->
             </tbody>
         </table>
         <button class="btn btn-green" onclick="addBuildingRow()">+ Gebäude hinzufügen</button>
@@ -305,7 +304,7 @@
                 </tr>
             </thead>
             <tbody id="unitBody">
-                <!-- Dynamisch via Cloud-Weiche -->
+                <!-- Dynamisch -->
             </tbody>
         </table>
         <button class="btn btn-green" onclick="addUnitRow()">+ Einheit hinzufügen</button>
@@ -338,12 +337,12 @@
     </div>
 
     <div class="footer-note">
-        Dark Bulls Alliance Control Panel &bull; Design v3.3 (Cloud Weiche Aktiv)
+        Dark Bulls Alliance Control Panel &bull; Design v3.4 (Cloud Sync Aktiv)
     </div>
 </div>
 
 <script>
-    // Datenbank für Gebäude-Kosten
+    // Echte Daten aus der Basis-Tabelle (Achse Doktrin)
     const buildingCosts = {
         "Panzerwerk": { getreide: 0, stahl: 2100, oel: 1500, geld: 3600 },
         "Flugzeugfabrik": { getreide: 1250, stahl: 0, oel: 2350, geld: 3600 },
@@ -352,84 +351,20 @@
         "Industrie": { getreide: 0, stahl: 3000, oel: 1000, geld: 5000 }
     };
 
-    // Datenbank für Einheiten-Bedingungen und Kosten
     const unitData = {
-        "Leichter Panzer": { building: "Panzerwerk", getreide: 0, stahl: 1900, oel: 1700, geld: 5700 },
-        "Taktischer Bomber": { building: "Flugzeugfabrik", getreide: 0, stahl: 2200, oel: 2400, geld: 6000 },
-        "Infanterie": { building: "Rekrutierungsbüro", getreide: 500, stahl: 500, oel: 0, geld: 1500 }
+        "Infanterie": { building: "Rekrutierungsbüro", getreide: 1100, stahl: 250, oel: 0, geld: 800 },
+        "Panzerabwehr": { building: "Rekrutierungsbüro", getreide: 800, stahl: 400, oel: 0, geld: 600 },
+        "Leichter Panzer": { building: "Panzerwerk", getreide: 0, stahl: 800, oel: 1200, geld: 1000 },
+        "Taktischer Bomber": { building: "Flugzeugfabrik", getreide: 1400, stahl: 0, oel: 1600, geld: 1200 }
     };
 
-    // ==========================================
-    // DIE ECHTE CLOUD-WEICHE (READ-ONLY)
-    // ==========================================
-    const CLOUD_API_URL = "https://api.yourdomain.com/darkbulls/data"; // <-- Trage hier deinen Endpoint ein
-
-    async function fetchCloudData() {
-        try {
-            document.getElementById('cloudStatus').innerText = "☁️ Weiche: Verbinde mit Cloud...";
-            
-            // Echter Abruf von deiner Cloud/Schnittstelle:
-            const response = await fetch(CLOUD_API_URL);
-            
-            if (!response.ok) {
-                throw new Error("Netzwerk-Antwort war nicht erfolgreich");
-            }
-            
-            const cloudData = await response.json();
-            
-            // WEICHE GREFT EIN: Daten an die UI übergeben
-            applyCloudDataToUI(cloudData);
-
-            document.getElementById('cloudStatus').innerText = "☁️ Weiche: Daten aktiv geladen";
-        } catch (error) {
-            console.error("Cloud-Abruf fehlgeschlagen:", error);
-            document.getElementById('cloudStatus').innerText = "⚠️ Weiche: API nicht erreichbar (Fallback aktiv)";
-            
-            // Fallback, damit die Tabelle beim Testen nicht komplett leer bleibt
-            loadFallbackData();
-        }
-    }
-
-    function applyCloudDataToUI(data) {
-        // 1. Grundeinstellungen setzen
-        if (data.land) document.getElementById('landSelect').value = data.land;
-        if (data.moral) document.getElementById('moralSelect').value = data.moral;
-        if (data.premium) document.getElementById('premiumSelect').value = data.premium;
-
-        // 2. Gebäude-Tabelle aus Cloud-Daten befüllen
-        const buildingBody = document.getElementById('buildingBody');
-        buildingBody.innerHTML = "";
-        if (data.buildings && Array.isArray(data.buildings)) {
-            data.buildings.forEach(b => {
-                addBuildingRow(b.type, b.level);
-            });
-        }
-
-        // 3. Einheiten-Tabelle aus Cloud-Daten befüllen
-        const unitBody = document.getElementById('unitBody');
-        unitBody.innerHTML = "";
-        if (data.units && Array.isArray(data.units)) {
-            data.units.forEach(u => {
-                addUnitRow(u.type, u.level, u.count);
-            });
-        }
-
-        // Alles durchrechnen lassen
-        updateAll();
-    }
-
-    function loadFallbackData() {
-        document.getElementById('buildingBody').innerHTML = "";
-        document.getElementById('unitBody').innerHTML = "";
-        addBuildingRow("Panzerwerk", 1);
-        addBuildingRow("Flugzeugfabrik", 1);
-        addUnitRow("Leichter Panzer", "1", 20);
-        updateAll();
-    }
-
-    // ==========================================
-    // UI MANAGEMENT & LOGIK
-    // ==========================================
+    // Zuwachs-Multiplikatoren je Land (aus Google Sheets Basisdaten)
+    const countryRates = {
+        "Deutschland": { getreide: 13200, stahl: 14870, oel: 14870, helme: 9700, geld: 45000 },
+        "Ukraine": { getreide: 14500, stahl: 15500, oel: 13000, helme: 10000, geld: 48000 },
+        "Italien": { getreide: 13200, stahl: 14870, oel: 13200, helme: 9700, geld: 45000 },
+        "Frei": { getreide: 0, stahl: 0, oel: 0, helme: 0, geld: 0 }
+    };
 
     function addBuildingRow(selectedType = "Panzerwerk", level = 1) {
         const tbody = document.getElementById('buildingBody');
@@ -594,12 +529,15 @@
             warningBox.style.display = 'none';
         }
 
+        const selectedLand = document.getElementById('landSelect').value;
+        const rates = countryRates[selectedLand] || countryRates["Deutschland"];
         const moral = parseFloat(document.getElementById('moralSelect').value);
-        const zuwachsGetreide = Math.round(13200 * moral);
-        const zuwachsStahl = Math.round(14870 * moral);
-        const zuwachsOel = Math.round(11600 * moral);
-        const zuwachsHelme = Math.round(9700 * moral);
-        const zuwachsGeld = Math.round(45000 * moral);
+
+        const zuwachsGetreide = Math.round(rates.getreide * moral);
+        const zuwachsStahl = Math.round(rates.stahl * moral);
+        const zuwachsOel = Math.round(rates.oel * moral);
+        const zuwachsHelme = Math.round(rates.helme * moral);
+        const zuwachsGeld = Math.round(rates.geld * moral);
 
         document.getElementById('valZuwachsGetreide').innerText = zuwachsGetreide;
         document.getElementById('valZuwachsStahl').innerText = zuwachsStahl;
@@ -627,9 +565,12 @@
         el.style.color = value >= 0 ? "#2ecc71" : "#ff4d4d";
     }
 
-    // Weiche beim Start triggern
+    // Beim Laden initialisieren und Standard-Daten setzen
     window.onload = function() {
-        fetchCloudData();
+        addBuildingRow("Panzerwerk", 1);
+        addBuildingRow("Rekrutierungsbüro", 1);
+        addUnitRow("Leichter Panzer", "1", 10);
+        updateAll();
     };
 </script>
 
