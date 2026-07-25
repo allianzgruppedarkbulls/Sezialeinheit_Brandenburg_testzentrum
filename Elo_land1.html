@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Bulls - Land 1</title>
+    <title>Dark Bulls - Land 1 (ELO Rechner)</title>
     <style>
         :root {
             --bg-color: #0b0b0b;
@@ -15,6 +15,11 @@
             --neon-glow: 0 0 10px rgba(255, 0, 51, 0.6), 0 0 20px rgba(255, 0, 51, 0.3);
             --tab-active-bg: #ff0033;
             --tab-inactive-bg: #1f1f1f;
+            --green-btn: #2ecc71;
+            --green-hover: #27ae60;
+            --red-btn: #ff4d4d;
+            --red-hover: #cc0000;
+            --red-bg: #331111;
         }
         
         body {
@@ -86,6 +91,39 @@
             margin-bottom: 20px;
         }
 
+        .top-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        select, input {
+            background-color: #1f1f1f;
+            color: var(--text-main);
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--neon-red);
+            outline: none;
+            box-shadow: 0 0 5px var(--neon-red);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -107,6 +145,65 @@
 
         tr:nth-child(even) {
             background-color: #111111;
+        }
+
+        .editable {
+            background-color: #1c2b1c;
+            border: 1px dashed #2ecc71;
+            color: #fff;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: var(--neon-red);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: var(--neon-glow);
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #ff1a4d;
+        }
+
+        .btn-green {
+            background-color: var(--green-btn);
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .btn-green:hover {
+            background-color: var(--green-hover);
+        }
+
+        .btn-red-small {
+            background-color: var(--red-btn);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .btn-red-small:hover {
+            background-color: var(--red-hover);
+        }
+
+        .warning-box {
+            background-color: var(--red-bg);
+            border: 1px solid var(--neon-red);
+            color: #ff9999;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            display: none;
         }
 
         .footer-note {
@@ -135,51 +232,210 @@
         <a href="Elo_feinde.html" class="tab-btn" style="border-color: #ff4d4d; color: #ff9999;">⚠️ Feinde</a>
     </div>
 
-    <!-- LAND 1 SPEZIFISCHER BEREICH -->
+    <!-- Allgemeine Einstellungen -->
     <div class="card">
-        <h2>Land 1 – Detailansicht & Verwaltung</h2>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">Individuelle Rohstoff- und Einheitenübersicht für Land 1.</p>
-        
+        <div class="top-bar">
+            <div class="control-group">
+                <label>Land auswählen</label>
+                <select id="landSelect">
+                    <option value="Deutschland">Deutschland</option>
+                    <option value="Frankreich">Frankreich</option>
+                    <option value="Grossbritannien">Großbritannien</option>
+                    <option value="Schweden" selected>Schweden</option>
+                    <option value="Ukraine">Ukraine</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Doktrin (Fix)</label>
+                <input type="text" id="doktrinInput" value="Achse (Axis)" readonly style="background-color: #1a1a1a; color: var(--neon-red); font-weight: bold;">
+            </div>
+            <div class="control-group">
+                <label>Moral / Tag</label>
+                <select id="moralSelect" onchange="calculateBalance()">
+                    <option value="0.70">Tag 1 (70% Moral)</option>
+                    <option value="0.78" selected>Tag 2 (78% Moral)</option>
+                    <option value="0.88">Tag 3 (88% Moral)</option>
+                    <option value="1.00">Tag 4 (100% Moral)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Premium-Account</label>
+                <select id="premiumSelect">
+                    <option value="aktiv" selected>Aktiv</option>
+                    <option value="inaktiv">Nicht aktiv</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ressourcen Tagesbilanz -->
+    <div class="card">
+        <h2>Ressourcen & Bilanz</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Ressource / Einheit</th>
-                    <th>Produktion / Bestand</th>
-                    <th>Verbrauch / Bedarf</th>
-                    <th>Netto-Bilanz</th>
+                    <th>Ressource</th>
+                    <th>Startbestand</th>
+                    <th>Zuwachs (24H)</th>
+                    <th>Reale Bilanz (Zuwachs - Kosten)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Getreide</td>
-                    <td>12,000</td>
-                    <td>5,824</td>
-                    <td style="color: #2ecc71;">+ 6,176</td>
+                    <td>15000</td>
+                    <td id="valZuwachsGetreide">10307</td>
+                    <td id="valBilanzGetreide" style="color: #2ecc71; font-weight: bold;">+ 6176</td>
                 </tr>
                 <tr>
                     <td>Stahl</td>
-                    <td>9,500</td>
-                    <td>2,452</td>
-                    <td style="color: #2ecc71;">+ 7,048</td>
+                    <td>15000</td>
+                    <td id="valZuwachsStahl">11600</td>
+                    <td id="valBilanzStahl" style="color: #2ecc71; font-weight: bold;">+ 7048</td>
                 </tr>
                 <tr>
                     <td>Öl</td>
-                    <td>1,200</td>
-                    <td>4,965</td>
-                    <td style="color: #ff4d4d;">- 3,765</td>
+                    <td>15000</td>
+                    <td id="valZuwachsOel">11600</td>
+                    <td id="valBilanzOel" style="color: #ff4d4d; font-weight: bold;">- 3765</td>
+                </tr>
+                <tr>
+                    <td>Helme</td>
+                    <td>12000</td>
+                    <td id="valZuwachsHelme">7588</td>
+                    <td id="valBilanzHelme" style="color: #2ecc71; font-weight: bold;">+ 1218</td>
                 </tr>
                 <tr>
                     <td>Geld</td>
-                    <td>15,000</td>
-                    <td>8,308</td>
-                    <td style="color: #2ecc71;">+ 6,692</td>
+                    <td>80000</td>
+                    <td id="valZuwachsGeld">36080</td>
+                    <td id="valBilanzGeld" style="color: #2ecc71; font-weight: bold;">+ 6692</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gebäude -->
+    <div class="card">
+        <h2>1. Gebäude-Verwaltung</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Errichte hier deine Gebäude, um die Einheitenproduktion unten freizuschalten.</p>
+        <table id="buildingTable">
+            <thead>
+                <tr>
+                    <th>Gebäude-Typ</th>
+                    <th>Stufe / Anzahl</th>
+                    <th>Getreide</th>
+                    <th>Stahl</th>
+                    <th>Öl</th>
+                    <th>Geld</th>
+                </tr>
+            </thead>
+            <tbody id="buildingBody">
+                <tr>
+                    <td>
+                        <select class="editable" style="width: 100%;" onchange="updateAll()">
+                            <option value="Panzerwerk" selected>Panzerwerk</option>
+                            <option value="Flugzeugfabrik">Flugzeugfabrik</option>
+                            <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
+                            <option value="Hafen">Hafen</option>
+                            <option value="Industrie">Industrie</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
+                        <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
+                    </td>
+                    <td>0</td>
+                    <td>2100</td>
+                    <td>1500</td>
+                    <td>3600</td>
                 </tr>
                 <tr>
-                    <td>Arbeitskraft</td>
-                    <td>4,000</td>
-                    <td>2,782</td>
-                    <td style="color: #2ecc71;">+ 1,218</td>
+                    <td>
+                        <select class="editable" style="width: 100%;" onchange="updateAll()">
+                            <option value="Panzerwerk">Panzerwerk</option>
+                            <option value="Flugzeugfabrik" selected>Flugzeugfabrik</option>
+                            <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
+                            <option value="Hafen">Hafen</option>
+                            <option value="Industrie">Industrie</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
+                        <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
+                    </td>
+                    <td>1250</td>
+                    <td>0</td>
+                    <td>2350</td>
+                    <td>3600</td>
                 </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-green" onclick="addBuildingRow()">+ Gebäude hinzufügen</button>
+    </div>
+
+    <!-- Einheitenproduktion -->
+    <div class="card">
+        <h2>2. Einheiten-Produktion</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Einheiten erfordern das entsprechende Gebäude oben. Automatische Synchronisation mit der Forschung.</p>
+        
+        <table id="unitTable">
+            <thead>
+                <tr>
+                    <th>Einheit</th>
+                    <th>Gewünschtes Level & Stückzahl</th>
+                    <th>Benötigtes Gebäude</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="unitBody">
+                <tr>
+                    <td>
+                        <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
+                            <option value="Leichter Panzer" selected>Leichter Panzer</option>
+                            <option value="Taktischer Bomber">Taktischer Bomber</option>
+                            <option value="Infanterie">Infanterie</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
+                            <option value="1" selected>Lvl 1</option>
+                            <option value="2">Lvl 2</option>
+                            <option value="3">Lvl 3</option>
+                        </select>
+                        <input type="number" class="editable unit-count" value="20" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
+                        <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
+                    </td>
+                    <td class="unit-req">Panzerwerk (Stufe ≥ 1)</td>
+                    <td class="unit-status" style="font-weight: bold; color: #2ecc71;">Bereit</td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-green" onclick="addUnitRow()">+ Einheit hinzufügen</button>
+
+        <div id="errorWarning" class="warning-box">
+            ⚠️ <strong>Fehler:</strong> Mindestens eine Einheit erfordert ein Gebäude, das oben noch nicht gebaut wurde!
+        </div>
+    </div>
+
+    <!-- Forschung (Automatisch generiert) -->
+    <div class="card">
+        <h2>3. Forschung (Automatisch generiert)</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Dieser Bereich wird vollautomatisch durch deine Einheiten-Auswahl oben gesteuert.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Erforderliche Tech / Einheit</th>
+                    <th>Ziel-Level</th>
+                    <th>Auslöser</th>
+                    <th>Getreide</th>
+                    <th>Stahl</th>
+                    <th>Öl</th>
+                    <th>Geld</th>
+                </tr>
+            </thead>
+            <tbody id="researchBody">
+                <!-- Wird dynamisch befüllt -->
             </tbody>
         </table>
     </div>
@@ -188,6 +444,154 @@
         Dark Bulls Alliance Control Panel &bull; Elo_land1 v1.0
     </div>
 </div>
+
+<script>
+    function addBuildingRow() {
+        const tbody = document.getElementById('buildingBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <select class="editable" style="width: 100%;" onchange="updateAll()">
+                    <option value="Panzerwerk">Panzerwerk</option>
+                    <option value="Flugzeugfabrik">Flugzeugfabrik</option>
+                    <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
+                    <option value="Hafen">Hafen</option>
+                    <option value="Industrie">Industrie</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
+                <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
+            </td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+        `;
+        tbody.appendChild(row);
+        updateAll();
+    }
+
+    function removeBuildingRow(btn) {
+        btn.closest('tr').remove();
+        updateAll();
+    }
+
+    function addUnitRow() {
+        const tbody = document.getElementById('unitBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
+                    <option value="Leichter Panzer">Leichter Panzer</option>
+                    <option value="Taktischer Bomber">Taktischer Bomber</option>
+                    <option value="Infanterie">Infanterie</option>
+                </select>
+            </td>
+            <td>
+                <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
+                    <option value="1" selected>Lvl 1</option>
+                    <option value="2">Lvl 2</option>
+                    <option value="3">Lvl 3</option>
+                </select>
+                <input type="number" class="editable unit-count" value="10" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
+                <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
+            </td>
+            <td class="unit-req">-</td>
+            <td class="unit-status" style="font-weight: bold; color: #2ecc71;">Bereit</td>
+        `;
+        tbody.appendChild(row);
+        updateAll();
+    }
+
+    function removeUnitRow(btn) {
+        btn.closest('tr').remove();
+        updateAll();
+    }
+
+    function updateAll() {
+        const buildingRows = document.querySelectorAll('#buildingBody tr');
+        let builtBuildings = [];
+        buildingRows.forEach(row => {
+            const select = row.querySelector('select');
+            const levelInput = row.querySelector('input[type="number"]');
+            if (select && levelInput && parseInt(levelInput.value) > 0) {
+                builtBuildings.push(select.value);
+            }
+        });
+
+        const unitRows = document.querySelectorAll('#unitBody tr');
+        const researchBody = document.getElementById('researchBody');
+        researchBody.innerHTML = "";
+
+        let hasError = false;
+        const warningBox = document.getElementById('errorWarning');
+
+        unitRows.forEach(row => {
+            const unitSelect = row.querySelector('.unit-select');
+            const unitLevel = row.querySelector('.unit-level').value;
+            const unitCount = parseInt(row.querySelector('.unit-count').value) || 0;
+            const reqCell = row.querySelector('.unit-req');
+            const statusCell = row.querySelector('.unit-status');
+
+            const unitName = unitSelect.value;
+            let requiredBuilding = "";
+            let costG = 0, costS = 0, costO = 0, costM = 0;
+
+            if (unitName === "Leichter Panzer") {
+                requiredBuilding = "Panzerwerk";
+                costS = 1900; costO = 1700; costM = 5700;
+            } else if (unitName === "Taktischer Bomber") {
+                requiredBuilding = "Flugzeugfabrik";
+                costS = 2200; costO = 2400; costM = 6000;
+            } else if (unitName === "Infanterie") {
+                requiredBuilding = "Rekrutierungsbüro";
+                costG = 500; costS = 500; costM = 1500;
+            }
+
+            reqCell.innerText = `${requiredBuilding} (Stufe ≥ 1)`;
+
+            if (unitCount > 0 && requiredBuilding && !builtBuildings.includes(requiredBuilding)) {
+                statusCell.innerText = `Gesperrt (Fehlt: ${requiredBuilding}!)`;
+                statusCell.style.color = "#ff4d4d";
+                hasError = true;
+            } else {
+                statusCell.innerText = "Bereit";
+                statusCell.style.color = "#2ecc71";
+
+                if (unitCount > 0) {
+                    const researchRow = document.createElement('tr');
+                    researchRow.innerHTML = `
+                        <td>${unitName} (Tech)</td>
+                        <td>Stufe ${unitLevel}</td>
+                        <td>Aus Einheit (${unitName})</td>
+                        <td>${costG}</td>
+                        <td>${costS}</td>
+                        <td>${costO}</td>
+                        <td>${costM}</td>
+                    `;
+                    researchBody.appendChild(researchRow);
+                }
+            }
+        });
+
+        if (hasError) {
+            warningBox.style.display = 'block';
+        } else {
+            warningBox.style.display = 'none';
+        }
+    }
+
+    function calculateBalance() {
+        const moral = parseFloat(document.getElementById('moralSelect').value);
+        document.getElementById('valZuwachsGetreide').innerText = Math.round(13200 * moral);
+        document.getElementById('valZuwachsStahl').innerText = Math.round(14870 * moral);
+    }
+
+    window.onload = function() {
+        updateAll();
+    };
+</script>
 
 </body>
 </html>
