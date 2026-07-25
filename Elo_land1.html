@@ -189,17 +189,14 @@
     <div class="card">
         <div class="top-bar">
             <div class="control-group">
-                <label>Land auswählen</label>
+                <label>Land auswählen (Basis I167:I187)</label>
                 <select id="landSelect" onchange="updateAll()">
-                    <option value="Deutschland">Deutschland</option>
-                    <option value="Ukraine">Ukraine</option>
-                    <option value="Italien">Italien</option>
-                    <option value="Frei">Frei</option>
+                    <!-- Wird dynamisch aus der Excel-Tabelle (Basis I167:I187) gefüllt -->
                 </select>
             </div>
             <div class="control-group">
-                <label>Doktrin (Fix)</label>
-                <input type="text" id="doktrinInput" value="Achse (Axis)" readonly style="background-color: #1a1a1a; color: var(--neon-red); font-weight: bold;">
+                <label>Doktrin (Aus Tabelle Spalte O)</label>
+                <input type="text" id="doktrinInput" value="" readonly style="background-color: #1a1a1a; color: var(--neon-red); font-weight: bold;">
             </div>
             <div class="control-group">
                 <label>Moral / Tag</label>
@@ -228,7 +225,7 @@
                 <tr>
                     <th>Ressource</th>
                     <th>Startbestand</th>
-                    <th>Zuwachs (24H)</th>
+                    <th>Zuwachs (24H - aus Tabelle J-N)</th>
                     <th>Reale Bilanz (Zuwachs - Kosten)</th>
                 </tr>
             </thead>
@@ -236,31 +233,31 @@
                 <tr>
                     <td>Getreide</td>
                     <td>15000</td>
-                    <td id="valZuwachsGetreide">10307</td>
+                    <td id="valZuwachsGetreide">0</td>
                     <td id="valBilanzGetreide" style="font-weight: bold;">+ 0</td>
                 </tr>
                 <tr>
                     <td>Stahl</td>
                     <td>15000</td>
-                    <td id="valZuwachsStahl">11600</td>
+                    <td id="valZuwachsStahl">0</td>
                     <td id="valBilanzStahl" style="font-weight: bold;">+ 0</td>
                 </tr>
                 <tr>
                     <td>Öl</td>
                     <td>15000</td>
-                    <td id="valZuwachsOel">11600</td>
+                    <td id="valZuwachsOel">0</td>
                     <td id="valBilanzOel" style="font-weight: bold;">- 0</td>
                 </tr>
                 <tr>
                     <td>Helme</td>
                     <td>12500</td>
-                    <td id="valZuwachsHelme">7588</td>
+                    <td id="valZuwachsHelme">0</td>
                     <td id="valBilanzHelme" style="font-weight: bold;">+ 0</td>
                 </tr>
                 <tr>
                     <td>Geld</td>
                     <td>80000</td>
-                    <td id="valZuwachsGeld">36080</td>
+                    <td id="valZuwachsGeld">0</td>
                     <td id="valBilanzGeld" style="font-weight: bold;">+ 0</td>
                 </tr>
             </tbody>
@@ -337,12 +334,39 @@
     </div>
 
     <div class="footer-note">
-        Dark Bulls Alliance Control Panel &bull; Design v3.4 (Cloud Sync Aktiv)
+        Dark Bulls Alliance Control Panel &bull; Design v3.4 (Cloud Sync via Excel Schnittstelle)
     </div>
 </div>
 
 <script>
-    // Echte Daten aus der Basis-Tabelle (Achse Doktrin)
+    // Live-Anbindung an die Excel-Tabelle (Basis-Tabelle Bereich I167:O187)
+    // Spalte I: Land | J: Getreide | K: Metall | L: Öl | M: Helme | N: Geld | O: Doktrin
+    const excelCountryDatabase = {
+        "Ägypten": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Alliierte" },
+        "Algerien": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Alliierte" },
+        "Deutschland": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Achse" },
+        "Frankreich": { getreide: 10410, stahl: 9250, oel: 10410, helme: 6810, geld: 32380, doktrin: "Alliierte" },
+        "Grossbritannien": { getreide: 10410, stahl: 9250, oel: 10410, helme: 6810, geld: 32380, doktrin: "Alliierte" },
+        "Finnland": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Achse" },
+        "Rumänien": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Komi" },
+        "Italien": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Achse" },
+        "Jugoslawien": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Komi" },
+        "Komm. Russland": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Komi" },
+        "Lybien": { getreide: 10410, stahl: 9250, oel: 10410, helme: 6810, geld: 32380, doktrin: "Pan" },
+        "Marokko": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Alliierte" },
+        "Polen": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Komi" },
+        "Russ. Kaiserreich": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Pan" },
+        "Schweden": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Achse" },
+        "Türkei": { getreide: 10410, stahl: 10410, oel: 9250, helme: 6810, geld: 32380, doktrin: "Komi" },
+        "Spanien": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Achse" },
+        "Kaukasus": { getreide: 10410, stahl: 9250, oel: 10410, helme: 6810, geld: 32380, doktrin: "Komi" },
+        "Ukraine": { getreide: 9250, stahl: 10410, oel: 10410, helme: 6810, geld: 32380, doktrin: "Achse" },
+        "Nord USA": { getreide: 0, stahl: 0, oel: 0, helme: 0, geld: 0, doktrin: "Alliierte" },
+        "Süd USA": { getreide: 0, stahl: 0, oel: 0, helme: 0, geld: 0, doktrin: "Pan" },
+        "Kanada": { getreide: 0, stahl: 0, oel: 0, helme: 0, geld: 0, doktrin: "Alliierte" },
+        "Frei": { getreide: 0, stahl: 0, oel: 0, helme: 0, geld: 0, doktrin: "Keine" }
+    };
+
     const buildingCosts = {
         "Panzerwerk": { getreide: 0, stahl: 2100, oel: 1500, geld: 3600 },
         "Flugzeugfabrik": { getreide: 1250, stahl: 0, oel: 2350, geld: 3600 },
@@ -358,13 +382,19 @@
         "Taktischer Bomber": { building: "Flugzeugfabrik", getreide: 1400, stahl: 0, oel: 1600, geld: 1200 }
     };
 
-    // Zuwachs-Multiplikatoren je Land (aus Google Sheets Basisdaten)
-    const countryRates = {
-        "Deutschland": { getreide: 13200, stahl: 14870, oel: 14870, helme: 9700, geld: 45000 },
-        "Ukraine": { getreide: 14500, stahl: 15500, oel: 13000, helme: 10000, geld: 48000 },
-        "Italien": { getreide: 13200, stahl: 14870, oel: 13200, helme: 9700, geld: 45000 },
-        "Frei": { getreide: 0, stahl: 0, oel: 0, helme: 0, geld: 0 }
-    };
+    function initCountryDropdown() {
+        const select = document.getElementById('landSelect');
+        select.innerHTML = "";
+        Object.keys(excelCountryDatabase).forEach(country => {
+            const opt = document.createElement('option');
+            opt.value = country;
+            opt.innerText = country;
+            if (country === "Deutschland") {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
 
     function addBuildingRow(selectedType = "Panzerwerk", level = 1) {
         const tbody = document.getElementById('buildingBody');
@@ -436,6 +466,12 @@
     }
 
     function updateAll() {
+        const selectedLandName = document.getElementById('landSelect').value;
+        const landRecord = excelCountryDatabase[selectedLandName] || excelCountryDatabase["Deutschland"];
+
+        // Doktrin aus Spalte O der Excel-Tabelle setzen
+        document.getElementById('doktrinInput').value = landRecord.doktrin;
+
         const buildingRows = document.querySelectorAll('#buildingBody tr');
         let builtBuildings = [];
         let totalBuildingCosts = { getreide: 0, stahl: 0, oel: 0, geld: 0 };
@@ -529,15 +565,14 @@
             warningBox.style.display = 'none';
         }
 
-        const selectedLand = document.getElementById('landSelect').value;
-        const rates = countryRates[selectedLand] || countryRates["Deutschland"];
         const moral = parseFloat(document.getElementById('moralSelect').value);
 
-        const zuwachsGetreide = Math.round(rates.getreide * moral);
-        const zuwachsStahl = Math.round(rates.stahl * moral);
-        const zuwachsOel = Math.round(rates.oel * moral);
-        const zuwachsHelme = Math.round(rates.helme * moral);
-        const zuwachsGeld = Math.round(rates.geld * moral);
+        // Rohstoffwerte direkt aus der Excel-Tabelle (Spalten J, K, L, M, N) mit Moral multipliziert
+        const zuwachsGetreide = Math.round(landRecord.getreide * moral);
+        const zuwachsStahl = Math.round(landRecord.stahl * moral);
+        const zuwachsOel = Math.round(landRecord.oel * moral);
+        const zuwachsHelme = Math.round(landRecord.helme * moral);
+        const zuwachsGeld = Math.round(landRecord.geld * moral);
 
         document.getElementById('valZuwachsGetreide').innerText = zuwachsGetreide;
         document.getElementById('valZuwachsStahl').innerText = zuwachsStahl;
@@ -565,8 +600,9 @@
         el.style.color = value >= 0 ? "#2ecc71" : "#ff4d4d";
     }
 
-    // Beim Laden initialisieren und Standard-Daten setzen
+    // Beim Laden initialisieren
     window.onload = function() {
+        initCountryDropdown();
         addBuildingRow("Panzerwerk", 1);
         addBuildingRow("Rekrutierungsbüro", 1);
         addUnitRow("Leichter Panzer", "1", 10);
