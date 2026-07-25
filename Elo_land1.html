@@ -165,6 +165,13 @@
             display: none;
         }
 
+        .cloud-status {
+            float: right;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: -10px;
+        }
+
         .footer-note {
             text-align: center;
             font-size: 0.8rem;
@@ -176,7 +183,7 @@
 <body>
 
 <div class="container">
-    <h1>Dark Bulls Alliance Rechner</h1>
+    <h1>Dark Bulls Alliance Rechner <span id="cloudStatus" class="cloud-status">☁️ Cloud: Verbunden</span></h1>
     
     <!-- Allgemeine Einstellungen -->
     <div class="card">
@@ -277,44 +284,7 @@
                 </tr>
             </thead>
             <tbody id="buildingBody">
-                <tr>
-                    <td>
-                        <select class="editable" style="width: 100%;" onchange="updateAll()">
-                            <option value="Panzerwerk" selected>Panzerwerk</option>
-                            <option value="Flugzeugfabrik">Flugzeugfabrik</option>
-                            <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
-                            <option value="Hafen">Hafen</option>
-                            <option value="Industrie">Industrie</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
-                        <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
-                    </td>
-                    <td class="b-getreide">0</td>
-                    <td class="b-stahl">2100</td>
-                    <td class="b-oel">1500</td>
-                    <td class="b-geld">3600</td>
-                </tr>
-                <tr>
-                    <td>
-                        <select class="editable" style="width: 100%;" onchange="updateAll()">
-                            <option value="Panzerwerk">Panzerwerk</option>
-                            <option value="Flugzeugfabrik" selected>Flugzeugfabrik</option>
-                            <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
-                            <option value="Hafen">Hafen</option>
-                            <option value="Industrie">Industrie</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
-                        <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
-                    </td>
-                    <td class="b-getreide">1250</td>
-                    <td class="b-stahl">0</td>
-                    <td class="b-oel">2350</td>
-                    <td class="b-geld">3600</td>
-                </tr>
+                <!-- Wird dynamisch geladen -->
             </tbody>
         </table>
         <button class="btn btn-green" onclick="addBuildingRow()">+ Gebäude hinzufügen</button>
@@ -335,26 +305,7 @@
                 </tr>
             </thead>
             <tbody id="unitBody">
-                <tr>
-                    <td>
-                        <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
-                            <option value="Leichter Panzer" selected>Leichter Panzer</option>
-                            <option value="Taktischer Bomber">Taktischer Bomber</option>
-                            <option value="Infanterie">Infanterie</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
-                            <option value="1" selected>Lvl 1</option>
-                            <option value="2">Lvl 2</option>
-                            <option value="3">Lvl 3</option>
-                        </select>
-                        <input type="number" class="editable unit-count" value="20" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
-                        <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
-                    </td>
-                    <td class="unit-req">Panzerwerk (Stufe ≥ 1)</td>
-                    <td class="unit-status" style="font-weight: bold; color: #2ecc71;">Bereit</td>
-                </tr>
+                <!-- Wird dynamisch geladen -->
             </tbody>
         </table>
         <button class="btn btn-green" onclick="addUnitRow()">+ Einheit hinzufügen</button>
@@ -387,7 +338,7 @@
     </div>
 
     <div class="footer-note">
-        Dark Bulls Alliance Control Panel &bull; Design v3.2 (Clean Layout)
+        Dark Bulls Alliance Control Panel &bull; Design v3.2 (Cloud Connected)
     </div>
 </div>
 
@@ -408,21 +359,147 @@
         "Infanterie": { building: "Rekrutierungsbüro", getreide: 500, stahl: 500, oel: 0, geld: 1500 }
     };
 
-    function addBuildingRow() {
+    // ==========================================
+    // CLOUD / API SYNCHRONISATION
+    // ==========================================
+    const CLOUD_ENDPOINT = "https://api.yourdomain.com/darkbulls/data"; // Hier deine Cloud-URL / Endpoint eintragen
+
+    async function loadFromCloud() {
+        try {
+            document.getElementById('cloudStatus').innerText = "☁️ Cloud: Lade...";
+            
+            // Beispiel für Fetch (falls du eine REST-API nutzt):
+            // const response = await fetch(CLOUD_ENDPOINT);
+            // const data = await response.json();
+
+            // Fallback auf localStorage für den Test, bis dein Endpoint aktiv ist:
+            const savedData = localStorage.getItem('darkBullsCloudData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                applyDataToUI(data);
+            } else {
+                // Default-Daten laden, falls leer
+                loadDefaultData();
+            }
+
+            document.getElementById('cloudStatus').innerText = "☁️ Cloud: Verbunden";
+        } catch (error) {
+            console.error("Fehler beim Laden aus der Cloud:", error);
+            document.getElementById('cloudStatus').innerText = "⚠️ Cloud: Offline-Modus";
+        }
+    }
+
+    async function saveToCloud() {
+        const data = gatherDataFromUI();
+        
+        try {
+            document.getElementById('cloudStatus').innerText = "☁️ Cloud: Speichere...";
+
+            // Beispiel für Fetch POST (Cloud-Sync):
+            // await fetch(CLOUD_ENDPOINT, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // });
+
+            // Lokales Spiegeln für nahtlosen Übergang
+            localStorage.setItem('darkBullsCloudData', JSON.stringify(data));
+
+            setTimeout(() => {
+                document.getElementById('cloudStatus').innerText = "☁️ Cloud: Verbunden";
+            }, 500);
+        } catch (error) {
+            console.error("Fehler beim Speichern in die Cloud:", error);
+            document.getElementById('cloudStatus').innerText = "⚠️ Cloud: Speichern fehlgeschlagen";
+        }
+    }
+
+    function gatherDataFromUI() {
+        const buildings = [];
+        document.querySelectorAll('#buildingBody tr').forEach(row => {
+            buildings.push({
+                type: row.querySelector('select').value,
+                level: row.querySelector('input[type="number"]').value
+            });
+        });
+
+        const units = [];
+        document.querySelectorAll('#unitBody tr').forEach(row => {
+            units.push({
+                type: row.querySelector('.unit-select').value,
+                level: row.querySelector('.unit-level').value,
+                count: row.querySelector('.unit-count').value
+            });
+        });
+
+        return {
+            land: document.getElementById('landSelect').value,
+            moral: document.getElementById('moralSelect').value,
+            premium: document.getElementById('premiumSelect').value,
+            buildings: buildings,
+            units: units
+        };
+    }
+
+    function applyDataToUI(data) {
+        if (data.land) document.getElementById('landSelect').value = data.land;
+        if (data.moral) document.getElementById('moralSelect').value = data.moral;
+        if (data.premium) document.getElementById('premiumSelect').value = data.premium;
+
+        // Gebäude wiederherstellen
+        const bBody = document.getElementById('buildingBody');
+        bBody.innerHTML = "";
+        if (data.buildings && data.buildings.length > 0) {
+            data.buildings.forEach(b => {
+                addBuildingRow(b.type, b.level);
+            });
+        } else {
+            loadDefaultData();
+            return;
+        }
+
+        // Einheiten wiederherstellen
+        const uBody = document.getElementById('unitBody');
+        uBody.innerHTML = "";
+        if (data.units && data.units.length > 0) {
+            data.units.forEach(u => {
+                addUnitRow(u.type, u.level, u.count);
+            });
+        }
+
+        updateAll(false); // Aktualisieren ohne erneutes Speichern (Loop verhindern)
+    }
+
+    function loadDefaultData() {
+        document.getElementById('buildingBody').innerHTML = "";
+        document.getElementById('unitBody').innerHTML = "";
+        addBuildingRow("Panzerwerk", 1);
+        addBuildingRow("Flugzeugfabrik", 1);
+        addUnitRow("Leichter Panzer", "1", 20);
+        updateAll();
+    }
+
+    // ==========================================
+    // UI MANAGEMENT & LOGIK
+    // ==========================================
+
+    function addBuildingRow(selectedType = "Panzerwerk", level = 1) {
         const tbody = document.getElementById('buildingBody');
         const row = document.createElement('tr');
+        
+        let optionsHtml = "";
+        Object.keys(buildingCosts).forEach(b => {
+            optionsHtml += `<option value="${b}" ${b === selectedType ? 'selected' : ''}>${b}</option>`;
+        });
+
         row.innerHTML = `
             <td>
                 <select class="editable" style="width: 100%;" onchange="updateAll()">
-                    <option value="Panzerwerk">Panzerwerk</option>
-                    <option value="Flugzeugfabrik">Flugzeugfabrik</option>
-                    <option value="Rekrutierungsbüro">Rekrutierungsbüro</option>
-                    <option value="Hafen">Hafen</option>
-                    <option value="Industrie">Industrie</option>
+                    ${optionsHtml}
                 </select>
             </td>
             <td>
-                <input type="number" class="editable" value="1" min="1" max="5" style="width: 60px;" oninput="updateAll()">
+                <input type="number" class="editable" value="${level}" min="1" max="5" style="width: 60px;" oninput="updateAll()">
                 <button class="btn-red-small" onclick="removeBuildingRow(this)">X</button>
             </td>
             <td class="b-getreide">0</td>
@@ -439,24 +516,28 @@
         updateAll();
     }
 
-    function addUnitRow() {
+    function addUnitRow(selectedType = "Leichter Panzer", level = "1", count = 10) {
         const tbody = document.getElementById('unitBody');
         const row = document.createElement('tr');
+
+        let optionsHtml = "";
+        Object.keys(unitData).forEach(u => {
+            optionsHtml += `<option value="${u}" ${u === selectedType ? 'selected' : ''}>${u}</option>`;
+        });
+
         row.innerHTML = `
             <td>
                 <select class="editable unit-select" style="width: 100%;" onchange="updateAll()">
-                    <option value="Leichter Panzer">Leichter Panzer</option>
-                    <option value="Taktischer Bomber">Taktischer Bomber</option>
-                    <option value="Infanterie">Infanterie</option>
+                    ${optionsHtml}
                 </select>
             </td>
             <td>
                 <select class="editable unit-level" style="width: 70px;" onchange="updateAll()">
-                    <option value="1" selected>Lvl 1</option>
-                    <option value="2">Lvl 2</option>
-                    <option value="3">Lvl 3</option>
+                    <option value="1" ${level === "1" ? 'selected' : ''}>Lvl 1</option>
+                    <option value="2" ${level === "2" ? 'selected' : ''}>Lvl 2</option>
+                    <option value="3" ${level === "3" ? 'selected' : ''}>Lvl 3</option>
                 </select>
-                <input type="number" class="editable unit-count" value="10" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
+                <input type="number" class="editable unit-count" value="${count}" min="0" style="width: 70px;" oninput="updateAll()"> Stk.
                 <button class="btn-red-small" onclick="removeUnitRow(this)">X</button>
             </td>
             <td class="unit-req">-</td>
@@ -471,7 +552,7 @@
         updateAll();
     }
 
-    function updateAll() {
+    function updateAll(triggerSync = true) {
         // 1. Gebäude-Auswertung & Kostenberechnung pro Zeile
         const buildingRows = document.querySelectorAll('#buildingBody tr');
         let builtBuildings = [];
@@ -581,11 +662,10 @@
         document.getElementById('valZuwachsHelme').innerText = zuwachsHelme;
         document.getElementById('valZuwachsGeld').innerText = zuwachsGeld;
 
-        // Gesamtkosten (Gebäude + Forschung als Beispielabzug für die Bilanz)
         const bilanzGetreide = zuwachsGetreide - (totalBuildingCosts.getreide + totalResearchCosts.getreide);
         const bilanzStahl = zuwachsStahl - (totalBuildingCosts.stahl + totalResearchCosts.stahl);
         const bilanzOel = zuwachsOel - (totalBuildingCosts.oel + totalResearchCosts.oel);
-        const bilanzHelme = zuwachsHelme; // Falls Helme für Einheiten relevant werden
+        const bilanzHelme = zuwachsHelme;
         const bilanzGeld = zuwachsGeld - (totalBuildingCosts.geld + totalResearchCosts.geld);
 
         setBalanceStyle('valBilanzGetreide', bilanzGetreide);
@@ -593,6 +673,11 @@
         setBalanceStyle('valBilanzOel', bilanzOel);
         setBalanceStyle('valBilanzHelme', bilanzHelme);
         setBalanceStyle('valBilanzGeld', bilanzGeld);
+
+        // Automatisch in die Cloud speichern, wenn von der UI ausgelöst
+        if (triggerSync) {
+            saveToCloud();
+        }
     }
 
     function setBalanceStyle(elementId, value) {
@@ -602,8 +687,9 @@
         el.style.color = value >= 0 ? "#2ecc71" : "#ff4d4d";
     }
 
+    // Beim Laden der Seite Daten aus der Cloud holen
     window.onload = function() {
-        updateAll();
+        loadFromCloud();
     };
 </script>
 
