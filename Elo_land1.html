@@ -183,7 +183,7 @@
 <body>
 
 <div class="container">
-    <h1>Dark Bulls Alliance Rechner <span id="cloudStatus" class="cloud-status">☁️ Cloud: Verbunden</span></h1>
+    <h1>Dark Bulls Alliance Rechner <span id="cloudStatus" class="cloud-status">☁️ Datenquelle: Verbunden</span></h1>
     
     <!-- Allgemeine Einstellungen -->
     <div class="card">
@@ -338,7 +338,7 @@
     </div>
 
     <div class="footer-note">
-        Dark Bulls Alliance Control Panel &bull; Design v3.2 (Cloud Connected)
+        Dark Bulls Alliance Control Panel &bull; Design v3.2 (Read-Only Cloud Sync)
     </div>
 </div>
 
@@ -360,85 +360,28 @@
     };
 
     // ==========================================
-    // CLOUD / API SYNCHRONISATION
+    // DATENABRUF AUS DER CLOUD (READ-ONLY)
     // ==========================================
-    const CLOUD_ENDPOINT = "https://api.yourdomain.com/darkbulls/data"; // Hier deine Cloud-URL / Endpoint eintragen
+    const CLOUD_DATA_ENDPOINT = "https://api.yourdomain.com/darkbulls/data"; // Hier deine Cloud-URL / Endpoint eintragen
 
-    async function loadFromCloud() {
+    async function fetchCloudData() {
         try {
-            document.getElementById('cloudStatus').innerText = "☁️ Cloud: Lade...";
+            document.getElementById('cloudStatus').innerText = "☁️ Datenquelle: Lade...";
             
-            // Beispiel für Fetch (falls du eine REST-API nutzt):
-            // const response = await fetch(CLOUD_ENDPOINT);
+            // Wenn der Endpoint aktiv ist, Daten per Fetch holen:
+            // const response = await fetch(CLOUD_DATA_ENDPOINT);
             // const data = await response.json();
+            // applyDataToUI(data);
 
-            // Fallback auf localStorage für den Test, bis dein Endpoint aktiv ist:
-            const savedData = localStorage.getItem('darkBullsCloudData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                applyDataToUI(data);
-            } else {
-                // Default-Daten laden, falls leer
-                loadDefaultData();
-            }
+            // Standard-Fallback fürs Layout, falls kein Live-Endpoint angebunden ist:
+            loadDefaultData();
 
-            document.getElementById('cloudStatus').innerText = "☁️ Cloud: Verbunden";
+            document.getElementById('cloudStatus').innerText = "☁️ Datenquelle: Verbunden";
         } catch (error) {
-            console.error("Fehler beim Laden aus der Cloud:", error);
-            document.getElementById('cloudStatus').innerText = "⚠️ Cloud: Offline-Modus";
+            console.error("Fehler beim Abrufen der Daten:", error);
+            document.getElementById('cloudStatus').innerText = "⚠️ Datenquelle: Offline-Fallback";
+            loadDefaultData();
         }
-    }
-
-    async function saveToCloud() {
-        const data = gatherDataFromUI();
-        
-        try {
-            document.getElementById('cloudStatus').innerText = "☁️ Cloud: Speichere...";
-
-            // Beispiel für Fetch POST (Cloud-Sync):
-            // await fetch(CLOUD_ENDPOINT, {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // });
-
-            // Lokales Spiegeln für nahtlosen Übergang
-            localStorage.setItem('darkBullsCloudData', JSON.stringify(data));
-
-            setTimeout(() => {
-                document.getElementById('cloudStatus').innerText = "☁️ Cloud: Verbunden";
-            }, 500);
-        } catch (error) {
-            console.error("Fehler beim Speichern in die Cloud:", error);
-            document.getElementById('cloudStatus').innerText = "⚠️ Cloud: Speichern fehlgeschlagen";
-        }
-    }
-
-    function gatherDataFromUI() {
-        const buildings = [];
-        document.querySelectorAll('#buildingBody tr').forEach(row => {
-            buildings.push({
-                type: row.querySelector('select').value,
-                level: row.querySelector('input[type="number"]').value
-            });
-        });
-
-        const units = [];
-        document.querySelectorAll('#unitBody tr').forEach(row => {
-            units.push({
-                type: row.querySelector('.unit-select').value,
-                level: row.querySelector('.unit-level').value,
-                count: row.querySelector('.unit-count').value
-            });
-        });
-
-        return {
-            land: document.getElementById('landSelect').value,
-            moral: document.getElementById('moralSelect').value,
-            premium: document.getElementById('premiumSelect').value,
-            buildings: buildings,
-            units: units
-        };
     }
 
     function applyDataToUI(data) {
@@ -446,19 +389,14 @@
         if (data.moral) document.getElementById('moralSelect').value = data.moral;
         if (data.premium) document.getElementById('premiumSelect').value = data.premium;
 
-        // Gebäude wiederherstellen
         const bBody = document.getElementById('buildingBody');
         bBody.innerHTML = "";
         if (data.buildings && data.buildings.length > 0) {
             data.buildings.forEach(b => {
                 addBuildingRow(b.type, b.level);
             });
-        } else {
-            loadDefaultData();
-            return;
         }
 
-        // Einheiten wiederherstellen
         const uBody = document.getElementById('unitBody');
         uBody.innerHTML = "";
         if (data.units && data.units.length > 0) {
@@ -467,7 +405,7 @@
             });
         }
 
-        updateAll(false); // Aktualisieren ohne erneutes Speichern (Loop verhindern)
+        updateAll();
     }
 
     function loadDefaultData() {
@@ -552,8 +490,7 @@
         updateAll();
     }
 
-    function updateAll(triggerSync = true) {
-        // 1. Gebäude-Auswertung & Kostenberechnung pro Zeile
+    function updateAll() {
         const buildingRows = document.querySelectorAll('#buildingBody tr');
         let builtBuildings = [];
         let totalBuildingCosts = { getreide: 0, stahl: 0, oel: 0, geld: 0 };
@@ -587,7 +524,6 @@
             }
         });
 
-        // 2. Einheiten & Forschung verarbeiten
         const unitRows = document.querySelectorAll('#unitBody tr');
         const researchBody = document.getElementById('researchBody');
         researchBody.innerHTML = "";
@@ -648,7 +584,6 @@
             warningBox.style.display = 'none';
         }
 
-        // 3. Ressourcen Zuwachs & Reale Bilanz berechnen
         const moral = parseFloat(document.getElementById('moralSelect').value);
         const zuwachsGetreide = Math.round(13200 * moral);
         const zuwachsStahl = Math.round(14870 * moral);
@@ -673,11 +608,6 @@
         setBalanceStyle('valBilanzOel', bilanzOel);
         setBalanceStyle('valBilanzHelme', bilanzHelme);
         setBalanceStyle('valBilanzGeld', bilanzGeld);
-
-        // Automatisch in die Cloud speichern, wenn von der UI ausgelöst
-        if (triggerSync) {
-            saveToCloud();
-        }
     }
 
     function setBalanceStyle(elementId, value) {
@@ -687,9 +617,9 @@
         el.style.color = value >= 0 ? "#2ecc71" : "#ff4d4d";
     }
 
-    // Beim Laden der Seite Daten aus der Cloud holen
+    // Beim Laden der Seite Daten aus der Cloud abrufen
     window.onload = function() {
-        loadFromCloud();
+        fetchCloudData();
     };
 </script>
 
