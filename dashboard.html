@@ -51,7 +51,8 @@
 </head>
 <body>
 
-    <img src="bulls_dashboard.jpg" id="dashboard-bg">
+    <!-- NEUES BILD EINGETRAGEN -->
+    <img src="Start_bild.png" id="dashboard-bg">
 
     <div class="header">
         <div class="user-info" id="userDisplay">Lädt...</div>
@@ -98,7 +99,6 @@
             </div>
         </div>
         
-<!-- SAUBERE ZENTRALE STRUKTUR: Nur noch 1 Button der zur Weiche führt -->
         <div class="card" id="box-elo">  
             <h2>Elo Bereich</h2>
             <div class="btn-stack">
@@ -154,7 +154,7 @@
         }
 
         function confirmNews() {
-            sessionStorage.getItem('bulls_news_seen', 'true') === 'true'; // korrigiert
+            sessionStorage.getItem('bulls_news_seen', 'true') === 'true'; 
             sessionStorage.setItem('bulls_news_seen', 'true');
             const overlay = document.getElementById('newsOverlay');
             if (overlay) overlay.remove();
@@ -170,7 +170,6 @@
                 const matrix = await res.json();
 
                 matrix.forEach(item => {
-                    // Falls in der Google Tabelle noch die alten IDs stehen, mappen wir sie abfangend:
                     let targetId = item.id;
                     if(targetId === "btn-rohstoffe" || targetId === "btn-einheiten") {
                         targetId = "btn-elo-rechner";
@@ -203,7 +202,6 @@
 
             } catch (e) {
                 console.error("Fehler im Dashboard-Autopiloten:", e);
-                // Fallback: Damit bei einem API-Hänger nicht alles schwarz bleibt, alles anzeigen
                 document.querySelectorAll('.card, .card-btn, .admin-btn').forEach(el => {
                     el.style.display = "block";
                     el.classList.remove('hidden');
