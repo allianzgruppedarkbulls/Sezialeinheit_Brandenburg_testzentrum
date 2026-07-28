@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>DARK BULLS - AUSBILDUNG</title>
+    <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container { 
+            width: 650px; background-color: #0f0f0f; border: 2px solid #333; 
+            border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2); 
+            text-align: center;
+        }
+        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 3px; font-size: 32px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
+        .subtitle { color: #888; font-size: 18px; margin-bottom: 30px; }
 
+        .progress-box {
+            background: #151515; border: 1px solid #333; border-radius: 10px; padding: 20px; margin-bottom: 30px; text-align: left;
+        }
+        .progress-title { color: #f0b232; font-size: 18px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+        .progress-info { color: #ccc; font-size: 16px; margin-bottom: 15px; }
+        
+        .content-card {
+            background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left;
+        }
+        .content-card h3 { color: #ff3131; margin-top: 0; text-transform: uppercase; }
+        .content-card p { color: #ddd; font-size: 16px; line-height: 1.5; }
+
+        .action-btn {
+            width: 100%; padding: 18px; background: #39d353; border: none;
+            color: #000; font-family: 'Almendra'; font-size: 20px; font-weight: bold;
+            text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s;
+            box-sizing: border-box; box-shadow: 0 0 15px rgba(57, 211, 83, 0.3);
+        }
+        .action-btn:hover { background: #2fb145; transform: scale(1.02); }
+        
+        .btn-back { display: block; margin-top: 30px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 16px; transition: 0.3s; }
+        .btn-back:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Akademie & Ausbildung</h1>
+    <div class="subtitle">Der Weg zum Elite-Mitglied</div>
+
+    <div class="progress-box">
+        <div class="progress-title">Dein aktueller Status</div>
+        <div class="progress-info" id="userProgressText">Lade Fortschritt vom HQ-Server... 🔄</div>
+    </div>
+
+    <div class="content-card" id="currentPartContainer">
+        <h3>Lade Ausbildungs-Inhalt...</h3>
+        <p>Bitte einen Moment Geduld, die Daten werden synchronisiert.</p>
+    </div>
+
+    <button class="action-btn" id="nextStepBtn" onclick="completeCurrentStep()" style="display:none;">
+        Part abschließen & Weiter ⚔️
+    </button>
+
+    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
+</div>
+
+<script>
+    const API = window.BULLS_CONFIG.SCRIPT_URL;
+    let currentPartId = 1;
+
+    // Beim Laden der Seite den Fortschritt des Users abrufen
+    window.addEventListener("DOMContentLoaded", () => {
+        loadUserTrainingProgress();
+    });
+
+    async function loadUserTrainingProgress() {
+        try {
+            // Hier wird der User-Fortschritt aus dem Google Sheet / Backend geladen
+            // Angenommen wir übergeben den Spielernamen oder holen es über die Session/Config
+            const playerName = localStorage.getItem("bulls_user") || "Unbekannt"; 
+            const res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}`);
+            const data = await res.json();
+            
+            currentPartId = data.currentPart || 1;
+            renderTrainingContent(currentPartId, data.status);
+        } catch (e) {
+            // Fallback für den ersten Aufbau
+            renderTrainingContent(1, "Aktiv");
+        }
+    }
+
+    function renderTrainingContent(part, status) {
+        const progressText = document.getElementById("userProgressText");
+        const contentContainer = document.getElementById("currentPartContainer");
+        const nextBtn = document.getElementById("nextStepBtn");
+
+        progressText.innerHTML = `Aktueller Meilenstein: <strong>Part ${part}</strong> | Status: <span style="color: #39d353;">${status}</span>`;
+
+        if (part === 1) {
+            contentContainer.innerHTML = `
+                <h3>Part 1: Grundlagen & Allianz-Regeln</h3>
+                <p>Willkommen in der Ausbildung! Als neuer Anwärter oder Mitglied startest du hier. Lies dir die internen Grundsätze durch, verstehe unsere Ausrichtung im Spiel und bereite dich auf den ersten Praxisschritt vor.</p>
+            `;
+        } else if (part === 2) {
+            contentContainer.innerHTML = `
+                <h3>Part 2: Taktische Koordination</h3>
+                <p>Du hast den ersten Schritt gemeistert. Nun widmen wir uns der Truppenbewegung, dem Meldesystem und der Absprache innerhalb der Gruppe.</p>
+            `;
+        } else {
+            contentContainer.innerHTML = `
+                <h3>Akademie - Fortgeschrittener Bereich (ELO)</h3>
+                <p>Du hast die Basis-Ausbildung erfolgreich abgeschlossen. Dieser Bereich ist für deine fortgeschrittenen ELO-Schulungen freigeschaltet.</p>
+            `;
+        }
+        nextBtn.style.display = "block";
+    }
+
+    async function completeCurrentStep() {
+        currentPartId++;
+        alert(`Meilenstein geschafft! Du steigst auf zu Part ${currentPartId}. (Wird in der Excel gespeichert...)`);
+        // Hier wird der neue Stand an das Apps Script / Google Sheet gesendet, 
+        // damit es in der Admin-Excel-Tabelle automatisch eingetragen wird.
+        location.reload();
+    }
+</script>
+
+</body>
+</html>
