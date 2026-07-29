@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>DARK BULLS - GRUNDAUSBILDUNG</title>
+    <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 650px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; }
+        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 3px; font-size: 30px; }
+        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; }
+        .action-btn { width: 100%; padding: 18px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 20px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .action-btn:hover { background: #2fb145; }
+        .quiz-box { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; }
+        .btn-back { display: block; margin-top: 30px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 16px; }
+        .btn-back:hover { color: #fff; }
+        #status-info { margin-bottom: 15px; color: #f0b232; font-size: 14px; }
+    </style>
+</head>
+<body onload="checkProgress()">
+<div class="container">
+    <h1>Akademie: Grundausbildung</h1>
+    <div id="status-info">Lade Status aus dem Protokoll...</div>
+    
+    <div class="content-card">
+        <h3>Lerneinheit 1: Grundlagen & Basis-Regeln</h3>
+        <p>Lies dir alle internen Leitfäden durch. Sobald du bereit bist, beantworte die Abschlussfrage unten, um den Anfänger-Test zu absolvieren.</p>
+        
+        <div class="quiz-box">
+            <p><strong>Abschlussfrage:</strong> Wie lautet die oberste Richtlinie unserer Allianz?</p>
+            <label><input type="radio" name="q1" value="wrong"> Jeder kämpft für sich allein</label><br>
+            <label><input type="radio" name="q1" value="correct"> Geschlossenheit & Teamwork</label><br>
+            <label><input type="radio" name="q1" value="wrong"> Inaktivität ignorieren</label>
+        </div>
+    </div>
+    
+    <button class="action-btn" onclick="submitTest()">Test bestehen & Fortgeschrittenen-Stufe freischalten ⚔️</button>
+    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
+</div>
+
+<script>
+    const API = window.BULLS_CONFIG.SCRIPT_URL;
+    const playerName = localStorage.getItem("bulls_user") || "TestUser";
+
+    async function checkProgress() {
+        try {
+            let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}&rang=Grundausbildung`);
+            let data = await res.json();
+            document.getElementById("status-info").innerText = `Aktueller Status: ${data.status}`;
+        } catch (e) {
+            console.error("Fehler beim Laden des Fortschritts", e);
+        }
+    }
+
+    async function submitTest() {
+        const selected = document.querySelector('input[name="q1"]:checked');
+        if (!selected || selected.value !== "correct") {
+            alert("Falsche Antwort! Bitte lies die Regeln noch einmal sorgfältig durch.");
+            return;
+        }
+        
+        try {
+            let res = await fetch(API, {
+                method: "POST",
+                body: JSON.stringify({
+                    user: playerName,
+                    currentRang: "Grundausbildung",
+                    nextRang: "Fortgeschritten"
+                })
+            });
+            let result = await res.json();
+            if (result.success) {
+                alert("Glückwunsch! Grundausbildung bestanden. Fortgeschrittenen-Bereich ist jetzt im Protokoll freigeschaltet!");
+                window.location.href = "Ausb_Fortgeschritten.html";
+            } else {
+                alert("Fehler beim Speichern: " + result.error);
+            }
+        } catch (e) {
+            alert("Verbindungsfehler beim Speichern des Fortschritts.");
+        }
+    }
+</script>
+</body>
+</html>
