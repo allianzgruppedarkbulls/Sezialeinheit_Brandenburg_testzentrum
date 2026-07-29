@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>DARK BULLS - FORTGESCHRITTENEN AUSBILDUNG</title>
+    <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 650px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; }
+        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 3px; font-size: 30px; }
+        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; }
+        .btn-back { display: block; margin-top: 30px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 16px; }
+        .btn-back:hover { color: #fff; }
+        #status-info { margin-bottom: 15px; color: #f0b232; font-size: 14px; }
+    </style>
+</head>
+<body onload="checkProgress()">
+<div class="container">
+    <h1>Akademie: Fortgeschritten</h1>
+    <div id="status-info">Lade Status aus dem Protokoll...</div>
+    
+    <div class="content-card">
+        <h3>Taktische Truppenführung & Frontkoordination</h3>
+        <p>Willkommen im fortgeschrittenen Bereich. Hier lernst du komplexe Manöver, Frontabsprachen und das Timing für Großoffensiven.</p>
+    </div>
+    
+    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
+</div>
+
+<script>
+    const API = window.BULLS_CONFIG.SCRIPT_URL;
+    const playerName = localStorage.getItem("bulls_user") || "TestUser";
+
+    async function checkProgress() {
+        try {
+            let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}&rang=Fortgeschritten`);
+            let data = await res.json();
+            document.getElementById("status-info").innerText = `Aktueller Status: ${data.status}`;
+        } catch (e) {
+            console.error("Fehler beim Laden des Fortgeschrittenen-Status", e);
+        }
+    }
+</script>
+</body>
+</html>
