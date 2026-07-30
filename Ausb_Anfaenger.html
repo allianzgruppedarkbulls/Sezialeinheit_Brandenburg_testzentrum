@@ -1,67 +1,167 @@
 <!DOCTYPE html>
 <html lang="de">
-<head> 
+<head>
     <meta charset="UTF-8">
     <title>DARK BULLS - GRUNDAUSBILDUNG</title>
     <script src="config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 650px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; }
-        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 3px; font-size: 30px; }
-        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; }
-        .action-btn { width: 100%; padding: 18px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 20px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .container { width: 700px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
+        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 3px; font-size: 28px; }
+        .subtitle { color: #f0b232; font-size: 16px; margin-bottom: 25px; text-transform: uppercase; }
+        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; }
+        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        .quiz-option:hover { border-color: #ff3131; background: #222; }
+        .btn-container { display: flex; justify-content: space-between; gap: 15px; }
+        .action-btn { flex: 1; padding: 15px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 18px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .action-btn:hover { background: #2fb145; }
-        .quiz-box { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left; }
-        .btn-back { display: block; margin-top: 30px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 16px; }
+        .secondary-btn { background: #333; color: #fff; }
+        .secondary-btn:hover { background: #444; }
+        .secondary-btn:disabled { background: #151515; color: #555; border-color: #222; cursor: not-allowed; }
+        .btn-back { display: block; margin-top: 25px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; }
         .btn-back:hover { color: #fff; }
-        #status-info { margin-bottom: 15px; color: #f0b232; font-size: 14px; }
     </style>
 </head>
-<body onload="checkProgress()">
+<body onload="loadLehrgangData()">
 <div class="container">
-    <h1>Akademie: Grundausbildung</h1>
-    <div id="status-info">Lade Status aus dem Protokoll...</div>
+    <h1 id="lehrgangTitel">Lade Akademie...</h1>
+    <div class="subtitle" id="statusInfo">Bitte einen Moment Geduld</div>
     
-    <div class="content-card">
-        <h3>Lerneinheit 1: Grundlagen & Basis-Regeln</h3>
-        <p>Lies dir alle internen Leitfäden durch. Sobald du bereit bist, beantworte die Abschlussfrage unten, um den Anfänger-Test zu absolvieren.</p>
-        
-        <div class="quiz-box">
-            <p><strong>Abschlussfrage:</strong> Wie lautet die oberste Richtlinie unserer Allianz?</p>
-            <label><input type="radio" name="q1" value="wrong"> Jeder kämpft für sich allein</label><br>
-            <label><input type="radio" name="q1" value="correct"> Geschlossenheit & Teamwork</label><br>
-            <label><input type="radio" name="q1" value="wrong"> Inaktivität ignorieren</label>
-        </div>
+    <div class="content-card" id="contentBox">
+        Lade Inhalte aus dem Protokoll...
     </div>
     
-    <button class="action-btn" onclick="submitTest()">Test bestehen & Fortgeschrittenen-Stufe freischalten ⚔️</button>
+    <div class="btn-container" id="btnContainer">
+        <button class="action-btn secondary-btn" id="prevBtn" onclick="prevStep()">Zurück</button>
+        <button class="action-btn" id="nextBtn" onclick="nextStep()">Weiter ⚔️</button>
+    </div>
+
     <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
 </div>
 
 <script>
     const API = window.BULLS_CONFIG.SCRIPT_URL;
     const playerName = localStorage.getItem("bulls_user") || "TestUser";
+    
+    let lehrgangData = null;
+    let currentIndex = 0; // Welcher Block/Zeile gerade angezeigt wird
+    let isExamMode = false; // Schaltet ab K/L auf Prüfung um (kein Zurückblättern mehr)
+    let userAnswers = {}; // Speichert die Antworten des Users für die 80%-Auswertung
 
-    async function checkProgress() {
+    async function loadLehrgangData() {
         try {
-            let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}&rang=Grundausbildung`);
-            let data = await res.json();
-            document.getElementById("status-info").innerText = `Aktueller Status: ${data.status}`;
+            let res = await fetch(`${API}?action=getLehrgangInhalt&rang=Grundausbildung&schritt=1`);
+            lehrgangData = await res.json();
+            
+            document.getElementById("lehrgangTitel").innerText = lehrgangData.titel;
+            renderCurrentView();
         } catch (e) {
-            console.error("Fehler beim Laden des Fortschritts", e);
+            document.getElementById("contentBox").innerHTML = "Fehler beim Laden der Lehrgangsdaten.";
         }
     }
 
-    async function submitTest() {
-        const selected = document.querySelector('input[name="q1"]:checked');
-        if (!selected || selected.value !== "correct") {
-            alert("Falsche Antwort! Bitte lies die Regeln noch einmal sorgfältig durch.");
+    function renderCurrentView() {
+        const box = document.getElementById("contentBox");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const status = document.getElementById("statusInfo");
+
+        // Wir prüfen, ob wir noch in der Präsentationsphase sind oder in der Prüfung
+        // Spalte C bis J sind die Leseseiten, K ist die Stopp-Tafel, L ist Einleitung, ab M sind Fragen
+        
+        let row = lehrgangData.rows[currentIndex];
+
+        // 1. Fall: Wir sind im Lesebereich / Präsentation
+        if (currentIndex < 8) { 
+            isExamMode = false;
+            prevBtn.disabled = (currentIndex === 0); // Ganz am Anfang kann man nicht zurück
+            
+            let textToShow = row.introOderFolie || row.folieD || "Inhalt wird geladen...";
+            status.innerText = `Lerneinheit / Folie ${currentIndex + 1}`;
+            box.innerHTML = `<p>${textToShow}</p>`;
+            nextBtn.innerText = "Weiter ⚔️";
+        } 
+        // 2. Fall: Schritt K (Die Stopp-Tafel / Fast geschafft)
+        else if (currentIndex === 8) {
+            isExamMode = false; // Hier darf man einmalig noch zurück, aber ab jetzt rastet die Sperre ein
+            prevBtn.disabled = false;
+            status.innerText = "Abschluss der Präsentation";
+            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${row.stoppTextK || "Wenn du jetzt weiterklickst, startest du die Prüfung. Danach ist kein Zurückblättern mehr möglich!"}</p>`;
+            nextBtn.innerText = "Prüfung starten 🚀";
+        }
+        // 3. Fall: Schritt L (Prüfungs-Einleitung)
+        else if (currentIndex === 9) {
+            isExamMode = true; // AB HIER IST DER ZURÜCK-BUTTON GESPERRT!
+            prevBtn.disabled = true; 
+            status.innerText = "Prüfungsmodus";
+            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL || "Ergänze die folgenden Fragen mit den richtigen Antworten. 80% müssen korrekt sein."}</p>`;
+            nextBtn.innerText = "Zur ersten Frage ⚔️";
+        }
+        // 4. Fall: Ab M (Die echten Prüfungsfragen)
+        else {
+            isExamMode = true;
+            prevBtn.disabled = true; // Zurückblättern in der Prüfung unmöglich!
+            status.innerText = `Prüfungsfrage ${currentIndex - 9} von ${lehrgangData.totalPruefungsFragen}`;
+            
+            let html = `<p><strong>${row.frageText}</strong></p>`;
+            
+            // Dynamisches Rendern der Antworten (je nachdem wie viele Spalten gefüllt sind)
+            row.antworten.forEach((ans, idx) => {
+                let checked = (userAnswers[currentIndex] === (idx + 1)) ? "checked" : "";
+                html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${currentIndex}, ${idx + 1})"> ${ans}</label>`;
+            });
+            
+            box.innerHTML = html;
+            nextBtn.innerText = (currentIndex >= 9 + lehrgangData.totalPruefungsFragen) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
+        }
+    }
+
+    function saveAnswer(qIndex, ansNum) {
+        userAnswers[qIndex] = ansNum;
+    }
+
+    function prevStep() {
+        if (isExamMode) return; // Sicherheitssperre
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCurrentView();
+        }
+    }
+
+    function nextStep() {
+        // Prüfen ob wir am Ende der Fragen sind -> Auswertung starten
+        if (currentIndex >= 9 + lehrgangData.totalPruefungsFragen) {
+            evaluateExam();
             return;
         }
-        
-        try {
-            let res = await fetch(API, {
+
+        currentIndex++;
+        renderCurrentView();
+    }
+
+    async function evaluateExam() {
+        let correctCount = 0;
+        let totalQ = lehrgangData.totalPruefungsFragen;
+
+        // Fragen im Array durchgehen und Punkte zählen
+        for (let i = 0; i < totalQ; i++) {
+            let rowIdx = 10 + i; // Startet ab Frage 1 (Index 10 im Array)
+            let userAns = userAnswers[rowIdx];
+            let correctAns = parseInt(lehrgangData.rows[rowIdx].korrekt);
+
+            if (userAns === correctAns) {
+                correctCount++;
+            }
+        }
+
+        let percentage = (correctCount / totalQ) * 100;
+
+        if (percentage >= 80) {
+            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
+            
+            // Fortschritt an Google Sheet melden
+            await fetch(API, {
                 method: "POST",
                 body: JSON.stringify({
                     user: playerName,
@@ -69,15 +169,11 @@
                     nextRang: "Fortgeschritten"
                 })
             });
-            let result = await res.json();
-            if (result.success) {
-                alert("Glückwunsch! Grundausbildung bestanden. Fortgeschrittenen-Bereich ist jetzt im Protokoll freigeschaltet!");
-                window.location.href = "Ausb_Fortgeschritten.html";
-            } else {
-                alert("Fehler beim Speichern: " + result.error);
-            }
-        } catch (e) {
-            alert("Verbindungsfehler beim Speichern des Fortschritts.");
+
+            window.location.href = "dashboard.html";
+        } else {
+            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt. Bitte wiederhole den Lehrgang.`);
+            location.reload();
         }
     }
 </script>
