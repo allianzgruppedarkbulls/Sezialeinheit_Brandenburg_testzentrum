@@ -49,14 +49,18 @@
     let isExamMode = false; // Schaltet ab K/L auf Prüfung um (kein Zurückblättern mehr)
     let userAnswers = {}; // Speichert die Antworten des Users für die 80%-Auswertung
 
-    async function loadLehrgangData() {
+   async function loadLehrgangData() {
+        console.log("Starte Laden mit API:", API);
         try {
             let res = await fetch(`${API}?action=getLehrgangInhalt&rang=Grundausbildung&schritt=1`);
-            lehrgangData = await res.json();
+            let textRes = await res.text();
+            console.log("Antwort vom Server:", textRes);
             
+            lehrgangData = JSON.parse(textRes);
             document.getElementById("lehrgangTitel").innerText = lehrgangData.titel;
             renderCurrentView();
         } catch (e) {
+            console.error("Fehler im Detail:", e);
             document.getElementById("contentBox").innerHTML = "Fehler beim Laden der Lehrgangsdaten.";
         }
     }
