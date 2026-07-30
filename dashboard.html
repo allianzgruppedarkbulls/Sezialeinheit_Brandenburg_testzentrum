@@ -51,7 +51,6 @@
 </head>
 <body>
 
-    <!-- DASHBOARD BILD MIT EXakter SCHREIBWEISE -->
     <img src="Daschbord.png" id="dashboard-bg">
 
     <div class="header">
@@ -136,7 +135,7 @@
         async function checkNews() {
             if (sessionStorage.getItem('bulls_news_seen') === 'true') return;
             try {
-                const res = abrufMitTimeout(window.BULLS_CONFIG.SCRIPT_URL + "?action=getGlobalSettings");
+                const res = fetch(window.BULLS_CONFIG.SCRIPT_URL + "?action=getGlobalSettings");
                 const s = await (await res).json();
                 if (s.newsActive && s.newsMsg) {
                     const newsDiv = document.createElement("div");
@@ -155,7 +154,6 @@
         }
 
         function confirmNews() {
-            sessionStorage.getItem('bulls_news_seen', 'true') === 'true'; 
             sessionStorage.setItem('bulls_news_seen', 'true');
             const overlay = document.getElementById('newsOverlay');
             if (overlay) overlay.remove();
@@ -172,10 +170,6 @@
 
                 matrix.forEach(item => {
                     let targetId = item.id;
-                    if(targetId === "btn-rohstoffe" || targetId === "btn-einheiten") {
-                        targetId = "btn-elo-rechner";
-                    }
-
                     const element = document.getElementById(targetId);
                     if (element) {
                         if (item.status === "Deaktiviert") {
@@ -187,6 +181,7 @@
 
                         if (hasAccess) {
                             element.style.display = "block";
+                            element.classList.remove('hidden');
                         } else {
                             element.className = "card-btn hidden";
                         }
