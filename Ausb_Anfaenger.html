@@ -10,9 +10,11 @@
         .container { width: 700px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
         h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 3px; font-size: 28px; }
         .subtitle { color: #f0b232; font-size: 16px; margin-bottom: 25px; text-transform: uppercase; }
-        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; }
-        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        /* white-space: pre-line sorgt dafür, dass Excel-Zeilenumbrüche 1:1 untereinander angezeigt werden! */
+        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; white-space: pre-line; }
+        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; text-align: left; }
         .quiz-option:hover { border-color: #ff3131; background: #222; }
+        .exam-input { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #ff3131; color: #fff; font-family: 'Almendra'; font-size: 18px; border-radius: 6px; box-sizing: border-box; margin-top: 15px; }
         .btn-container { display: flex; justify-content: space-between; gap: 15px; }
         .action-btn { flex: 1; padding: 15px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 18px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .action-btn:hover { background: #2fb145; }
@@ -45,11 +47,11 @@
     const playerName = localStorage.getItem("bulls_user") || "TestUser";
     
     let lehrgangData = null;
-    let currentIndex = 0; // Welcher Block/Zeile gerade angezeigt wird
-    let isExamMode = false; // Schaltet ab K/L auf Prüfung um (kein Zurückblättern mehr)
-    let userAnswers = {}; // Speichert die Antworten des Users für die 80%-Auswertung
+    let currentIndex = 0; 
+    let isExamMode = false; 
+    let userAnswers = {}; 
 
-   async function loadLehrgangData() {
+    async function loadLehrgangData() {
         console.log("Starte Laden mit API:", API);
         try {
             let res = await fetch(`${API}?action=getLehrgangInhalt&rang=Grundausbildung&schritt=1`);
@@ -71,53 +73,59 @@
         const nextBtn = document.getElementById("nextBtn");
         const status = document.getElementById("statusInfo");
 
-        // Wir prüfen, ob wir noch in der Präsentationsphase sind oder in der Prüfung
-        // Spalte C bis J sind die Leseseiten, K ist die Stopp-Tafel, L ist Einleitung, ab M sind Fragen
-        
         let row = lehrgangData.rows[currentIndex];
 
-        // 1. Fall: Wir sind im Lesebereich / Präsentation
+        // 1. Fall: Lesephase (Folienschritte)
         if (currentIndex < 8) { 
             isExamMode = false;
-            prevBtn.disabled = (currentIndex === 0); // Ganz am Anfang kann man nicht zurück
+            prevBtn.disabled = (currentIndex === 0);
             
             let textToShow = row.introOderFolie || row.folieD || "Inhalt wird geladen...";
             status.innerText = `Lerneinheit / Folie ${currentIndex + 1}`;
             box.innerHTML = `<p>${textToShow}</p>`;
             nextBtn.innerText = "Weiter ⚔️";
         } 
-        // 2. Fall: Schritt K (Die Stopp-Tafel / Fast geschafft)
+        // 2. Fall: Stopp-Tafel (Schritt K)
         else if (currentIndex === 8) {
-            isExamMode = false; // Hier darf man einmalig noch zurück, aber ab jetzt rastet die Sperre ein
+            isExamMode = false; 
             prevBtn.disabled = false;
             status.innerText = "Abschluss der Präsentation";
             box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${row.stoppTextK || "Wenn du jetzt weiterklickst, startest du die Prüfung. Danach ist kein Zurückblättern mehr möglich!"}</p>`;
             nextBtn.innerText = "Prüfung starten 🚀";
         }
-        // 3. Fall: Schritt L (Prüfungs-Einleitung)
+        // 3. Fall: Prüfungs-Einleitung (Schritt L)
         else if (currentIndex === 9) {
-            isExamMode = true; // AB HIER IST DER ZURÜCK-BUTTON GESPERRT!
+            isExamMode = true; 
             prevBtn.disabled = true; 
             status.innerText = "Prüfungsmodus";
             box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL || "Ergänze die folgenden Fragen mit den richtigen Antworten. 80% müssen korrekt sein."}</p>`;
             nextBtn.innerText = "Zur ersten Frage ⚔️";
         }
-        // 4. Fall: Ab M (Die echten Prüfungsfragen)
+        // 4. Fall: Echte Prüfungsfragen (Ab Index 10)
         else {
             isExamMode = true;
-            prevBtn.disabled = true; // Zurückblättern in der Prüfung unmöglich!
-            status.innerText = `Prüfungsfrage ${currentIndex - 9} von ${lehrgangData.totalPruefungsFragen}`;
+            prevBtn.disabled = true; 
+            let totalQ = lehrgangData.totalPruefungsFragen;
+            let questionNum = currentIndex - 9;
             
-            let html = `<p><strong>${row.frageText}</strong></p>`;
+            status.innerText = `Prüfungsfrage ${questionNum} von ${totalQ}`;
             
-            // Dynamisches Rendern der Antworten (je nachdem wie viele Spalten gefüllt sind)
-            row.antworten.forEach((ans, idx) => {
-                let checked = (userAnswers[currentIndex] === (idx + 1)) ? "checked" : "";
-                html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${currentIndex}, ${idx + 1})"> ${ans}</label>`;
-            });
+            let html = `<p><strong>${row.frage || row.frageText || "Fragetext fehlt"}</strong></p>`;
+            
+            // Prüfen ob Multiple-Choice Antworten da sind oder ein Freitextfeld benötigt wird
+            if (row.antworten && row.antworten.length > 0 && row.antworten[0] !== "") {
+                row.antworten.forEach((ans, idx) => {
+                    let checked = (userAnswers[currentIndex] === (idx + 1)) ? "checked" : "";
+                    html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${currentIndex}, ${idx + 1})"> ${ans}</label>`;
+                });
+            } else {
+                // Freitext-Eingabefeld falls keine Antwort-Optionen vorgegeben sind
+                let savedVal = userAnswers[currentIndex] || "";
+                html += `<input type="text" class="exam-input" id="freieAntwortInput" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${currentIndex}, this.value)">`;
+            }
             
             box.innerHTML = html;
-            nextBtn.innerText = (currentIndex >= 9 + lehrgangData.totalPruefungsFragen) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
+            nextBtn.innerText = (questionNum >= totalQ) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
         }
     }
 
@@ -125,8 +133,12 @@
         userAnswers[qIndex] = ansNum;
     }
 
+    function saveTextAnswer(qIndex, textVal) {
+        userAnswers[qIndex] = textVal;
+    }
+
     function prevStep() {
-        if (isExamMode) return; // Sicherheitssperre
+        if (isExamMode) return; 
         if (currentIndex > 0) {
             currentIndex--;
             renderCurrentView();
@@ -134,7 +146,7 @@
     }
 
     function nextStep() {
-        // Prüfen ob wir am Ende der Fragen sind -> Auswertung starten
+        // Wenn wir im Prüfungsmodus sind und auf die letzte Frage folgen -> Auswerten
         if (currentIndex >= 9 + lehrgangData.totalPruefungsFragen) {
             evaluateExam();
             return;
@@ -148,23 +160,28 @@
         let correctCount = 0;
         let totalQ = lehrgangData.totalPruefungsFragen;
 
-        // Fragen im Array durchgehen und Punkte zählen
         for (let i = 0; i < totalQ; i++) {
-            let rowIdx = 10 + i; // Startet ab Frage 1 (Index 10 im Array)
+            let rowIdx = 10 + i; 
             let userAns = userAnswers[rowIdx];
-            let correctAns = parseInt(lehrgangData.rows[rowIdx].korrekt);
+            let correctAns = lehrgangData.rows[rowIdx].korrekt;
 
-            if (userAns === correctAns) {
-                correctCount++;
+            // Abgleich (unterstützt sowohl Nummern als auch Textvergleich bei Freitext)
+            if (typeof correctAns === "string" && isNaN(correctAns)) {
+                if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
+                    correctCount++;
+                }
+            } else {
+                if (parseInt(userAns) === parseInt(correctAns)) {
+                    correctCount++;
+                }
             }
         }
 
-        let percentage = (correctCount / totalQ) * 100;
+        let percentage = Math.round((correctCount / totalQ) * 100);
 
         if (percentage >= 80) {
             alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
             
-            // Fortschritt an Google Sheet melden
             await fetch(API, {
                 method: "POST",
                 body: JSON.stringify({
