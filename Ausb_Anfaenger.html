@@ -75,57 +75,68 @@
 
         let row = lehrgangData.rows[currentIndex];
 
-        // 1. Fall: Lesephase (Folienschritte)
-        if (currentIndex < 8) { 
+        if (!row) {
+            box.innerHTML = "Keine weiteren Daten vorhanden.";
+            return;
+        }
+
+        // 1. Fall: Stopp-Tafel (Spalte K)
+        if (row.stoppTextK && row.stoppTextK.trim() !== "") {
             isExamMode = false;
-            prevBtn.disabled = (currentIndex === 0);
-            
-            let textToShow = row.introOderFolie || row.folieD || "Inhalt wird geladen...";
-            status.innerText = `Lerneinheit / Folie ${currentIndex + 1}`;
-            box.innerHTML = `<p>${textToShow}</p>`;
-            nextBtn.innerText = "Weiter ⚔️";
-        } 
-        // 2. Fall: Stopp-Tafel (Schritt K)
-        else if (currentIndex === 8) {
-            isExamMode = false; 
             prevBtn.disabled = false;
             status.innerText = "Abschluss der Präsentation";
-            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${row.stoppTextK || "Wenn du jetzt weiterklickst, startest du die Prüfung. Danach ist kein Zurückblättern mehr möglich!"}</p>`;
+            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${row.stoppTextK}</p>`;
             nextBtn.innerText = "Prüfung starten 🚀";
         }
-        // 3. Fall: Prüfungs-Einleitung (Schritt L)
-        else if (currentIndex === 9) {
-            isExamMode = true; 
-            prevBtn.disabled = true; 
+        // 2. Fall: Prüfungs-Einleitung (Spalte L)
+        else if (row.pruefungEinleitungL && row.pruefungEinleitungL.trim() !== "") {
+            isExamMode = true;
+            prevBtn.disabled = true; // Ab hier kein Zurück mehr!
             status.innerText = "Prüfungsmodus";
-            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL || "Ergänze die folgenden Fragen mit den richtigen Antworten. 80% müssen korrekt sein."}</p>`;
+            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL}</p>`;
             nextBtn.innerText = "Zur ersten Frage ⚔️";
         }
-        // 4. Fall: Echte Prüfungsfragen (Ab Index 10)
-        else {
+        // 3. Fall: Echte Prüfungsfrage (Spalte M / frageText)
+        else if (row.frageText && row.frageText.trim() !== "") {
             isExamMode = true;
-            prevBtn.disabled = true; 
+            prevBtn.disabled = true; // In der Prüfung kein Zurück
+            
             let totalQ = lehrgangData.totalPruefungsFragen;
-            let questionNum = currentIndex - 9;
+            let questionNum = 0;
+            for(let i = 0; i <= currentIndex; i++) {
+                if(lehrgangData.rows[i].frageText && lehrgangData.rows[i].frageText.trim() !== "") {
+                    questionNum++;
+                }
+            }
             
             status.innerText = `Prüfungsfrage ${questionNum} von ${totalQ}`;
             
-            let html = `<p><strong>${row.frage || row.frageText || "Fragetext fehlt"}</strong></p>`;
+            let html = `<p><strong>${row.frageText}</strong></p>`;
             
-            // Prüfen ob Multiple-Choice Antworten da sind oder ein Freitextfeld benötigt wird
-            if (row.antworten && row.antworten.length > 0 && row.antworten[0] !== "") {
+            if (row.antworten && row.antworten.length > 0) {
                 row.antworten.forEach((ans, idx) => {
                     let checked = (userAnswers[currentIndex] === (idx + 1)) ? "checked" : "";
-                    html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${currentIndex}, ${idx + 1})"> ${ans}</label>`;
+                    html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${currentIndex}, ${idx + 1})"> ${idx + 1}. ${ans}</label>`;
                 });
             } else {
-                // Freitext-Eingabefeld falls keine Antwort-Optionen vorgegeben sind
                 let savedVal = userAnswers[currentIndex] || "";
-                html += `<input type="text" class="exam-input" id="freieAntwortInput" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${currentIndex}, this.value)">`;
+                html += `<input type="text" class="exam-input" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${currentIndex}, this.value)">`;
             }
             
             box.innerHTML = html;
-            nextBtn.innerText = (questionNum >= totalQ) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
+            
+            let isLastQuestion = (questionNum >= totalQ);
+            nextBtn.innerText = isLastQuestion ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
+        }
+        // 4. Fall: Normale Lese-Folien (Standard)
+        else {
+            isExamMode = false;
+            prevBtn.disabled = (currentIndex === 0);
+            
+            let textToShow = row.folieText || "Inhalt wird geladen...";
+            status.innerText = `Lerneinheit / Folie ${currentIndex + 1}`;
+            box.innerHTML = `<p>${textToShow}</p>`;
+            nextBtn.innerText = "Weiter ⚔️";
         }
     }
 
@@ -146,41 +157,42 @@
     }
 
     function nextStep() {
-        // Wenn wir im Prüfungsmodus sind und auf die letzte Frage folgen -> Auswerten
-        if (currentIndex >= 9 + lehrgangData.totalPruefungsFragen) {
+        if (currentIndex < lehrgangData.rows.length - 1) {
+            currentIndex++;
+            renderCurrentView();
+        } else {
             evaluateExam();
-            return;
         }
-
-        currentIndex++;
-        renderCurrentView();
     }
 
     async function evaluateExam() {
         let correctCount = 0;
         let totalQ = lehrgangData.totalPruefungsFragen;
+        let answeredQuestions = 0;
 
-        for (let i = 0; i < totalQ; i++) {
-            let rowIdx = 10 + i; 
-            let userAns = userAnswers[rowIdx];
-            let correctAns = lehrgangData.rows[rowIdx].korrekt;
+        lehrgangData.rows.forEach((row, idx) => {
+            if (row.frageText && row.frageText.trim() !== "") {
+                answeredQuestions++;
+                let userAns = userAnswers[idx];
+                let correctAns = row.korrekt;
 
-            // Abgleich (unterstützt sowohl Nummern als auch Textvergleich bei Freitext)
-            if (typeof correctAns === "string" && isNaN(correctAns)) {
-                if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
-                    correctCount++;
-                }
-            } else {
-                if (parseInt(userAns) === parseInt(correctAns)) {
-                    correctCount++;
+                if (typeof correctAns === "string" && isNaN(correctAns)) {
+                    if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
+                        correctCount++;
+                    }
+                } else {
+                    if (parseInt(userAns) === parseInt(correctAns)) {
+                        correctCount++;
+                    }
                 }
             }
-        }
+        });
 
-        let percentage = Math.round((correctCount / totalQ) * 100);
+        let effectiveTotal = answeredQuestions > 0 ? answeredQuestions : totalQ;
+        let percentage = Math.round((correctCount / effectiveTotal) * 100);
 
         if (percentage >= 80) {
-            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
+            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${effectiveTotal} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
             
             await fetch(API, {
                 method: "POST",
@@ -193,7 +205,7 @@
 
             window.location.href = "dashboard.html";
         } else {
-            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt. Bitte wiederhole den Lehrgang.`);
+            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${effectiveTotal} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
             location.reload();
         }
     }
