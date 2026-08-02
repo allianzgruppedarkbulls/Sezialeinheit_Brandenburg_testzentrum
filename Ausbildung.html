@@ -117,20 +117,16 @@
     function buildTrainingList(userRang) {
         const list = document.getElementById("pathList");
         
-        // Logik für die Status-Ermittlung pro Bereich basierend auf dem User-Rang
-        // Zustände: 'green' (abgeschlossen), 'yellow' (aktuell aktiv), 'red' (gesperrt), 'blue' (Update in abgeschlossenem Bereich)
-        
         let grundState = "green";
         let fortState = "red";
         let turnierState = "red";
 
-        // Beispiel-Zuordnung je nach Fortschritt
         if (userRang.includes("grundausbildung")) {
             grundState = "yellow";
             fortState = "red";
             turnierState = "red";
         } else if (userRang.includes("fortgeschritten")) {
-            grundState = "green"; // oder "blue", falls ein Update kam
+            grundState = "green"; 
             fortState = "yellow";
             turnierState = "red";
         } else if (userRang.includes("turnier") || userRang.includes("spezialeinheit")) {
@@ -139,12 +135,12 @@
             turnierState = "yellow";
         }
 
-        // HTML für die Grundausbildung
+        // HTML für die Grundausbildung (Verweist auf die Lern-Ansicht)
         let grundCard = getCardHTML({
             title: "Grundausbildung (Basis-Taktiken)",
             desc: "Wichtige Abkürzungen, Befehle und grundlegende Spielmechaniken.",
             state: grundState,
-            link: "Ausb_Anfaenger_Lernen.html?rang=Grundausbildung", // Hier hin verweist der Klick zum echten Lernen
+            link: "Ausb_Anfaenger.html?rang=Grundausbildung", 
             btnText: grundState === "red" ? "Gesperrt 🔒" : "Öffnen 🔍"
         });
 
@@ -168,7 +164,6 @@
 
         list.innerHTML = grundCard + fortCard + turnierCard;
 
-        // Falls in einem abgeschlossenen Bereich ein Update vorliegt (Beispiel Blau-Status)
         if (grundState === "blue") {
             setTimeout(() => {
                 document.getElementById("updateModal").style.display = "flex";
