@@ -10,7 +10,6 @@
         .container { width: 700px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
         h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 3px; font-size: 28px; }
         .subtitle { color: #f0b232; font-size: 16px; margin-bottom: 25px; text-transform: uppercase; }
-        /* white-space: pre-line sorgt dafür, dass Excel-Zeilenumbrüche 1:1 untereinander angezeigt werden! */
         .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; white-space: pre-line; }
         .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; text-align: left; }
         .quiz-option:hover { border-color: #ff3131; background: #222; }
@@ -39,7 +38,7 @@
         <button class="action-btn" id="nextBtn" onclick="nextStep()">Weiter ⚔️</button>
     </div>
 
-    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
+    <a href="Ausb_Anfaenger.html" class="btn-back">Zurück zur Übersicht</a>
 </div>
 
 <script>
@@ -60,6 +59,9 @@
             
             lehrgangData = JSON.parse(textRes);
             document.getElementById("lehrgangTitel").innerText = lehrgangData.titel;
+            
+            // Erzwinge, dass immer sauber ganz oben bei Index 0 (erste Lese-Folie) gestartet wird
+            currentIndex = 0;
             renderCurrentView();
         } catch (e) {
             console.error("Fehler im Detail:", e);
@@ -91,7 +93,7 @@
         // 2. Fall: Prüfungs-Einleitung (Spalte L)
         else if (row.pruefungEinleitungL && row.pruefungEinleitungL.trim() !== "") {
             isExamMode = true;
-            prevBtn.disabled = true; // Ab hier kein Zurück mehr!
+            prevBtn.disabled = true; 
             status.innerText = "Prüfungsmodus";
             box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL}</p>`;
             nextBtn.innerText = "Zur ersten Frage ⚔️";
@@ -99,7 +101,7 @@
         // 3. Fall: Echte Prüfungsfrage (Spalte M / frageText)
         else if (row.frageText && row.frageText.trim() !== "") {
             isExamMode = true;
-            prevBtn.disabled = true; // In der Prüfung kein Zurück
+            prevBtn.disabled = true; 
             
             let totalQ = lehrgangData.totalPruefungsFragen;
             let questionNum = 0;
