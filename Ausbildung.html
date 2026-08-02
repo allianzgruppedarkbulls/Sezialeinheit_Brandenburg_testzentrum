@@ -28,20 +28,21 @@
         .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; }
         .dropdown-content ul { margin: 0; padding-left: 0; list-style: none; }
         
-        /* Lektionen-Eintrag mit Ampel-Farbe statt Pin */
+        /* Lektionen-Eintrag mit Ampel-Farbe */
         .lesson-item { 
             margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 8px; 
             display: flex; justify-content: space-between; align-items: center; 
         }
         .lesson-link { text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: bold; transition: 0.2s; }
         
-        /* Ampel-Farben für die einzelnen Lektionen */
+        /* Ampel-Farben & Klickbarkeit */
         .lesson-link.green { color: #39d353; }
         .lesson-link.green:hover { text-shadow: 0 0 5px #39d353; }
         
         .lesson-link.yellow { color: #f0b232; }
         .lesson-link.yellow:hover { text-shadow: 0 0 5px #f0b232; }
         
+        /* Jeder kann es sehen, aber gesperrte sind grau und nicht anklickbar */
         .lesson-link.red { color: #555; cursor: not-allowed; pointer-events: none; }
 
         .status-text { font-size: 12px; font-weight: normal; text-transform: uppercase; }
@@ -81,18 +82,19 @@
 
     async function initTrainingOverview() {
         try {
-            // Holt sowohl die Struktur (Kategorien & Lektionen wie B1, B2...) als auch den Fortschritt des Users aus dem Sheet
-            let res = await fetch(`${API}?action=getFullTrainingData&user=${encodeURIComponent(playerName)}`);
-            let data = await res.json();
+            // 1. Fortschritt des Spielers holen
+            let progressRes = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}`);
+            let progressData = await progressRes.json().catch(() => ({}));
             
-            if (!data || !data.categories || data.categories.length === 0) {
-                document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Keine Ausbildungsdaten in der Tabelle gefunden.</p>`;
-                document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName}`;
-                return;
-            }
-
+            let userRang = (progressData.currentRang || progressData.rang || "Grundausbildung").toLowerCase();
             document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Status-Übersicht`;
-            renderTrainingUI(data.categories);
+
+            // 2. Struktur / Lektionen (wie B1, B2...) aus der Tabelle holen
+            let structureRes = await fetch(`${API}?action=getAllTrainingStructure`);
+            let structureData = await structureRes.json().catch(() => ({}));
+
+            // Falls die API-Struktur als Objekt oder Array ankommt, sauber verarbeiten
+            renderTrainingUI(structureData, userRang);
 
         } catch (e) {
             console.error("Fehler beim Laden der Tabellen-Daten:", e);
@@ -100,20 +102,42 @@
         }
     }
 
-    function renderTrainingUI(categories) {
+    function renderTrainingUI(structure, userRang) {
         const list = document.getElementById("pathList");
+        
+        // Fallback falls structure leer ist, damit man direkt sieht, wie es sich aufbaut
+        // Sobald dein Google Sheet `getAllTrainingStructure` bedient, greifen die Echtdaten aus der Tabelle.
+        let categories = structure.categories || [
+            {
+                id: "grundausbildung",
+                title: "Grundausbildung (Basis-Taktiken)",
+                description: "Grundlegende Befehle und Lektionen.",
+                lessons: [
+                    { id: "B1", title: "Grundbefehle & Einheiten", page: "Ausb_Anfaenger.html" },
+                    { id: "B2", title: "Ressourcen-Management", page: "Ausb_Anfaenger.html" },
+                    { id: "B3", title: "Abschlusstest Grundausbildung", page: "Ausb_Anfaenger.html" }
+                ]
+            }
+        ];
+
         let html = "";
 
         categories.forEach((cat, index) => {
-            // cat enthält: { id, title, description, lessons: [{ id: "B1", title: "...", status: "green/yellow/red", linkPage: "..." }] }
-            
             let lessonsHTML = "<ul>";
+            
             if (cat.lessons && cat.lessons.length > 0) {
-                cat.lessons.forEach(lesson => {
-                    // lesson.status kommt direkt aus der Tabelle: "green" (bestanden), "yellow" (aktuell), "red" (gesperrt)
-                    let statusClass = lesson.status || "red"; 
+                cat.lessons.forEach((lesson, lessonIndex) => {
+                    // Logik: Wer das Level erreicht hat, kann es anklicken (Grün/Gelb), der Rest sieht es (Rot/Gesperrt)
+                    // Jeder kann alles einsehen, aber nur freigeschaltete Lektionen sind klickbar.
+                    let statusClass = "green"; // Standardmäßig sichtbar
+                    
+                    // Beispiel-Steuerung basierend auf dem Rang des Users in der Tabelle
+                    if (userRang.includes("grundausbildung") && lessonIndex > 0) {
+                        statusClass = lessonIndex === 1 ? "yellow" : "red";
+                    }
+
                     let statusLabel = statusClass === "green" ? "Bestanden ✓" : (statusClass === "yellow" ? "Aktuell ⚡" : "Gesperrt 🔒");
-                    let targetURL = statusClass === "red" ? "#" : `${lesson.linkPage || 'Ausb_Anfaenger.html'}?lektion=${lesson.id}`;
+                    let targetURL = statusClass === "red" ? "#" : `${lesson.page || 'Ausb_Anfaenger.html'}?lektion=${lesson.id}`;
 
                     lessonsHTML += `
                         <li class="lesson-item">
@@ -124,7 +148,7 @@
                         </li>`;
                 });
             } else {
-                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen hinterlegt.</li>`;
+                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen in der Tabelle gefunden.</li>`;
             }
             lessonsHTML += "</ul>";
 
@@ -136,7 +160,7 @@
                             <p>${cat.description || ''}</p>
                         </div>
                     </div>
-                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen aus der Tabelle anzeigen (${cat.lessons ? cat.lessons.length : 0}) ▼</button>
+                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen einsehen (${cat.lessons ? cat.lessons.length : 0}) ▼</button>
                     <div class="dropdown-content" id="drop-${cat.id || index}">
                         ${lessonsHTML}
                     </div>
