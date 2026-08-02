@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>DARK BULLS - AUSBILDUNG</title>
+    <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
     <script src="config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -11,30 +11,81 @@
             margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
         .container { 
-            width: 650px; background-color: #0f0f0f; border: 2px solid #333; 
+            width: 750px; background-color: #0f0f0f; border: 2px solid #333; 
             border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2); 
-            text-align: center;
+            box-sizing: border-box;
         }
-        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 3px; font-size: 32px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
-        .subtitle { color: #888; font-size: 18px; margin-bottom: 30px; }
-        .content-card {
-            background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: center; color: #f0b232; font-size: 18px;
-        }
-        .btn-back { display: block; margin-top: 30px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 16px; transition: 0.3s; }
+        h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
+        .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
+        
+        /* Ausbildungs-Karten im Ampel-Look */
+        .path-card { background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; transition: 0.3s; }
+        .path-info h3 { margin: 0 0 5px 0; font-size: 20px; }
+        .path-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
+        
+        /* Status Farben & Punkte */
+        .status-badge { display: flex; align-items: center; gap: 10px; font-weight: bold; text-transform: uppercase; font-size: 14px; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        
+        /* Zustände */
+        .green { border-color: #39d353; }
+        .green .dot { background: #39d353; box-shadow: 0 0 8px #39d353; }
+        .green-text { color: #39d353; }
+
+        .yellow { border-color: #f0b232; background: #18150a; }
+        .yellow .dot { background: #f0b232; box-shadow: 0 0 8px #f0b232; }
+        .yellow-text { color: #f0b232; }
+
+        .red { border-color: #444; opacity: 0.6; }
+        .red .dot { background: #ff3131; box-shadow: 0 0 8px #ff3131; }
+        .red-text { color: #ff3131; }
+
+        .blue { border-color: #3182ce; background: #0a121c; }
+        .blue .dot { background: #3182ce; box-shadow: 0 0 12px #3182ce; }
+        .blue-text { color: #3182ce; }
+
+        /* Buttons pro Karte */
+        .card-btn { padding: 10px 20px; border-radius: 6px; font-family: 'Almendra'; font-weight: bold; text-transform: uppercase; cursor: pointer; border: none; text-decoration: none; font-size: 14px; transition: 0.2s; text-align: center; }
+        .btn-green { background: #39d353; color: #000; }
+        .btn-green:hover { background: #2fb145; }
+        .btn-yellow { background: #f0b232; color: #000; }
+        .btn-yellow:hover { background: #d99f28; }
+        .btn-red { background: #222; color: #555; cursor: not-allowed; }
+        .btn-blue { background: #3182ce; color: #fff; }
+        .btn-blue:hover { background: #2b6cb0; }
+
+        /* Pop-up Modal für neue Inhalte in alten Rängen */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #121212; border: 2px solid #3182ce; padding: 30px; border-radius: 12px; width: 450px; text-align: center; box-shadow: 0 0 30px rgba(49, 130, 206, 0.4); }
+        .modal-content h3 { color: #3182ce; margin-top: 0; }
+        .modal-content p { font-family: sans-serif; font-size: 14px; color: #ccc; line-height: 1.5; }
+        .modal-btn { margin-top: 20px; padding: 10px 20px; background: #3182ce; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-family: 'Almendra'; font-size: 16px; font-weight: bold; }
+
+        .btn-back { display: block; margin-top: 30px; text-align: center; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; transition: 0.3s; }
         .btn-back:hover { color: #fff; }
     </style>
 </head>
-<body>
+<body onload="initTrainingOverview()">
 
 <div class="container">
     <h1>Akademie & Ausbildung</h1>
-    <div class="subtitle">Der Weg zum Elite-Mitglied</div>
+    <div class="subtitle" id="userSubtitle">Lade Ausbildungs-Protokoll...</div>
 
-    <div class="content-card" id="loadingText">
-        Prüfe Ausbildungs-Protokoll... 🔄
+    <!-- Die dynamische Liste aller Ausbildungsbereiche -->
+    <div id="pathList">
+        <!-- Wird per Script generiert -->
     </div>
 
     <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
+</div>
+
+<!-- Pop-up für neue Inhalte in bereits abgeschlossenen Rängen -->
+<div class="modal" id="updateModal">
+    <div class="modal-content">
+        <h3>⚠️ Neuigkeiten in der Akademie!</h3>
+        <p>Kommandant, in einem bereits abgeschlossenen Ausbildungsbereich wurden neue Taktiken oder Inhalte hinterlegt. Schau gerne vorbei, um dein Wissen aufzufrischen!</p>
+        <button class="modal-btn" onclick="closeModal()">Verstanden ⚔️</button>
+    </div>
 </div>
 
 <script>
@@ -43,31 +94,115 @@
 
     if (!playerName) {
         window.location.href = "index.html";
-    } else {
-        checkUserTrainingStatus();
     }
 
-    async function checkUserTrainingStatus() {
+    async function initTrainingOverview() {
         try {
+            // Wir holen den echten Status des Users vom Google Sheet
             let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}`);
             let data = await res.json();
             
-            let rang = data.currentRang || data.rang || "Grundausbildung";
-            
-            // Korrigiert von innerHTML zu innerText, damit kein Fehler auftritt
-            document.getElementById("loadingText").innerText = `Leite weiter zu: ${rang}...`;
+            let rang = (data.currentRang || data.rang || "Grundausbildung").toLowerCase();
+            document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Aktueller Status`;
 
-            if (rang.toLowerCase().includes("fortgeschritten")) {
-                window.location.href = "Ausb_Fortgeschritten.html";
-            } else if (rang.toLowerCase().includes("turnier")) {
-                window.location.href = "Ausb_Turnier.html";
-            } else {
-                window.location.href = "Ausb_Anfaenger.html";
-            }
+            buildTrainingList(rang);
 
         } catch (e) {
-            window.location.href = "Ausb_Anfaenger.html";
+            console.error("Fehler beim Laden des Status:", e);
+            // Fallback: Grundausbildung als aktiv annehmen, wenn offline/Fehler
+            buildTrainingList("grundausbildung");
         }
+    }
+
+    function buildTrainingList(userRang) {
+        const list = document.getElementById("pathList");
+        
+        // Logik für die Status-Ermittlung pro Bereich basierend auf dem User-Rang
+        // Zustände: 'green' (abgeschlossen), 'yellow' (aktuell aktiv), 'red' (gesperrt), 'blue' (Update in abgeschlossenem Bereich)
+        
+        let grundState = "green";
+        let fortState = "red";
+        let turnierState = "red";
+
+        // Beispiel-Zuordnung je nach Fortschritt
+        if (userRang.includes("grundausbildung")) {
+            grundState = "yellow";
+            fortState = "red";
+            turnierState = "red";
+        } else if (userRang.includes("fortgeschritten")) {
+            grundState = "green"; // oder "blue", falls ein Update kam
+            fortState = "yellow";
+            turnierState = "red";
+        } else if (userRang.includes("turnier") || userRang.includes("spezialeinheit")) {
+            grundState = "green";
+            fortState = "green";
+            turnierState = "yellow";
+        }
+
+        // HTML für die Grundausbildung
+        let grundCard = getCardHTML({
+            title: "Grundausbildung (Basis-Taktiken)",
+            desc: "Wichtige Abkürzungen, Befehle und grundlegende Spielmechaniken.",
+            state: grundState,
+            link: "Ausb_Anfaenger_Lernen.html?rang=Grundausbildung", // Hier hin verweist der Klick zum echten Lernen
+            btnText: grundState === "red" ? "Gesperrt 🔒" : "Öffnen 🔍"
+        });
+
+        // HTML für Fortgeschritten
+        let fortCard = getCardHTML({
+            title: "Fortgeschrittene Taktiken",
+            desc: "Koordination, Frontlinien-Management und erweiterte Manöver.",
+            state: fortState,
+            link: fortState === "red" ? "#" : "Ausb_Fortgeschritten.html",
+            btnText: fortState === "red" ? "Gesperrt 🔒" : (fortState === "yellow" ? "Fortsetzen ⚔️" : "Nachschlagen 🔍")
+        });
+
+        // HTML für Turnier / Spezialeinheit
+        let turnierCard = getCardHTML({
+            title: "Turnier & Spezialeinheit",
+            desc: "Streng vertraulich. Elite-Protokolle und Spezialoperationen.",
+            state: turnierState,
+            link: turnierState === "red" ? "#" : "Ausb_Turnier.html",
+            btnText: turnierState === "red" ? "Gesperrt 🔒" : (turnierState === "yellow" ? "Starten 🚀" : "Ansehen 🎖️")
+        });
+
+        list.innerHTML = grundCard + fortCard + turnierCard;
+
+        // Falls in einem abgeschlossenen Bereich ein Update vorliegt (Beispiel Blau-Status)
+        if (grundState === "blue") {
+            setTimeout(() => {
+                document.getElementById("updateModal").style.display = "flex";
+            }, 500);
+        }
+    }
+
+    function getCardHTML(data) {
+        let classColor = "";
+        let textColor = "";
+        
+        if (data.state === "green") { classColor = "green"; textColor = "green-text"; }
+        else if (data.state === "yellow") { classColor = "yellow"; textColor = "yellow-text"; }
+        else if (data.state === "blue") { classColor = "blue"; textColor = "blue-text"; }
+        else { classColor = "red"; textColor = "red-text"; }
+
+        let clickAction = data.state === "red" ? `onclick="alert('Dieser Bereich ist noch gesperrt! Schließe zuerst die vorherige Ausbildung ab.'); return false;"` : '';
+
+        return `
+            <div class="path-card ${classColor}">
+                <div class="path-info">
+                    <h3 class="${textColor}">${data.title}</h3>
+                    <p>${data.desc}</p>
+                </div>
+                <div class="status-badge">
+                    <span class="dot"></span>
+                    <a href="${data.link}" class="card-btn btn-${data.state === 'red' ? 'red' : (data.state === 'yellow' ? 'yellow' : (data.state === 'blue' ? 'blue' : 'green'))}" ${clickAction}>${data.btnText}</a>
+                </div>
+            </div>
+        `;
+    }
+
+    function closeModal() {
+        document.getElementById("updateModal").style.display = "none";
     }
 </script>
 
