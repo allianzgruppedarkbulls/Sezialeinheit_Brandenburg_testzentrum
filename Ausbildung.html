@@ -82,61 +82,39 @@
 
     async function initTrainingOverview() {
         try {
-            // 1. Fortschritt des Spielers holen
-            let progressRes = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}`);
-            let progressData = await progressRes.json().catch(() => ({}));
-            
-            let userRang = (progressData.currentRang || progressData.rang || "Grundausbildung").toLowerCase();
             document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Status-Übersicht`;
 
-            // 2. Struktur / Lektionen (wie B1, B2...) aus der Tabelle holen
-            let structureRes = await fetch(`${API}?action=getAllTrainingStructure`);
-            let structureData = await structureRes.json().catch(() => ({}));
+            // Holt die echten Daten direkt aus dem Google Sheet (inklusive User-Status pro Lektion)
+            let res = await fetch(`${API}?action=getTrainingData&user=${encodeURIComponent(playerName)}`);
+            let data = await res.json();
+            
+            if (!data || !data.categories || data.categories.length === 0) {
+                document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Keine Ausbildungsdaten in der Tabelle gefunden.</p>`;
+                return;
+            }
 
-            // Falls die API-Struktur als Objekt oder Array ankommt, sauber verarbeiten
-            renderTrainingUI(structureData, userRang);
+            renderTrainingUI(data.categories);
 
         } catch (e) {
             console.error("Fehler beim Laden der Tabellen-Daten:", e);
-            document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Fehler bei der Verbindung zum Server.</p>`;
+            document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Fehler bei der Verbindung zur Cloud-Tabelle.</p>`;
         }
     }
 
-    function renderTrainingUI(structure, userRang) {
+    function renderTrainingUI(categories) {
         const list = document.getElementById("pathList");
-        
-        // Fallback falls structure leer ist, damit man direkt sieht, wie es sich aufbaut
-        // Sobald dein Google Sheet `getAllTrainingStructure` bedient, greifen die Echtdaten aus der Tabelle.
-        let categories = structure.categories || [
-            {
-                id: "grundausbildung",
-                title: "Grundausbildung (Basis-Taktiken)",
-                description: "Grundlegende Befehle und Lektionen.",
-                lessons: [
-                    { id: "B1", title: "Grundbefehle & Einheiten", page: "Ausb_Anfaenger.html" },
-                    { id: "B2", title: "Ressourcen-Management", page: "Ausb_Anfaenger.html" },
-                    { id: "B3", title: "Abschlusstest Grundausbildung", page: "Ausb_Anfaenger.html" }
-                ]
-            }
-        ];
-
         let html = "";
 
         categories.forEach((cat, index) => {
             let lessonsHTML = "<ul>";
             
             if (cat.lessons && cat.lessons.length > 0) {
-                cat.lessons.forEach((lesson, lessonIndex) => {
-                    // Logik: Wer das Level erreicht hat, kann es anklicken (Grün/Gelb), der Rest sieht es (Rot/Gesperrt)
-                    // Jeder kann alles einsehen, aber nur freigeschaltete Lektionen sind klickbar.
-                    let statusClass = "green"; // Standardmäßig sichtbar
-                    
-                    // Beispiel-Steuerung basierend auf dem Rang des Users in der Tabelle
-                    if (userRang.includes("grundausbildung") && lessonIndex > 0) {
-                        statusClass = lessonIndex === 1 ? "yellow" : "red";
-                    }
-
+                cat.lessons.forEach(lesson => {
+                    // Der Status (green, yellow, red) kommt direkt aus der Cloud-Tabelle für diesen User
+                    let statusClass = lesson.status || "red"; 
                     let statusLabel = statusClass === "green" ? "Bestanden ✓" : (statusClass === "yellow" ? "Aktuell ⚡" : "Gesperrt 🔒");
+                    
+                    // Wer gesperrt ist (red), kann nicht klicken. Alle anderen schon.
                     let targetURL = statusClass === "red" ? "#" : `${lesson.page || 'Ausb_Anfaenger.html'}?lektion=${lesson.id}`;
 
                     lessonsHTML += `
@@ -148,7 +126,7 @@
                         </li>`;
                 });
             } else {
-                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen in der Tabelle gefunden.</li>`;
+                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen in dieser Kategorie eingetragen.</li>`;
             }
             lessonsHTML += "</ul>";
 
@@ -160,7 +138,7 @@
                             <p>${cat.description || ''}</p>
                         </div>
                     </div>
-                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen einsehen (${cat.lessons ? cat.lessons.length : 0}) ▼</button>
+                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen aus Tabelle einsehen (${cat.lessons ? cat.lessons.length : 0}) ▼</button>
                     <div class="dropdown-content" id="drop-${cat.id || index}">
                         ${lessonsHTML}
                     </div>
