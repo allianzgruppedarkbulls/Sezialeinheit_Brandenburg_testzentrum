@@ -18,56 +18,40 @@
         h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
         .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
         
-        /* Ausbildungs-Karten im Ampel-Look */
-        .path-wrapper { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; transition: 0.3s; }
-        .path-card { background: #121212; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .path-info h3 { margin: 0 0 5px 0; font-size: 20px; }
+        /* Ausbildungs-Karten */
+        .path-wrapper { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; transition: 0.3s; background: #121212; }
+        .path-card { padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .path-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
         .path-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
         
-        /* Dropdown / Accordion Bereich für Unterpunkte */
-        .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; color: #bbb; }
+        /* Dropdown Bereich für die echten Tabellen-Lektionen */
+        .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; }
         .dropdown-content ul { margin: 0; padding-left: 0; list-style: none; }
-        .dropdown-content li { margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Klickbare Unterpunkte-Links */
-        .lesson-link { color: #f0b232; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .lesson-link:hover { color: #fff; text-shadow: 0 0 5px rgba(240, 178, 50, 0.5); }
-        .lesson-link.locked { color: #555; cursor: not-allowed; pointer-events: none; }
-
-        /* Toggle Pfeil Button */
-        .toggle-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; display: block; width: 100%; text-align: center; padding: 8px; background: #151515; transition: 0.2s; }
-        .toggle-btn:hover { color: #fff; background: #1a1a1a; }
-
-        /* Status Farben & Punkte */
-        .status-badge { display: flex; align-items: center; gap: 10px; font-weight: bold; text-transform: uppercase; font-size: 14px; }
-        .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        /* Lektionen-Eintrag mit Ampel-Farbe statt Pin */
+        .lesson-item { 
+            margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 8px; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .lesson-link { text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: bold; transition: 0.2s; }
         
-        /* Zustände */
-        .path-wrapper.green { border-color: #39d353; }
-        .green .dot { background: #39d353; box-shadow: 0 0 8px #39d353; }
+        /* Ampel-Farben für die einzelnen Lektionen */
+        .lesson-link.green { color: #39d353; }
+        .lesson-link.green:hover { text-shadow: 0 0 5px #39d353; }
+        
+        .lesson-link.yellow { color: #f0b232; }
+        .lesson-link.yellow:hover { text-shadow: 0 0 5px #f0b232; }
+        
+        .lesson-link.red { color: #555; cursor: not-allowed; pointer-events: none; }
+
+        .status-text { font-size: 12px; font-weight: normal; text-transform: uppercase; }
         .green-text { color: #39d353; }
-
-        .path-wrapper.yellow { border-color: #f0b232; background: #18150a; }
-        .yellow .dot { background: #f0b232; box-shadow: 0 0 8px #f0b232; }
         .yellow-text { color: #f0b232; }
-
-        .path-wrapper.red { border-color: #444; opacity: 0.7; }
-        .red .dot { background: #ff3131; box-shadow: 0 0 8px #ff3131; }
         .red-text { color: #ff3131; }
 
-        .path-wrapper.blue { border-color: #3182ce; background: #0a121c; }
-        .blue .dot { background: #3182ce; box-shadow: 0 0 12px #3182ce; }
-        .blue-text { color: #3182ce; }
-
-        /* Buttons pro Karte */
-        .card-btn { padding: 10px 20px; border-radius: 6px; font-family: 'Almendra'; font-weight: bold; text-transform: uppercase; cursor: pointer; border: none; text-decoration: none; font-size: 14px; transition: 0.2s; text-align: center; }
-        .btn-green { background: #39d353; color: #000; }
-        .btn-green:hover { background: #2fb145; }
-        .btn-yellow { background: #f0b232; color: #000; }
-        .btn-yellow:hover { background: #d99f28; }
-        .btn-red { background: #222; color: #555; cursor: not-allowed; }
-        .btn-blue { background: #3182ce; color: #fff; }
-        .btn-blue:hover { background: #2b6cb0; }
+        /* Toggle Button */
+        .toggle-btn { background: #151515; border: none; color: #888; cursor: pointer; font-size: 14px; display: block; width: 100%; text-align: center; padding: 8px; transition: 0.2s; font-family: 'Almendra'; }
+        .toggle-btn:hover { color: #fff; background: #1a1a1a; }
 
         .btn-back { display: block; margin-top: 30px; text-align: center; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; transition: 0.3s; }
         .btn-back:hover { color: #fff; }
@@ -77,11 +61,11 @@
 
 <div class="container">
     <h1>Akademie & Ausbildung</h1>
-    <div class="subtitle" id="userSubtitle">Lade Ausbildungs-Protokoll aus Tabelle...</div>
+    <div class="subtitle" id="userSubtitle">Lade Echtdaten aus der Tabelle...</div>
 
-    <!-- Die dynamische Liste aller Ausbildungsbereiche -->
+    <!-- Dynamische Liste direkt aus dem Sheet -->
     <div id="pathList">
-        <!-- Wird per Script generiert -->
+        <p style="text-align: center; color: #666;">Verbinde mit der Datenbank...</p>
     </div>
 
     <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
@@ -97,146 +81,74 @@
 
     async function initTrainingOverview() {
         try {
-            // Fortschritt des Users abrufen
-            let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}`);
+            // Holt sowohl die Struktur (Kategorien & Lektionen wie B1, B2...) als auch den Fortschritt des Users aus dem Sheet
+            let res = await fetch(`${API}?action=getFullTrainingData&user=${encodeURIComponent(playerName)}`);
             let data = await res.json();
             
-            let rang = (data.currentRang || data.rang || "Grundausbildung").toLowerCase();
+            if (!data || !data.categories || data.categories.length === 0) {
+                document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Keine Ausbildungsdaten in der Tabelle gefunden.</p>`;
+                document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName}`;
+                return;
+            }
+
             document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Status-Übersicht`;
-
-            // Struktur & Lektionen direkt aus dem Google Sheet (z.B. B1, B2, B3...) abrufen
-            let structureRes = await fetch(`${API}?action=getAllTrainingStructure`);
-            let structureData = await structureRes.json().catch(() => ({}));
-
-            buildTrainingList(rang, structureData);
+            renderTrainingUI(data.categories);
 
         } catch (e) {
             console.error("Fehler beim Laden der Tabellen-Daten:", e);
-            buildTrainingList("grundausbildung", {});
+            document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Fehler bei der Verbindung zum Server.</p>`;
         }
     }
 
-    function buildTrainingList(userRang, structure) {
+    function renderTrainingUI(categories) {
         const list = document.getElementById("pathList");
-        
-        let grundState = "green";
-        let fortState = "red";
-        let turnierState = "red";
+        let html = "";
 
-        if (userRang.includes("grundausbildung")) {
-            grundState = "yellow";
-            fortState = "red";
-            turnierState = "red";
-        } else if (userRang.includes("fortgeschritten")) {
-            grundState = "green"; 
-            fortState = "yellow";
-            turnierState = "red";
-        } else if (userRang.includes("turnier") || userRang.includes("spezialeinheit")) {
-            grundState = "green";
-            fortState = "green";
-            turnierState = "yellow";
-        }
-
-        // Erwartet ein Array von Objekten aus dem Sheet: [{id: "B1", title: "Grundbefehle"}, {id: "B2", title: "Kartenkunde"}]
-        // Fallback falls die API-Struktur noch nicht komplett befüllt ist:
-        let grundItems = structure.grundausbildung || [
-            { id: "B1", title: "Grundbefehle & Einheiten" },
-            { id: "B2", title: "Ressourcen-Management" },
-            { id: "B3", title: "Abschlusstest Grundausbildung" }
-        ];
-        
-        let fortItems = structure.fortgeschritten || [
-            { id: "F1", title: "Frontlinien-Koordination" },
-            { id: "F2", title: "Großoffensiven Timing" },
-            { id: "F3", title: "Verteidigungswälle & Taktik" }
-        ];
-
-        let turnierItems = structure.turnier || [
-            { id: "T1", title: "Meta-Strategien & High-Tier" },
-            { id: "T2", title: "Spezialoperationen (Brandenburg)" }
-        ];
-
-        let grundCard = getCardHTML({
-            key: "grund",
-            title: "Grundausbildung (Basis-Taktiken)",
-            desc: "Grundlegende Spielmechaniken und Befehle aus der Tabelle.",
-            state: grundState,
-            link: "Ausb_Anfaenger.html?lektion=" + (grundItems[0]?.id || "B1"),
-            btnText: grundState === "red" ? "Gesperrt 🔒" : "Öffnen 🔍",
-            items: grundItems,
-            categoryPage: "Ausb_Anfaenger.html"
-        });
-
-        let fortCard = getCardHTML({
-            key: "fort",
-            title: "Fortgeschrittene Taktiken",
-            desc: "Erweiterte Manöver und Koordination.",
-            state: fortState,
-            link: fortState === "red" ? "#" : "Ausb_Fortgeschritten.html?lektion=" + (fortItems[0]?.id || "F1"),
-            btnText: fortState === "red" ? "Gesperrt 🔒" : (fortState === "yellow" ? "Fortsetzen ⚔️" : "Nachschlagen 🔍"),
-            items: fortItems,
-            categoryPage: "Ausb_Fortgeschritten.html"
-        });
-
-        let turnierCard = getCardHTML({
-            key: "turnier",
-            title: "Turnier & Spezialeinheit",
-            desc: "Streng vertraulich. Elite-Protokolle.",
-            state: turnierState,
-            link: turnierState === "red" ? "#" : "Ausb_Turnier.html?lektion=" + (turnierItems[0]?.id || "T1"),
-            btnText: turnierState === "red" ? "Gesperrt 🔒" : (turnierState === "yellow" ? "Starten 🚀" : "Ansehen 🎖️"),
-            items: turnierItems,
-            categoryPage: "Ausb_Turnier.html"
-        });
-
-        list.innerHTML = grundCard + fortCard + turnierCard;
-    }
-
-    function getCardHTML(data) {
-        let classColor = data.state;
-        let textColor = `${data.state}-text`;
-        
-        let clickAction = data.state === "red" ? `onclick="alert('Dieser Bereich ist noch gesperrt!'); return false;"` : '';
-
-        // Baue die Unterpunkte-Liste mit direkten Links zu B1, B2, F1, F2 usw.
-        let listHTML = "<ul>";
-        data.items.forEach(item => {
-            let isLocked = data.state === "red";
-            let linkClass = isLocked ? "lesson-link locked" : "lesson-link";
-            let targetURL = isLocked ? "#" : `${data.categoryPage}?lektion=${item.id}`;
+        categories.forEach((cat, index) => {
+            // cat enthält: { id, title, description, lessons: [{ id: "B1", title: "...", status: "green/yellow/red", linkPage: "..." }] }
             
-            listHTML += `
-                <li>
-                    <a href="${targetURL}" class="${linkClass}">
-                        <span>📌 <b>[${item.id}]</b> ${item.title}</span>
-                    </a>
-                    <span style="font-size: 12px; color: #666;">${isLocked ? 'Gesperrt' : 'Starten ➔'}</span>
-                </li>`;
-        });
-        listHTML += "</ul>";
+            let lessonsHTML = "<ul>";
+            if (cat.lessons && cat.lessons.length > 0) {
+                cat.lessons.forEach(lesson => {
+                    // lesson.status kommt direkt aus der Tabelle: "green" (bestanden), "yellow" (aktuell), "red" (gesperrt)
+                    let statusClass = lesson.status || "red"; 
+                    let statusLabel = statusClass === "green" ? "Bestanden ✓" : (statusClass === "yellow" ? "Aktuell ⚡" : "Gesperrt 🔒");
+                    let targetURL = statusClass === "red" ? "#" : `${lesson.linkPage || 'Ausb_Anfaenger.html'}?lektion=${lesson.id}`;
 
-        return `
-            <div class="path-wrapper ${classColor}">
-                <div class="path-card">
-                    <div class="path-info">
-                        <h3 class="${textColor}">${data.title}</h3>
-                        <p>${data.desc}</p>
+                    lessonsHTML += `
+                        <li class="lesson-item">
+                            <a href="${targetURL}" class="lesson-link ${statusClass}">
+                                <span>[${lesson.id}] ${lesson.title}</span>
+                            </a>
+                            <span class="status-text ${statusClass}-text">${statusLabel}</span>
+                        </li>`;
+                });
+            } else {
+                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen hinterlegt.</li>`;
+            }
+            lessonsHTML += "</ul>";
+
+            html += `
+                <div class="path-wrapper">
+                    <div class="path-card">
+                        <div class="path-info">
+                            <h3>${cat.title}</h3>
+                            <p>${cat.description || ''}</p>
+                        </div>
                     </div>
-                    <div class="status-badge">
-                        <span class="dot"></span>
-                        <a href="${data.link}" class="card-btn btn-${data.state === 'red' ? 'red' : (data.state === 'yellow' ? 'yellow' : 'green')}" ${clickAction}>${data.btnText}</a>
+                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen aus der Tabelle anzeigen (${cat.lessons ? cat.lessons.length : 0}) ▼</button>
+                    <div class="dropdown-content" id="drop-${cat.id || index}">
+                        ${lessonsHTML}
                     </div>
                 </div>
-                <button class="toggle-btn" onclick="toggleDropdown('${data.key}')">▼ ${data.items.length} Lektionen aus der Tabelle anzeigen ▼</button>
-                <div class="dropdown-content" id="drop-${data.key}">
-                    ${listHTML}
-                </div>
-            </div>
-        `;
+            `;
+        });
+
+        list.innerHTML = html;
     }
 
-    function toggleDropdown(key) {
-        let content = document.getElementById(`drop-${key}`);
+    function toggleDropdown(id) {
+        let content = document.getElementById(`drop-${id}`);
         content.style.display = content.style.display === "block" ? "none" : "block";
     }
 </script>
