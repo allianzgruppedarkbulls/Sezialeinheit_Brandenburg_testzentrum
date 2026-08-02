@@ -1,342 +1,136 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
-    <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="s<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
-    <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { 
-            background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; 
-            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-        .container { 
-            width: 750px; background-color: #0f0f0f; border: 2px solid #333; 
-            border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2); 
-            box-sizing: border-box;
-        }
-        h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
-        .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
-        
-        /* Ausbildungs-Karten */
-        .path-wrapper { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; transition: 0.3s; background: #121212; }
-        .path-card { padding: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .path-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
-        .path-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
-        
-        /* Dropdown Bereich */
-        .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; }
-        .dropdown-content ul { margin: 0; padding-left: 0; list-style: none; }
-        
-        /* Lektionen-Eintrag */
-        .lesson-item { 
-            margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 8px; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .lesson-link { text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: bold; transition: 0.2s; }
-        
-        /* Ampel-Farben & Klickbarkeit */
-        .lesson-link.green { color: #39d353; }
-        .lesson-link.green:hover { text-shadow: 0 0 5px #39d353; }
-        
-        .lesson-link.yellow { color: #f0b232; }
-        .lesson-link.yellow:hover { text-shadow: 0 0 5px #f0b232; }
-        
-        /* Jeder kann es sehen, aber gesperrte sind grau und nicht anklickbar */
-        .lesson-link.red { color: #555; cursor: not-allowed; pointer-events: none; }
+  <meta charset="UTF-8">
+  <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
+  <script src="config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #050505; color: #ffffff; font-family: 'Almendra', serif;
+      margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    }
+    .container {
+      width: 750px; background-color: #0f0f0f; border: 2px solid #333;
+      border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2);
+      box-sizing: border-box;
+    }
+    h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
+    .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
 
-        .status-text { font-size: 12px; font-weight: normal; text-transform: uppercase; }
-        .green-text { color: #39d353; }
-        .yellow-text { color: #f0b232; }
-        .red-text { color: #ff3131; }
+    .path-wrapper { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; background: #121212; }
+    .path-card { padding: 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .path-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
+    .path-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
 
-        /* Toggle Button */
-        .toggle-btn { background: #151515; border: none; color: #888; cursor: pointer; font-size: 14px; display: block; width: 100%; text-align: center; padding: 8px; transition: 0.2s; font-family: 'Almendra'; }
-        .toggle-btn:hover { color: #fff; background: #1a1a1a; }
+    .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; }
+    .dropdown-content ul { margin: 0; padding-left: 0; list-style: none; }
 
-        /* Debug Box für die Rohdaten im Fehlerfall */
-        #debugBox { background: #1a0000; border: 1px dashed #ff3131; padding: 10px; margin-top: 15px; font-family: monospace; font-size: 11px; color: #ff9999; display: none; white-space: pre-wrap; word-break: break-all; }
-
-        .btn-back { display: block; margin-top: 30px; text-align: center; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; transition: 0.3s; }
-        .btn-back:hover { color: #fff; }
-    </style>
+    .lesson-item {
+      margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .lesson-link { text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: bold; color: #39d353; }
+    .lesson-link:hover { text-shadow: 0 0 5px #39d353; }
+    
+    .btn-back {
+      display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
+      border: 1px solid #444; color: #888; padding: 12px; font-family: 'Almendra', serif; font-size: 16px;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 5px; text-decoration: none;
+    }
+    .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
+  </style>
 </head>
-<body onload="initTrainingOverview()">
+<body>
 
-<div class="container">
+  <div class="container">
     <h1>Akademie & Ausbildung</h1>
-    <div class="subtitle" id="userSubtitle">Lade Echtdaten aus der Tabelle...</div>
+    <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
 
-    <!-- Dynamische Liste direkt aus dem Sheet -->
-    <div id="pathList">
-        <p style="text-align: center; color: #666;">Verbinde mit der Cloud-Tabelle...</p>
+    <div id="academy-container">
+      <p style="text-align: center; color: #888;">Lade Echtdaten aus der Tabelle...</p>
     </div>
 
-    <!-- Falls was schiefleuchtet, sehen wir hier direkt den API-Inhalt -->
-    <div id="debugBox"></div>
+    <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
+  </div>
 
-    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
-</div>
-
-<script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
-    const playerName = localStorage.getItem("bulls_user");
-
-    if (!playerName) {
-        window.location.href = "index.html";
+  <script>
+    // Globale API-Variable sicher definiert (verhindert 'Identifier has already been declared')
+    if (typeof API_BASE_URL === 'undefined') {
+      var API_BASE_URL = "https://script.google.com/macros/s/AKfycby.../exec"; // Deine Web-App URL einfügen
     }
 
-    async function initTrainingOverview() {
-        try {
-            document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Status-Übersicht`;
+    document.addEventListener("DOMContentLoaded", function() {
+      loadAcademyData();
+    });
 
-            let url = `${API}?action=getTrainingData&user=${encodeURIComponent(playerName)}`;
-            let res = await fetch(url);
-            let rawText = await res.text();
-            
-            let data;
-            try {
-                data = JSON.parse(rawText);
-            } catch (jsonErr) {
-                console.error("Kein gültiges JSON erhalten:", rawText);
-                showDebugError("API hat kein valides JSON zurückgegeben:\n" + rawText);
-                return;
-            }
+    function loadAcademyData() {
+      fetch(API_BASE_URL + "?action=getTrainingData")
+        .then(response => response.json())
+        .then(data => {
+          var container = document.getElementById("academy-container");
+          container.innerHTML = "";
 
-            // Wenn das Objekt 'categories' fehlt, zeigen wir die Rohdaten im Debug-Fenster an, damit wir sehen, wie das Sheet antwortet
-            if (!data || (!data.categories && !Array.isArray(data))) {
-                showDebugError("Antwort der API erhalten, aber das Format stimmt nicht.\nEmpfangene Daten:\n" + JSON.stringify(data, null, 2));
-                return;
-            }
+          if (!data.categories || data.categories.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#ff3131;'>Keine Lehrgänge gefunden.</p>";
+            return;
+          }
 
-            // Falls das Sheet ein direktes Array statt { categories: [...] } zurückgibt
-            let categories = data.categories || data;
-            renderTrainingUI(categories);
+          data.categories.forEach(cat => {
+            var wrapper = document.createElement("div");
+            wrapper.className = "path-wrapper";
 
-        } catch (e) {
-            console.error("Netzwerkfehler:", e);
-            showDebugError("Verbindungsfehler zur API: " + e.message);
-        }
-    }
+            var count = cat.lessons ? cat.lessons.length : 0;
 
-    function showDebugError(msg) {
-        document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Keine Ausbildungsdaten in der Tabelle gefunden.</p>`;
-        let dbg = document.getElementById("debugBox");
-        dbg.style.display = "block";
-        dbg.innerText = msg;
-    }
-
-    function renderTrainingUI(categories) {
-        const list = document.getElementById("pathList");
-        let html = "";
-
-        categories.forEach((cat, index) => {
-            let lessonsHTML = "<ul>";
-            let lessons = cat.lessons || cat.items || [];
-            
-            if (lessons.length > 0) {
-                lessons.forEach(lesson => {
-                    let statusClass = lesson.status || "red"; 
-                    let statusLabel = statusClass === "green" ? "Bestanden ✓" : (statusClass === "yellow" ? "Aktuell ⚡" : "Gesperrt 🔒");
-                    
-                    // Klickbar nur wenn nicht gesperrt
-                    let targetURL = statusClass === "red" ? "#" : `${lesson.page || 'Ausb_Anfaenger.html'}?lektion=${lesson.id || lesson.name}`;
-
-                    lessonsHTML += `
-                        <li class="lesson-item">
-                            <a href="${targetURL}" class="lesson-link ${statusClass}">
-                                <span>[${lesson.id || lesson.name}] ${lesson.title || lesson.text || ''}</span>
-                            </a>
-                            <span class="status-text ${statusClass}-text">${statusLabel}</span>
-                        </li>`;
-                });
-            } else {
-                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen eingetragen.</li>`;
-            }
-            lessonsHTML += "</ul>";
-
-            html += `
-                <div class="path-wrapper">
-                    <div class="path-card">
-                        <div class="path-info">
-                            <h3>${cat.title || cat.name || 'Ausbildung'}</h3>
-                            <p>${cat.description || ''}</p>
-                        </div>
-                    </div>
-                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen aus Tabelle einsehen (${lessons.length}) ▼</button>
-                    <div class="dropdown-content" id="drop-${cat.id || index}">
-                        ${lessonsHTML}
-                    </div>
-                </div>
+            var card = document.createElement("div");
+            card.className = "path-card";
+            card.innerHTML = `
+              <div class="path-info">
+                <h3>${cat.title}</h3>
+                <p>▼ Lektionen aus Tabelle einsehen (${count}) ▼</p>
+              </div>
             `;
-        });
 
-        list.innerHTML = html;
-    }
-
-    function toggleDropdown(id) {
-        let content = document.getElementById(`drop-${id}`);
-        content.style.display = content.style.display === "block" ? "none" : "block";
-    }
-</script>
-
-</body>
-</html>ylesheet">
-    <style>
-        body { 
-            background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; 
-            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-        .container { 
-            width: 750px; background-color: #0f0f0f; border: 2px solid #333; 
-            border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2); 
-            box-sizing: border-box;
-        }
-        h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
-        .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
-        
-        /* Ausbildungs-Karten */
-        .path-wrapper { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; transition: 0.3s; background: #121212; }
-        .path-card { padding: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .path-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
-        .path-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
-        
-        /* Dropdown Bereich für die echten Tabellen-Lektionen */
-        .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; }
-        .dropdown-content ul { margin: 0; padding-left: 0; list-style: none; }
-        
-        /* Lektionen-Eintrag mit Ampel-Farbe */
-        .lesson-item { 
-            margin-bottom: 8px; border-bottom: 1px solid #151515; padding-bottom: 8px; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .lesson-link { text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: bold; transition: 0.2s; }
-        
-        /* Ampel-Farben & Klickbarkeit */
-        .lesson-link.green { color: #39d353; }
-        .lesson-link.green:hover { text-shadow: 0 0 5px #39d353; }
-        
-        .lesson-link.yellow { color: #f0b232; }
-        .lesson-link.yellow:hover { text-shadow: 0 0 5px #f0b232; }
-        
-        /* Jeder kann es sehen, aber gesperrte sind grau und nicht anklickbar */
-        .lesson-link.red { color: #555; cursor: not-allowed; pointer-events: none; }
-
-        .status-text { font-size: 12px; font-weight: normal; text-transform: uppercase; }
-        .green-text { color: #39d353; }
-        .yellow-text { color: #f0b232; }
-        .red-text { color: #ff3131; }
-
-        /* Toggle Button */
-        .toggle-btn { background: #151515; border: none; color: #888; cursor: pointer; font-size: 14px; display: block; width: 100%; text-align: center; padding: 8px; transition: 0.2s; font-family: 'Almendra'; }
-        .toggle-btn:hover { color: #fff; background: #1a1a1a; }
-
-        .btn-back { display: block; margin-top: 30px; text-align: center; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; transition: 0.3s; }
-        .btn-back:hover { color: #fff; }
-    </style>
-</head>
-<body onload="initTrainingOverview()">
-
-<div class="container">
-    <h1>Akademie & Ausbildung</h1>
-    <div class="subtitle" id="userSubtitle">Lade Echtdaten aus der Tabelle...</div>
-
-    <!-- Dynamische Liste direkt aus dem Sheet -->
-    <div id="pathList">
-        <p style="text-align: center; color: #666;">Verbinde mit der Datenbank...</p>
-    </div>
-
-    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
-</div>
-
-<script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
-    const playerName = localStorage.getItem("bulls_user");
-
-    if (!playerName) {
-        window.location.href = "index.html";
-    }
-
-    async function initTrainingOverview() {
-        try {
-            document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Status-Übersicht`;
-
-            // Holt die echten Daten direkt aus dem Google Sheet (inklusive User-Status pro Lektion)
-            let res = await fetch(`${API}?action=getTrainingData&user=${encodeURIComponent(playerName)}`);
-            let data = await res.json();
+            var dropdown = document.createElement("div");
+            dropdown.className = "dropdown-content";
             
-            if (!data || !data.categories || data.categories.length === 0) {
-                document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Keine Ausbildungsdaten in der Tabelle gefunden.</p>`;
-                return;
-            }
-
-            renderTrainingUI(data.categories);
-
-        } catch (e) {
-            console.error("Fehler beim Laden der Tabellen-Daten:", e);
-            document.getElementById("pathList").innerHTML = `<p style="text-align: center; color: #ff3131;">Fehler bei der Verbindung zur Cloud-Tabelle.</p>`;
-        }
-    }
-
-    function renderTrainingUI(categories) {
-        const list = document.getElementById("pathList");
-        let html = "";
-
-        categories.forEach((cat, index) => {
-            let lessonsHTML = "<ul>";
-            
-            if (cat.lessons && cat.lessons.length > 0) {
-                cat.lessons.forEach(lesson => {
-                    // Der Status (green, yellow, red) kommt direkt aus der Cloud-Tabelle für diesen User
-                    let statusClass = lesson.status || "red"; 
-                    let statusLabel = statusClass === "green" ? "Bestanden ✓" : (statusClass === "yellow" ? "Aktuell ⚡" : "Gesperrt 🔒");
-                    
-                    // Wer gesperrt ist (red), kann nicht klicken. Alle anderen schon.
-                    let targetURL = statusClass === "red" ? "#" : `${lesson.page || 'Ausb_Anfaenger.html'}?lektion=${lesson.id}`;
-
-                    lessonsHTML += `
-                        <li class="lesson-item">
-                            <a href="${targetURL}" class="lesson-link ${statusClass}">
-                                <span>[${lesson.id}] ${lesson.title}</span>
-                            </a>
-                            <span class="status-text ${statusClass}-text">${statusLabel}</span>
-                        </li>`;
-                });
+            var ul = document.createElement("ul");
+            if (count > 0) {
+              cat.lessons.forEach(lesson => {
+                var li = document.createElement("li");
+                li.className = "lesson-item";
+                li.innerHTML = `
+                  <a href="${lesson.page}?lektion=${encodeURIComponent(lesson.title)}" class="lesson-link">
+                    ${lesson.title}
+                  </a>
+                  <span style="color: #39d353; font-size: 12px; font-family: sans-serif;">BEREIT ✓</span>
+                `;
+                ul.appendChild(li);
+              });
             } else {
-                lessonsHTML += `<li style="color: #666; text-align: center; padding: 5px;">Keine Lektionen in dieser Kategorie eingetragen.</li>`;
+              ul.innerHTML = "<li style='color:#888;'>Keine Lektionen eingetragen.</li>";
             }
-            lessonsHTML += "</ul>";
+            dropdown.appendChild(ul);
 
-            html += `
-                <div class="path-wrapper">
-                    <div class="path-card">
-                        <div class="path-info">
-                            <h3>${cat.title}</h3>
-                            <p>${cat.description || ''}</p>
-                        </div>
-                    </div>
-                    <button class="toggle-btn" onclick="toggleDropdown('${cat.id || index}')">▼ Lektionen aus Tabelle einsehen (${cat.lessons ? cat.lessons.length : 0}) ▼</button>
-                    <div class="dropdown-content" id="drop-${cat.id || index}">
-                        ${lessonsHTML}
-                    </div>
-                </div>
-            `;
+            // Aufklapp-Logik
+            card.addEventListener("click", function() {
+              if (dropdown.style.display === "block") {
+                dropdown.style.display = "none";
+              } else {
+                dropdown.style.display = "block";
+              }
+            });
+
+            wrapper.appendChild(card);
+            wrapper.appendChild(dropdown);
+            container.appendChild(wrapper);
+          });
+        })
+        .catch(err => {
+          console.error("Fehler beim Laden:", err);
+          document.getElementById("academy-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler beim Laden der Echtdaten.</p>";
         });
-
-        list.innerHTML = html;
     }
-
-    function toggleDropdown(id) {
-        let content = document.getElementById(`drop-${id}`);
-        content.style.display = content.style.display === "block" ? "none" : "block";
-    }
-</script>
-
+  </script>
 </body>
 </html>
