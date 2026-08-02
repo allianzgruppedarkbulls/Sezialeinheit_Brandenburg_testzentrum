@@ -32,6 +32,9 @@
     }
     .lesson-link { text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: bold; color: #39d353; }
     .lesson-link:hover { text-shadow: 0 0 5px #39d353; }
+    .lesson-status { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+    .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); }
+    .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); }
     
     .btn-back {
       display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
@@ -55,81 +58,90 @@
   </div>
 
   <script>
-    // Globale API-Variable sicher definiert (verhindert 'Identifier has already been declared')
     if (typeof API_BASE_URL === 'undefined') {
-      var API_BASE_URL = "https://script.google.com/macros/s/AKfycby.../exec"; // Deine Web-App URL einfügen
+      var API_BASE_URL = "HIER_DEINE_ECHTE_APPS_SCRIPT_URL_EINTRAGEN"; 
     }
 
+    var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian"; 
+
     document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("user-header").innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
       loadAcademyData();
     });
 
     function loadAcademyData() {
-      fetch(API_BASE_URL + "?action=getTrainingData")
-        .then(response => response.json())
-        .then(data => {
-          var container = document.getElementById("academy-container");
-          container.innerHTML = "";
+      Promise.all([
+        fetch(API_BASE_URL + "?action=getTrainingData").then(res => res.json()),
+        fetch(API_BASE_URL + "?action=getTrainingProgress&user=" + encodeURIComponent(currentPlayer)).then(res => res.json()).catch(() => ({}))
+      ])
+      .then(([trainingData, progressData]) => {
+        var container = document.getElementById("academy-container");
+        container.innerHTML = "";
 
-          if (!data.categories || data.categories.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#ff3131;'>Keine Lehrgänge gefunden.</p>";
-            return;
-          }
+        // Die 3 separaten Bereiche, wie von dir gewünscht
+        var keys = [
+          { key: "grundausbildung", fallbackTitle: "Grundausbildung (Basis-Taktiken)" },
+          { key: "fortgeschritten", fallbackTitle: "Fortgeschrittene Taktiken" },
+          { key: "turnier", fallbackTitle: "Turnier & Spezialeinheit" }
+        ];
 
-          data.categories.forEach(cat => {
-            var wrapper = document.createElement("div");
-            wrapper.className = "path-wrapper";
+        keys.forEach(kObj => {
+          var cat = trainingData[kObj.key] || { title: kObj.fallbackTitle, lessons: [] };
+          var wrapper = document.createElement("div");
+          wrapper.className = "path-wrapper";
 
-            var count = cat.lessons ? cat.lessons.length : 0;
+          var lessons = cat.lessons || [];
+          var count = lessons.length;
 
-            var card = document.createElement("div");
-            card.className = "path-card";
-            card.innerHTML = `
-              <div class="path-info">
-                <h3>${cat.title}</h3>
-                <p>▼ Lektionen aus Tabelle einsehen (${count}) ▼</p>
-              </div>
-            `;
+          var card = document.createElement("div");
+          card.className = "path-card";
+          card.innerHTML = `
+            <div class="path-info">
+              <h3>${cat.title || kObj.fallbackTitle}</h3>
+              <p>▼ Lektionen aus Tabelle einsehen (${count}) ▼</p>
+            </div>
+          `;
 
-            var dropdown = document.createElement("div");
-            dropdown.className = "dropdown-content";
-            
-            var ul = document.createElement("ul");
-            if (count > 0) {
-              cat.lessons.forEach(lesson => {
-                var li = document.createElement("li");
-                li.className = "lesson-item";
-                li.innerHTML = `
-                  <a href="${lesson.page}?lektion=${encodeURIComponent(lesson.title)}" class="lesson-link">
-                    ${lesson.title}
-                  </a>
-                  <span style="color: #39d353; font-size: 12px; font-family: sans-serif;">BEREIT ✓</span>
-                `;
-                ul.appendChild(li);
-              });
-            } else {
-              ul.innerHTML = "<li style='color:#888;'>Keine Lektionen eingetragen.</li>";
-            }
-            dropdown.appendChild(ul);
+          var dropdown = document.createElement("div");
+          dropdown.className = "dropdown-content";
+          
+          var ul = document.createElement("ul");
+          if (count > 0) {
+            lessons.forEach(lesson => {
+              // Echten Status aus Protokoll prüfen (z.B. ob Status "Bestanden" ist, ansonsten "Offen")
+              var isPassed = (progressData.status === "Bestanden" || progressData[lesson.title] === "Bestanden");
+              var statusText = isPassed ? "BESTANDEN ✓" : "OFFEN";
+              var statusClass = isPassed ? "status-passed" : "status-open";
 
-            // Aufklapp-Logik
-            card.addEventListener("click", function() {
-              if (dropdown.style.display === "block") {
-                dropdown.style.display = "none";
-              } else {
-                dropdown.style.display = "block";
-              }
+              var li = document.createElement("div");
+              li.className, "lesson-item";
+              li.innerHTML = `
+                <a href="${lesson.page || 'Ausb_Anfaenger.html'}?lektion=${encodeURIComponent(lesson.title)}" class="lesson-link">
+                  ${lesson.title}
+                </a>
+                <span class="lesson-status ${statusClass}">${statusText}</span>
+              `;
+              ul.appendChild(li);
             });
+          } else {
+            ul.innerHTML = "<li style='color:#888; font-family:sans-serif; padding:5px 0;'>Keine Lektionen eingetragen (Bereich leer).</li>";
+          }
+          dropdown.appendChild(ul);
 
-            wrapper.appendChild(card);
-            wrapper.appendChild(dropdown);
-            container.appendChild(wrapper);
+          // Aufklapp-Funktion per Klick
+          card.addEventListener("click", function() {
+            dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
           });
-        })
-        .catch(err => {
-          console.error("Fehler beim Laden:", err);
-          document.getElementById("academy-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler beim Laden der Echtdaten.</p>";
+
+          wrapper.appendChild(card);
+          wrapper.appendChild(dropdown);
+          container.appendChild(wrapper);
         });
+      })
+      .catch(err => {
+        console.error("Fehler beim Laden:", err);
+        document.getElementById("academy-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler beim Laden der Echtdaten.</p>";
+      });
     }
   </script>
 </body>
