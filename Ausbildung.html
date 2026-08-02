@@ -19,28 +19,38 @@
         .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
         
         /* Ausbildungs-Karten im Ampel-Look */
-        .path-card { background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; transition: 0.3s; }
+        .path-wrapper { margin-bottom: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #333; transition: 0.3s; }
+        .path-card { background: #121212; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
         .path-info h3 { margin: 0 0 5px 0; font-size: 20px; }
         .path-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
         
+        /* Dropdown / Accordion Bereich für Unterpunkte */
+        .dropdown-content { background: #0a0a0a; border-top: 1px solid #222; padding: 15px 20px; display: none; font-family: sans-serif; font-size: 14px; color: #bbb; }
+        .dropdown-content ul { margin: 0; padding-left: 20px; }
+        .dropdown-content li { margin-bottom: 6px; }
+        
+        /* Toggle Pfeil Button */
+        .toggle-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; display: block; width: 100%; text-align: center; padding: 5px; background: #151515; transition: 0.2s; }
+        .toggle-btn:hover { color: #fff; background: #1a1a1a; }
+
         /* Status Farben & Punkte */
         .status-badge { display: flex; align-items: center; gap: 10px; font-weight: bold; text-transform: uppercase; font-size: 14px; }
         .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         
         /* Zustände */
-        .green { border-color: #39d353; }
+        .path-wrapper.green { border-color: #39d353; }
         .green .dot { background: #39d353; box-shadow: 0 0 8px #39d353; }
         .green-text { color: #39d353; }
 
-        .yellow { border-color: #f0b232; background: #18150a; }
+        .path-wrapper.yellow { border-color: #f0b232; background: #18150a; }
         .yellow .dot { background: #f0b232; box-shadow: 0 0 8px #f0b232; }
         .yellow-text { color: #f0b232; }
 
-        .red { border-color: #444; opacity: 0.6; }
+        .path-wrapper.red { border-color: #444; opacity: 0.7; }
         .red .dot { background: #ff3131; box-shadow: 0 0 8px #ff3131; }
         .red-text { color: #ff3131; }
 
-        .blue { border-color: #3182ce; background: #0a121c; }
+        .path-wrapper.blue { border-color: #3182ce; background: #0a121c; }
         .blue .dot { background: #3182ce; box-shadow: 0 0 12px #3182ce; }
         .blue-text { color: #3182ce; }
 
@@ -54,7 +64,7 @@
         .btn-blue { background: #3182ce; color: #fff; }
         .btn-blue:hover { background: #2b6cb0; }
 
-        /* Pop-up Modal für neue Inhalte in alten Rängen */
+        /* Pop-up Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: #121212; border: 2px solid #3182ce; padding: 30px; border-radius: 12px; width: 450px; text-align: center; box-shadow: 0 0 30px rgba(49, 130, 206, 0.4); }
         .modal-content h3 { color: #3182ce; margin-top: 0; }
@@ -79,11 +89,11 @@
     <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
 </div>
 
-<!-- Pop-up für neue Inhalte in bereits abgeschlossenen Rängen -->
+<!-- Pop-up für neue Inhalte -->
 <div class="modal" id="updateModal">
     <div class="modal-content">
         <h3>⚠️ Neuigkeiten in der Akademie!</h3>
-        <p>Kommandant, in einem bereits abgeschlossenen Ausbildungsbereich wurden neue Taktiken oder Inhalte hinterlegt. Schau gerne vorbei, um dein Wissen aufzufrischen!</p>
+        <p>Kommandant, in einem bereits abgeschlossenen Ausbildungsbereich wurden neue Taktiken hinterlegt. Schau gerne vorbei!</p>
         <button class="modal-btn" onclick="closeModal()">Verstanden ⚔️</button>
     </div>
 </div>
@@ -98,23 +108,25 @@
 
     async function initTrainingOverview() {
         try {
-            // Wir holen den echten Status des Users vom Google Sheet
             let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}`);
             let data = await res.json();
             
             let rang = (data.currentRang || data.rang || "Grundausbildung").toLowerCase();
-            document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Aktueller Status`;
+            document.getElementById("userSubtitle").innerText = `Kommandant: ${playerName} | Status-Übersicht`;
 
-            buildTrainingList(rang);
+            // Wir holen zusätzlich die Dynamischen Unterpunkte/Überschriften für die Akkordeons ab
+            let structureRes = await fetch(`${API}?action=getAllTrainingStructure`);
+            let structureData = await structureRes.json().catch(() => ({}));
+
+            buildTrainingList(rang, structureData);
 
         } catch (e) {
             console.error("Fehler beim Laden des Status:", e);
-            // Fallback: Grundausbildung als aktiv annehmen, wenn offline/Fehler
-            buildTrainingList("grundausbildung");
+            buildTrainingList("grundausbildung", {});
         }
     }
 
-    function buildTrainingList(userRang) {
+    function buildTrainingList(userRang, structure) {
         const list = document.getElementById("pathList");
         
         let grundState = "green";
@@ -135,31 +147,39 @@
             turnierState = "yellow";
         }
 
-        // HTML für die Grundausbildung (Verweist auf die Lern-Ansicht)
+        // Beispiel-Daten aus dem Sheet für die Aufklapp-Listen (mit Fallbacks falls das Sheet leer ist)
+        let grundItems = structure.grundausbildung || ["Basis-Befehle & Abkürzungen", "Karten-Navigation", "Abschluss-Prüfung"];
+        let fortItems = structure.fortgeschritten || ["Frontlinien-Koordination", "Großoffensiven Timing", "Verteidigungswälle"];
+        let turnierItems = structure.turnier || ["Meta-Strategien", "High-Tier Taktiken", "Spezialoperationen"];
+
         let grundCard = getCardHTML({
+            id: "grund",
             title: "Grundausbildung (Basis-Taktiken)",
             desc: "Wichtige Abkürzungen, Befehle und grundlegende Spielmechaniken.",
             state: grundState,
             link: "Ausb_Anfaenger.html?rang=Grundausbildung", 
-            btnText: grundState === "red" ? "Gesperrt 🔒" : "Öffnen 🔍"
+            btnText: grundState === "red" ? "Gesperrt 🔒" : "Öffnen 🔍",
+            items: grundItems
         });
 
-        // HTML für Fortgeschritten
         let fortCard = getCardHTML({
+            id: "fort",
             title: "Fortgeschrittene Taktiken",
             desc: "Koordination, Frontlinien-Management und erweiterte Manöver.",
             state: fortState,
             link: fortState === "red" ? "#" : "Ausb_Fortgeschritten.html",
-            btnText: fortState === "red" ? "Gesperrt 🔒" : (fortState === "yellow" ? "Fortsetzen ⚔️" : "Nachschlagen 🔍")
+            btnText: fortState === "red" ? "Gesperrt 🔒" : (fortState === "yellow" ? "Fortsetzen ⚔️" : "Nachschlagen 🔍"),
+            items: fortItems
         });
 
-        // HTML für Turnier / Spezialeinheit
         let turnierCard = getCardHTML({
+            id: "turnier",
             title: "Turnier & Spezialeinheit",
             desc: "Streng vertraulich. Elite-Protokolle und Spezialoperationen.",
             state: turnierState,
             link: turnierState === "red" ? "#" : "Ausb_Turnier.html",
-            btnText: turnierState === "red" ? "Gesperrt 🔒" : (turnierState === "yellow" ? "Starten 🚀" : "Ansehen 🎖️")
+            btnText: turnierState === "red" ? "Gesperrt 🔒" : (turnierState === "yellow" ? "Starten 🚀" : "Ansehen 🎖️"),
+            items: turnierItems
         });
 
         list.innerHTML = grundCard + fortCard + turnierCard;
@@ -172,28 +192,45 @@
     }
 
     function getCardHTML(data) {
-        let classColor = "";
-        let textColor = "";
+        let classColor = data.state;
+        let textColor = `${data.state}-text`;
         
-        if (data.state === "green") { classColor = "green"; textColor = "green-text"; }
-        else if (data.state === "yellow") { classColor = "yellow"; textColor = "yellow-text"; }
-        else if (data.state === "blue") { classColor = "blue"; textColor = "blue-text"; }
-        else { classColor = "red"; textColor = "red-text"; }
-
         let clickAction = data.state === "red" ? `onclick="alert('Dieser Bereich ist noch gesperrt! Schließe zuerst die vorherige Ausbildung ab.'); return false;"` : '';
 
+        // Baue die Unterpunkte als Liste für das Akkordeon
+        let listHTML = "<ul>";
+        data.items.forEach(item => {
+            listHTML += `<li>📌 ${item}</li>`;
+        });
+        listHTML += "</ul>";
+
         return `
-            <div class="path-card ${classColor}">
-                <div class="path-info">
-                    <h3 class="${textColor}">${data.title}</h3>
-                    <p>${data.desc}</p>
+            <div class="path-wrapper ${classColor}">
+                <div class="path-card">
+                    <div class="path-info">
+                        <h3 class="${textColor}">${data.title}</h3>
+                        <p>${data.desc}</p>
+                    </div>
+                    <div class="status-badge">
+                        <span class="dot"></span>
+                        <a href="${data.link}" class="card-btn btn-${data.state === 'red' ? 'red' : (data.state === 'yellow' ? 'yellow' : (data.state === 'blue' ? 'blue' : 'green'))}" ${clickAction}>${data.btnText}</a>
+                    </div>
                 </div>
-                <div class="status-badge">
-                    <span class="dot"></span>
-                    <a href="${data.link}" class="card-btn btn-${data.state === 'red' ? 'red' : (data.state === 'yellow' ? 'yellow' : (data.state === 'blue' ? 'blue' : 'green'))}" ${clickAction}>${data.btnText}</a>
+                <button class="toggle-btn" onclick="toggleDropdown('${data.id}')">▼ Inhalte & Lektionen anzeigen ▼</button>
+                <div class="dropdown-content" id="drop-${data.id}">
+                    ${listHTML}
                 </div>
             </div>
         `;
+    }
+
+    function toggleDropdown(id) {
+        let content = document.getElementById(`drop-${id}`);
+        if (content.style.display === "block") {
+            content.style.display = "none";
+        } else {
+            content.style.display = "block";
+        }
     }
 
     function closeModal() {
