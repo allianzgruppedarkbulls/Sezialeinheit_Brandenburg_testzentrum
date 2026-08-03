@@ -18,14 +18,28 @@
     h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
     .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
 
+    /* Aufklapp- / Akkordeon-Stil für die Kategorien */
+    .dropdown-container { margin-bottom: 15px; }
     .category-card {
       background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
-      margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
-      text-decoration: none; transition: all 0.3s ease;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: all 0.3s ease;
     }
     .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
     .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
     .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
+
+    /* Untermenü zum Aufklappen */
+    .dropdown-content {
+      display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
+      border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
+    }
+    .dropdown-content.show { display: block; }
+    .sub-item {
+      display: block; color: #bbb; text-decoration: none; padding: 10px; margin-bottom: 5px;
+      background: #151515; border-radius: 6px; font-family: sans-serif; font-size: 14px; transition: 0.2s;
+    }
+    .sub-item:hover { background: #ff3131; color: #000; padding-left: 15px; }
 
     .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
     .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
@@ -53,9 +67,7 @@
   </div>
 
   <script>
-    // Holt die URL sauber aus der zentralen config.js
     var API_BASE_URL = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
-
     var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -75,28 +87,79 @@
           var container = document.getElementById("menu-container");
           container.innerHTML = "";
 
+          // Definition der Hauptbereiche und ihrer aufklappbaren Lektionen
           var categories = [
-            { title: "Grundausbildung (Basis-Taktiken)", desc: "Grundlegende Spielmechaniken & Wirtschaft", page: "Ausb_Anfaenger.html", key: "Grundausbildung" },
-            { title: "Fortgeschrittene Taktiken", desc: "Erweiterte Strategien & Frontverläufe", page: "Ausb_Fortgeschritten.html", key: "Fortgeschritten" },
-            { title: "Turnier & Spezialeinheit", desc: "Taktiken für Ligen & verdeckte Operationen", page: "Ausb_Turnier.html", key: "Turnierspieler" }
+            { 
+              title: "Grundausbildung", 
+              desc: "Grundlegende Spielmechaniken & Wirtschaft", 
+              key: "Grundausbildung",
+              page: "Ausb_Anfaenger.html",
+              sublektionen: ["Einführung & Wirtschaft", "Truppenausbildung", "Kartenkontrolle"] 
+            },
+            { 
+              title: "Fortgeschrittene Taktiken", 
+              desc: "Erweiterte Strategien & Frontverläufe", 
+              key: "Fortgeschritten",
+              page: "Ausb_Fortgeschritten.html",
+              sublektionen: ["Artillerie-Taktik", "Luftüberlegenheit", "Verteidigungslinien"] 
+            },
+            { 
+              title: "Turnier & Spezialeinheit", 
+              desc: "Taktiken für Ligen & verdeckte Operationen", 
+              key: "Turnierspieler",
+              page: "Ausb_Turnier.html",
+              sublektionen: ["Koordination", "Geheime Operationen", "Endspiel-Taktik"] 
+            }
           ];
 
-          categories.forEach(cat => {
+          categories.forEach((cat, index) => {
             var isPassed = progress[cat.key] === "Bestanden" || progress[cat.key] == 1;
             var statusText = isPassed ? "FREIGESCHALTET ✓" : "OFFEN";
             var statusClass = isPassed ? "status-passed" : "status-open";
 
-            var card = document.createElement("a");
+            var wrap = document.createElement("div");
+            wrap.className = "dropdown-container";
+
+            // Hauptkarte zum Anklicken / Aufklappen
+            var card = document.createElement("div");
             card.className = "category-card";
-            card.href = cat.page;
             card.innerHTML = `
               <div class="cat-info">
-                <h3>${cat.title}</h3>
+                <h3>${cat.title} ▾</h3>
                 <p>${cat.desc}</p>
               </div>
               <span class="status-badge ${statusClass}">${statusText}</span>
             `;
-            container.appendChild(card);
+
+            // Aufklappbarer Bereich
+            var dropdown = document.createElement("div");
+            dropdown.className = "dropdown-content";
+            dropdown.id = "dropdown-" + index;
+
+            // Direkt-Link zur Hauptseite + Unterpunkte einfügen
+            var mainLink = document.createElement("a");
+            mainLink.className = "sub-item";
+            mainLink.href = cat.page;
+            mainLink.innerHTML = `<strong>⚡ Gesamten Lehrgang starten</strong>`;
+            dropdown.appendChild(mainLink);
+
+            cat.sublektionen.forEach(sub => {
+              var subLink = document.createElement("a");
+              subLink.className = "sub-item";
+              subLink.href = cat.page + "?lektion=" + encodeURIComponent(sub);
+              subLink.innerHTML = `🔹 ${sub}`;
+              dropdown.appendChild(subLink);
+            });
+
+            // Klick-Event zum Ein-/Auklappen
+            card.onclick = function() {
+              var content = document.getElementById("dropdown-" + index);
+              content.classList.toggle("show");
+            };
+
+            wrap.appendChild(card);
+            wrap.appendChild(dropdown);
+            container.appendChild(wrap);
           });
         })
         .catch(err => {
