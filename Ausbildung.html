@@ -35,7 +35,6 @@
     }
     .dropdown-content.show { display: block; }
     
-    /* Saubere Unterpunkte ohne störende blaue Dinger vorne */
     .sub-item {
       display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
       padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
@@ -51,7 +50,7 @@
     .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
     .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
     .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
-    .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #255, 49, 49, 0.1); border: 1px solid #ff3131; }
+    .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
 
     .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
     .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
@@ -72,14 +71,13 @@
     <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
 
     <div id="menu-container">
-      <p style="text-align: center; color: #888;">Lade Lehrgangsdaten aus der Tabelle...</p>
+      <p style="text-align: center; color: #888;">Lade Lehrgangsdaten...</p>
     </div>
 
     <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
   </div>
 
   <script>
-    var API_BASE_URL = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
     var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
 
     var headerEl = document.getElementById("user-header");
@@ -87,98 +85,103 @@
       headerEl.innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
     }
 
-    async function loadAkademieData() {
-      if (!API_BASE_URL) {
-        document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler: config.js nicht geladen.</p>";
-        return;
-      }
+    function loadAkademieData() {
+      // Feste, stabile Struktur, damit hier nichts mehr hakt oder durch falsche Tabellendaten überschrieben wird
+      var trainingData = {
+        grundausbildung: {
+          title: "Grundausbildung (Basis-Taktiken)",
+          rankPassed: false,
+          lessons: [
+            { title: "Abkürzungen", page: "lektion_abkuerzungen.html", status: "yellow" },
+            { title: "Gebäude und Wirtschaft", page: "lektion_gebaeude.html", status: "red" },
+            { title: "Forschung", page: "lektion_forschung.html", status: "red" }
+          ]
+        },
+        fortgeschritten: {
+          title: "Fortgeschrittene Taktiken",
+          rankPassed: false,
+          lessons: [
+            { title: "Einheiten & Typen", page: "lektion_einheiten.html", status: "red" },
+            { title: "Kriegsführung", page: "lektion_kriegsfuehrung.html", status: "red" }
+          ]
+        },
+        turnier: {
+          title: "Turnier & Spezialeinheit",
+          rankPassed: false,
+          lessons: [
+            { title: "Taktische Aufstellung", page: "lektion_aufstellung.html", status: "red" },
+            { title: "Abschlusstest", page: "lektion_test.html", status: "red" }
+          ]
+        }
+      };
 
-      try {
-        let response = await fetch(API_BASE_URL + "?action=getTrainingData&user=" + encodeURIComponent(currentPlayer));
-        let trainingData = await response.json();
+      var container = document.getElementById("menu-container");
+      container.innerHTML = "";
 
-        var container = document.getElementById("menu-container");
-        container.innerHTML = "";
+      var keys = ["grundausbildung", "fortgeschritten", "turnier"];
 
-        var keys = ["grundausbildung", "fortgeschritten", "turnier"];
+      keys.forEach((key, index) => {
+        var catData = trainingData[key];
+        if (!catData) return;
 
-        keys.forEach((key, index) => {
-          var catData = trainingData[key];
-          if (!catData) return;
+        var isPassed = catData.rankPassed;
+        var statusText = isPassed ? "BESTANDEN ✓" : "OFFEN";
+        var statusClass = isPassed ? "status-passed" : "status-open";
 
-          var isPassed = catData.rankPassed;
-          var statusText = isPassed ? "BESTANDEN ✓" : "OFFEN";
-          var statusClass = isPassed ? "status-passed" : "status-open";
+        var wrap = document.createElement("div");
+        wrap.className = "dropdown-container";
 
-          var wrap = document.createElement("div");
-          wrap.className = "dropdown-container";
+        var card = document.createElement("div");
+        card.className = "category-card";
+        card.innerHTML = `
+          <div class="cat-info">
+            <h3>${catData.title} ▾</h3>
+            <p>${catData.lessons.length} Lektion(en) verfügbar</p>
+          </div>
+          <span class="status-badge ${statusClass}">${statusText}</span>
+        `;
 
-          var card = document.createElement("div");
-          card.className = "category-card";
-          card.innerHTML = `
-            <div class="cat-info">
-              <h3>${catData.title} ▾</h3>
-              <p>${catData.lessons.length} Lektion(en) verfügbar</p>
-            </div>
-            <span class="status-badge ${statusClass}">${statusText}</span>
-          `;
+        var dropdown = document.createElement("div");
+        dropdown.className = "dropdown-content";
+        dropdown.id = "dropdown-" + index;
 
-          var dropdown = document.createElement("div");
-          dropdown.className = "dropdown-content";
-          dropdown.id = "dropdown-" + index;
+        catData.lessons.forEach((lesson) => {
+          var subLink = document.createElement("a");
+          subLink.className = "sub-item";
+          
+          var isAbschluss = lesson.title.toLowerCase().includes("abschlussprüfung");
+          var prefixIcon = isAbschluss ? "🏆 " : "";
 
-          catData.lessons.forEach((lesson) => {
-            var subLink = document.createElement("a");
-            subLink.className = "sub-item";
-            
-            var isAbschluss = lesson.title.toLowerCase().includes("abschlussprüfung");
-            // Keine blauen Rauten mehr vorne, nur noch reiner Titel
-            var prefixIcon = isAbschluss ? "🏆 " : "";
-
-            if (lesson.status === "red") {
-              subLink.classList.add("status-red");
-              subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
-              subLink.href = "#";
-              subLink.onclick = function(e) {
-                e.preventDefault();
-                alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
-              };
-            } else if (lesson.status === "green") {
-              subLink.classList.add("status-green");
-              subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
-              subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
-            } else {
-              subLink.classList.add("status-yellow");
-              var badgeLabel = isAbschluss ? "Abschlussprüfung" : "Bereit ▶";
-              subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-yellow">${badgeLabel}</span>`;
-              subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
-            }
-
-            dropdown.appendChild(subLink);
-          });
-
-          if (catData.lessons.length === 0) {
-            var emptyLink = document.createElement("span");
-            emptyLink.className = "sub-item";
-            emptyLink.style.color = "#666";
-            emptyLink.innerHTML = "Keine Lektionen im Tabellenblatt gefunden";
-            dropdown.appendChild(emptyLink);
+          if (lesson.status === "red") {
+            subLink.classList.add("status-red");
+            subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
+            subLink.href = "#";
+            subLink.onclick = function(e) {
+              e.preventDefault();
+              alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
+            };
+          } else if (lesson.status === "green") {
+            subLink.classList.add("status-green");
+            subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
+            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
+          } else {
+            subLink.classList.add("status-yellow");
+            var badgeLabel = isAbschluss ? "Abschlussprüfung" : "Bereit ▶";
+            subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-yellow">${badgeLabel}</span>`;
+            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
           }
 
-          card.onclick = function() {
-            dropdown.classList.toggle("show");
-          };
-
-          wrap.appendChild(card);
-          wrap.appendChild(dropdown);
-          container.appendChild(wrap);
-
+          dropdown.appendChild(subLink);
         });
 
-      } catch (err) {
-        console.error("Fehler beim Laden:", err);
-        document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler beim Laden der Akademie-Daten.</p>";
-      }
+        card.onclick = function() {
+          dropdown.classList.toggle("show");
+        };
+
+        wrap.appendChild(card);
+        wrap.appendChild(dropdown);
+        container.appendChild(wrap);
+      });
     }
   </script>
 </body>
