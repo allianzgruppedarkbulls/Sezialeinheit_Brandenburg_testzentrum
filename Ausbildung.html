@@ -35,14 +35,13 @@
     }
     .dropdown-content.show { display: block; }
     
-    /* Einheits-Look für die Unterpunkte ohne verwirrende linke Balken */
+    /* Saubere Unterpunkte ohne störende blaue Dinger vorne */
     .sub-item {
       display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
       padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
       font-family: sans-serif; font-size: 14px; transition: 0.2s; border: 1px solid #222;
     }
     
-    /* Zustände klar über Badges und Opacity geregelt */
     .sub-item.status-green { color: #fff; }
     .sub-item.status-yellow { background: #141410; color: #fff; border-color: #333; }
     .sub-item.status-red { opacity: 0.4; cursor: not-allowed; background: #0d0d0d; }
@@ -52,7 +51,7 @@
     .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
     .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
     .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
-    .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
+    .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #255, 49, 49, 0.1); border: 1px solid #ff3131; }
 
     .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
     .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
@@ -133,11 +132,12 @@
             subLink.className = "sub-item";
             
             var isAbschluss = lesson.title.toLowerCase().includes("abschlussprüfung");
-            var icon = isAbschluss ? "🏆 " : "🔹 ";
+            // Keine blauen Rauten mehr vorne, nur noch reiner Titel
+            var prefixIcon = isAbschluss ? "🏆 " : "";
 
             if (lesson.status === "red") {
               subLink.classList.add("status-red");
-              subLink.innerHTML = `<span>${icon}${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
+              subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
               subLink.href = "#";
               subLink.onclick = function(e) {
                 e.preventDefault();
@@ -145,12 +145,12 @@
               };
             } else if (lesson.status === "green") {
               subLink.classList.add("status-green");
-              subLink.innerHTML = `<span>${icon}${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
+              subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
               subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
             } else {
               subLink.classList.add("status-yellow");
               var badgeLabel = isAbschluss ? "Abschlussprüfung" : "Bereit ▶";
-              subLink.innerHTML = `<span>${icon}${lesson.title}</span> <span class="badge-status badge-yellow">${badgeLabel}</span>`;
+              subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-yellow">${badgeLabel}</span>`;
               subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
             }
 
