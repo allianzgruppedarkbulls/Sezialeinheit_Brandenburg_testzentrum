@@ -53,8 +53,8 @@
   </div>
 
   <script>
-    // Echte URL aus deiner Tabellen-ID im Projekt abgeleitet
-    var API_BASE_URL = "https://script.google.com/macros/s/AKfycby1Gjnhol0ou63xW20OnbTo_wugzpOTgBP2yjnx3Qzg4bQ/exec"; 
+    // Holt die URL sauber aus der zentralen config.js
+    var API_BASE_URL = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
 
     var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
 
@@ -64,6 +64,11 @@
     });
 
     function loadMenuStatus() {
+      if (!API_BASE_URL) {
+        document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler: config.js nicht geladen oder SCRIPT_URL fehlt.</p>";
+        return;
+      }
+
       fetch(API_BASE_URL + "?action=getTrainingProgress&user=" + encodeURIComponent(currentPlayer))
         .then(res => res.json())
         .then(progress => {
