@@ -25,6 +25,9 @@
       cursor: pointer; transition: all 0.3s ease;
     }
     .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
+    .category-card.locked { opacity: 0.6; cursor: not-allowed; border-color: #551515; }
+    .category-card.locked:hover { box-shadow: none; border-color: #551515; }
+
     .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
     .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
 
@@ -77,7 +80,6 @@
       }
 
       try {
-        // 1. Fortschritt des Spielers und echte Tabellen-Inhalte gleichzeitig laden
         let [progressRes, trainingRes] = await Promise.all([
           fetch(API_BASE_URL + "?action=getTrainingProgress&user=" + encodeURIComponent(currentPlayer)),
           fetch(API_BASE_URL + "?action=getTrainingData")
@@ -89,25 +91,33 @@
         var container = document.getElementById("menu-container");
         container.innerHTML = "";
 
-        // Struktur der 3 Bereiche, verknüpft mit den Daten aus dem Backend
         var categories = [
-          { key: "grundausbildung", progressKey: "Grundausbildung", fallbackPage: "Ausb_Anfaenger.html" },
-          { key: "fortgeschritten", progressKey: "Fortgeschritten", fallbackPage: "Ausb_Fortgeschritten.html" },
-          { key: "turnier", progressKey: "Turnierspieler", fallbackPage: "Ausb_Turnier.html" }
+          { key: "grundausbildung", progressKey: "Grundausbildung" },
+          { key: "fortgeschritten", progressKey: "Fortgeschritten" },
+          { key: "turnier", progressKey: "Turnierspieler" }
         ];
 
         categories.forEach((cat, index) => {
           var catData = trainingData[cat.key] || { title: cat.progressKey, lessons: [] };
           var isPassed = progress[cat.progressKey] === "Bestanden" || progress[cat.progressKey] == 1;
-          var statusText = isPassed ? "FREIGESCHALTET ✓" : "OFFEN";
+          
+          // Optional: Wenn man möchte, dass Folgestufen gesperrt sind, bis die vorherige bestanden ist.
+          // Grundausbildung ist immer offen, die anderen prüfen den Vorgänger (kannst du nach Bedarf anpassen).
+          var isUnlocked = true;
+          if (cat.progressKey === "Fortgeschritten") {
+            isUnlocked = (progress["Grundausbildung"] === "Bestanden" || progress["Grundausbildung"] == 1);
+          } else if (cat.progressKey === "Turnierspieler") {
+            isUnlocked = (progress["Fortgeschritten"] === "Bestanden" || progress["Fortgeschritten"] == 1);
+          }
+
+          var statusText = isPassed ? "FREIGESCHALTET ✓" : (isUnlocked ? "OFFEN" : "GESPERRT 🔒");
           var statusClass = isPassed ? "status-passed" : "status-open";
 
           var wrap = document.createElement("div");
           wrap.className = "dropdown-container";
 
-          // Hauptkarte (Aufklappbar)
           var card = document.createElement("div");
-          card.className = "category-card";
+          card.className = "category-card" + (!isUnlocked ? " locked" : "");
           card.innerHTML = `
             <div class="cat-info">
               <h3>${catData.title} ▾</h3>
@@ -116,34 +126,36 @@
             <span class="status-badge ${statusClass}">${statusText}</span>
           `;
 
-          // Dropdown-Inhalt mit den echten Überschriften aus Spalte B
           var dropdown = document.createElement("div");
           dropdown.className = "dropdown-content";
           dropdown.id = "dropdown-" + index;
 
-          catData.lessons.forEach(lesson => {
-            var subLink = document.createElement("a");
-            subLink.className = "sub-item";
-            // Übergibt die echte Überschrift als Lektion an die jeweilige HTML-Seite
-            subLink.href = lesson.page + "?lektion=" + encodeURIComponent(lesson.title);
-            subLink.innerHTML = `🔹 ${lesson.title}`;
-            dropdown.appendChild(subLink);
-          });
+          if (isUnlocked) {
+            catData.lessons.forEach(lesson => {
+              var subLink = document.createElement("a");
+              subLink.className = "sub-item";
+              subLink.href = lesson.page + "?lektion=" + encodeURIComponent(lesson.title);
+              subLink.innerHTML = `🔹 ${lesson.title}`;
+              dropdown.appendChild(subLink);
+            });
 
-          // Fallback, falls keine Lektionen gefunden wurden
-          if (catData.lessons.length === 0) {
-            var emptyLink = document.createElement("span");
-            emptyLink.className = "sub-item";
-            emptyLink.style.color = "#666";
-            emptyLink.innerHTML = "Keine Lektionen im Tabellenblatt gefunden";
-            dropdown.appendChild(emptyLink);
+            if (catData.lessons.length === 0) {
+              var emptyLink = document.createElement("span");
+              emptyLink.className = "sub-item";
+              emptyLink.style.color = "#666";
+              emptyLink.innerHTML = "Keine Lektionen im Tabellenblatt gefunden";
+              dropdown.appendChild(emptyLink);
+            }
+
+            card.onclick = function() {
+              var content = document.getElementById("dropdown-" + index);
+              content.classList.toggle("show");
+            };
+          } else {
+            card.onclick = function() {
+              alert("Dieser Lehrgang ist noch gesperrt! Schließe zuerst den vorherigen Rang ab, Kommandant.");
+            };
           }
-
-          // Klick-Event zum Aufklappen
-          card.onclick = function() {
-            var content = document.getElementById("dropdown-" + index);
-            content.classList.toggle("show");
-          };
 
           wrap.appendChild(card);
           wrap.appendChild(dropdown);
