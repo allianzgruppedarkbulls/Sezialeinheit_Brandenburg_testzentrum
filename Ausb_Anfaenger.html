@@ -6,12 +6,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 700px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
+        .container { width: 750px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
         h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 3px; font-size: 28px; }
         .subtitle { color: #f0b232; font-size: 16px; margin-bottom: 25px; text-transform: uppercase; }
-        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; white-space: pre-line; }
-        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; text-align: left; }
+        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; white-space: pre-line; min-height: 150px; }
+        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; text-align: left; font-family: sans-serif; font-size: 15px; }
         .quiz-option:hover { border-color: #ff3131; background: #222; }
+        .quiz-option input { margin-right: 10px; }
         .exam-input { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #ff3131; color: #fff; font-family: 'Almendra'; font-size: 18px; border-radius: 6px; box-sizing: border-box; margin-top: 15px; }
         .btn-container { display: flex; justify-content: space-between; gap: 15px; }
         .action-btn { flex: 1; padding: 15px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 18px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
@@ -41,27 +42,34 @@
 </div>
 
 <script>
-    // Direkt feste API-URL aus deiner Tabelle hinterlegt
     const API = "https://script.google.com/macros/s/AKfycby1Gjnhol0ou63xW20OnbTo_wugzpOTgBP2yjnx3Qzg4bQ/exec";
     const playerName = localStorage.getItem("darkBullsUser") || "Julian";
     
+    // URL-Parameter auslesen (falls eine bestimmte Lektion aus der Übersicht angeklickt wurde)
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedLektion = urlParams.get("lektion") || "";
+
     let lehrgangData = null;
-    let currentIndex = 0; 
-    let isExamMode = false; 
+    let currentStepIndex = 0; // 0 bis (folien.length - 1) sind Folien, danach Stopp-Tafel, danach Prüfung
     let userAnswers = {}; 
 
     async function loadLehrgangData() {
         try {
-            let res = await fetch(`${API}?action=getLehrgangInhalt&rang=Grundausbildung&schritt=1`);
+            let fetchUrl = `${API}?action=getLehrgangInhalt&rang=Grundausbildung`;
+            if (selectedLektion) {
+                fetchUrl += `&lektion=` + encodeURIComponent(selectedLektion);
+            }
+
+            let res = await fetch(fetchUrl);
             let textRes = await res.text();
             
             lehrgangData = JSON.parse(textRes);
-            document.getElementById("lehrgangTitel").innerText = lehrgangData.titel;
+            document.getElementById("lehrgangTitel").innerText = lehrgangData.titel || "Grundausbildung";
             
-            currentIndex = 0;
+            currentStepIndex = 0;
             renderCurrentView();
         } catch (e) {
-            console.error("Fehler im Detail:", e);
+            console.error("Fehler beim Laden:", e);
             document.getElementById("contentBox").innerHTML = "Fehler beim Laden der Lehrgangsdaten.";
         }
     }
@@ -72,66 +80,54 @@
         const nextBtn = document.getElementById("nextBtn");
         const status = document.getElementById("statusInfo");
 
-        let row = lehrgangData.rows[currentIndex];
+        let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
 
-        if (!row) {
-            box.innerHTML = "Keine weiteren Daten vorhanden.";
-            return;
+        // 1. Bereich: Normale Lese-Folien
+        if (currentStepIndex < totalFolien) {
+            prevBtn.disabled = (currentStepIndex === 0);
+            status.innerText = `Lerneinheit / Folie ${currentStepIndex + 1} von ${totalFolien}`;
+            box.innerHTML = `<p>${lehrgangData.folien[currentStepIndex]}</p>`;
+            nextBtn.innerText = (currentStepIndex === totalFolien - 1) ? "Weiter zur Prüfung ➔" : "Weiter ⚔️";
         }
-
-        if (row.stoppTextK && row.stoppTextK.trim() !== "") {
-            isExamMode = false;
+        // 2. Bereich: Stopp-Tafel (zwischen Folien und Fragen)
+        else if (currentStepIndex === totalFolien) {
             prevBtn.disabled = false;
             status.innerText = "Abschluss der Präsentation";
-            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${row.stoppTextK}</p>`;
+            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${lehrgangData.stoppTextK || "Bereit für die Prüfung?"}</p>`;
             nextBtn.innerText = "Prüfung starten 🚀";
         }
-        else if (row.pruefungEinleitungL && row.pruefungEinleitungL.trim() !== "") {
-            isExamMode = true;
-            prevBtn.disabled = true; 
+        // 3. Bereich: Prüfungs-Einleitung
+        else if (currentStepIndex === totalFolien + 1) {
+            prevBtn.disabled = true;
             status.innerText = "Prüfungsmodus";
-            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL}</p>`;
+            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${lehrgangData.pruefungEinleitungL || "Beantworte die folgenden Fragen:"}</p>`;
             nextBtn.innerText = "Zur ersten Frage ⚔️";
         }
-        else if (row.frageText && row.frageText.trim() !== "") {
-            isExamMode = true;
-            prevBtn.disabled = true; 
-            
-            let totalQ = lehrgangData.totalPruefungsFragen;
-            let questionNum = 0;
-            for(let i = 0; i <= currentIndex; i++) {
-                if(lehrgangData.rows[i].frageText && lehrgangData.rows[i].frageText.trim() !== "") {
-                    questionNum++;
-                }
-            }
-            
-            status.innerText = `Prüfungsfrage ${questionNum} von ${totalQ}`;
-            
-            let html = `<p><strong>${row.frageText}</strong></p>`;
-            
-            if (row.antworten && row.antworten.length > 0) {
-                row.antworten.forEach((ans, idx) => {
-                    let checked = (userAnswers[currentIndex] === (idx + 1)) ? "checked" : "";
-                    html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${currentIndex}, ${idx + 1})"> ${idx + 1}. ${ans}</label>`;
-                });
-            } else {
-                let savedVal = userAnswers[currentIndex] || "";
-                html += `<input type="text" class="exam-input" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${currentIndex}, this.value)">`;
-            }
-            
-            box.innerHTML = html;
-            
-            let isLastQuestion = (questionNum >= totalQ);
-            nextBtn.innerText = isLastQuestion ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
-        }
+        // 4. Bereich: Echte Prüfungsfragen
         else {
-            isExamMode = false;
-            prevBtn.disabled = (currentIndex === 0);
-            
-            let textToShow = row.folieText || "Inhalt wird geladen...";
-            status.innerText = `Lerneinheit / Folie ${currentIndex + 1}`;
-            box.innerHTML = `<p>${textToShow}</p>`;
-            nextBtn.innerText = "Weiter ⚔️";
+            let questionIndex = currentStepIndex - (totalFolien + 2);
+            let fragenList = lehrgangData.fragen || [];
+
+            if (questionIndex < fragenList.length) {
+                prevBtn.disabled = true;
+                let q = fragenList[questionIndex];
+                status.innerText = `Prüfungsfrage ${questionIndex + 1} von ${fragenList.length}`;
+
+                let html = `<p><strong>${q.frageText}</strong></p>`;
+
+                if (q.antworten && q.antworten.length > 0) {
+                    q.antworten.forEach((ans, idx) => {
+                        let checked = (userAnswers[questionIndex] === (idx + 1)) ? "checked" : "";
+                        html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${questionIndex}, ${idx + 1})"> ${idx + 1}. ${ans}</label>`;
+                    });
+                } else {
+                    let savedVal = userAnswers[questionIndex] || "";
+                    html += `<input type="text" class="exam-input" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${questionIndex}, this.value)">`;
+                }
+
+                box.innerHTML = html;
+                nextBtn.innerText = (questionIndex === fragenList.length - 1) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
+            }
         }
     }
 
@@ -144,16 +140,18 @@
     }
 
     function prevStep() {
-        if (isExamMode) return; 
-        if (currentIndex > 0) {
-            currentIndex--;
+        if (currentStepIndex > 0) {
+            currentStepIndex--;
             renderCurrentView();
         }
     }
 
     function nextStep() {
-        if (currentIndex < lehrgangData.rows.length - 1) {
-            currentIndex++;
+        let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
+        let maxSteps = totalFolien + 1 + 1 + (lehrgangData.fragen ? lehrgangData.fragen.length : 0);
+
+        if (currentStepIndex < maxSteps - 1) {
+            currentStepIndex++;
             renderCurrentView();
         } else {
             evaluateExam();
@@ -162,45 +160,50 @@
 
     async function evaluateExam() {
         let correctCount = 0;
-        let totalQ = lehrgangData.totalPruefungsFragen;
-        let answeredQuestions = 0;
+        let fragenList = lehrgangData.fragen || [];
+        let totalQ = fragenList.length;
 
-        lehrgangData.rows.forEach((row, idx) => {
-            if (row.frageText && row.frageText.trim() !== "") {
-                answeredQuestions++;
-                let userAns = userAnswers[idx];
-                let correctAns = row.korrekt;
+        if (totalQ === 0) {
+            alert("Keine Prüfungsfragen vorhanden.");
+            return;
+        }
 
-                if (typeof correctAns === "string" && isNaN(correctAns)) {
-                    if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
-                        correctCount++;
-                    }
-                } else {
-                    if (parseInt(userAns) === parseInt(correctAns)) {
-                        correctCount++;
-                    }
+        fragenList.forEach((q, idx) => {
+            let userAns = userAnswers[idx];
+            let correctAns = q.korrekt;
+
+            if (typeof correctAns === "string" && isNaN(correctAns)) {
+                if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
+                    correctCount++;
+                }
+            } else {
+                if (parseInt(userAns) === parseInt(correctAns)) {
+                    correctCount++;
                 }
             }
         });
 
-        let effectiveTotal = answeredQuestions > 0 ? answeredQuestions : totalQ;
-        let percentage = Math.round((correctCount / effectiveTotal) * 100);
+        let percentage = Math.round((correctCount / totalQ) * 100);
 
         if (percentage >= 80) {
-            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${effectiveTotal} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
+            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
             
-            await fetch(API, {
-                method: "POST",
-                body: JSON.stringify({
-                    user: playerName,
-                    currentRang: "Grundausbildung",
-                    nextRang: "Fortgeschritten"
-                })
-            });
+            try {
+                await fetch(API, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        user: playerName,
+                        currentRang: "Grundausbildung",
+                        nextRang: "Fortgeschritten"
+                    })
+                });
+            } catch (err) {
+                console.error("Fehler beim Speichern des Fortschritts:", err);
+            }
 
             window.location.href = "Ausbildung.html";
         } else {
-            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${effectiveTotal} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
+            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
             location.reload();
         }
     }
