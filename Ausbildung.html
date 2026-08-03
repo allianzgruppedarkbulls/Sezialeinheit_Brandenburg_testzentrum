@@ -1,80 +1,4 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
-  <script src="config.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background-color: #050505; color: #ffffff; font-family: 'Almendra', serif;
-      margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-    }
-    .container {
-      width: 750px; background-color: #0f0f0f; border: 2px solid #333;
-      border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2);
-      box-sizing: border-box;
-    }
-    h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
-    .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
-
-    .dropdown-container { margin-bottom: 15px; }
-    .category-card {
-      background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
-      display: flex; justify-content: space-between; align-items: center;
-      cursor: pointer; transition: all 0.3s ease;
-    }
-    .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
-    .category-card.locked { opacity: 0.6; cursor: not-allowed; border-color: #551515; }
-    .category-card.locked:hover { box-shadow: none; border-color: #551515; }
-
-    .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
-    .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
-
-    .dropdown-content {
-      display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
-      border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
-    }
-    .dropdown-content.show { display: block; }
-    
-    /* Lektionen-Statusfarben innerhalb des Dropdowns */
-    .sub-item {
-      display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
-      padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
-      font-family: sans-serif; font-size: 14px; transition: 0.2s; border-left: 4px solid #444;
-    }
-    .sub-item.status-green { border-left-color: #39d353; color: #fff; }
-    .sub-item.status-yellow { border-left-color: #e3b341; background: #1a1810; color: #fff; }
-    .sub-item.status-red { border-left-color: #ff3131; opacity: 0.5; cursor: not-allowed; }
-    
-    .sub-item:not(.status-red):hover { background: #ff3131; color: #000; padding-left: 20px; }
-
-    .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
-    .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
-    .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
-
-    .btn-back {
-      display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
-      border: 1px solid #444; color: #888; padding: 12px; font-family: 'Almendra', serif; font-size: 16px;
-      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 5px; text-decoration: none;
-    }
-    .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
-  </style>
-</head>
-<body onload="loadAkademieData()">
-
-  <div class="container">
-    <h1>Akademie & Ausbildung</h1>
-    <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
-
-    <div id="menu-container">
-      <p style="text-align: center; color: #888;">Lade Lehrgangsdaten aus der Tabelle...</p>
-    </div>
-
-    <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
-  </div>
-
-  <script>
+<script>
     var API_BASE_URL = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
     var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
 
@@ -87,49 +11,31 @@
       }
 
       try {
-        // Wir laden den Fortschritt und die Lehrgangsdaten parallel
-        let [progressRes, trainingRes] = await Promise.all([
-          fetch(API_BASE_URL + "?action=getTrainingProgress&user=" + encodeURIComponent(currentPlayer)),
-          fetch(API_BASE_URL + "?action=getTrainingData&user=" + encodeURIComponent(currentPlayer))
-        ]);
-
-        let progress = await progressRes.json();
-        let trainingData = await trainingRes.json();
+        let response = await fetch(API_BASE_URL + "?action=getTrainingData&user=" + encodeURIComponent(currentPlayer));
+        let trainingData = await response.json();
 
         var container = document.getElementById("menu-container");
         container.innerHTML = "";
 
-        var categories = [
-          { key: "grundausbildung", progressKey: "Grundausbildung" },
-          { key: "fortgeschritten", progressKey: "Fortgeschritten" },
-          { key: "turnier", progressKey: "Turnierspieler" }
-        ];
+        var keys = ["grundausbildung", "fortgeschritten", "turnier"];
 
-        categories.forEach((cat, index) => {
-          var catData = trainingData[cat.key] || { title: cat.progressKey, lessons: [] };
-          var isPassed = progress.status === "Bestanden" && progress.rang && progress.rang.toLowerCase().includes(cat.progressKey.toLowerCase());
-          
-          // Ränge aufeinander aufbauen lassen (Grundausbildung immer offen, Fortgeschrittene brauchen Grundausbildung etc.)
-          var isUnlocked = true;
-          if (cat.progressKey === "Fortgeschritten") {
-            // Hier kannst du prüfen, ob Grundausbildung bestanden ist
-            isUnlocked = true; // Passe das je nach globalem Rang an
-          } else if (cat.progressKey === "Turnierspieler") {
-            isUnlocked = true;
-          }
+        keys.forEach((key, index) => {
+          var catData = trainingData[key];
+          if (!catData) return;
 
-          var statusText = isPassed ? "FREIGESCHALTET ✓" : "OFFEN";
+          var isPassed = catData.rankPassed;
+          var statusText = isPassed ? "BESTANDEN ✓" : "OFFEN";
           var statusClass = isPassed ? "status-passed" : "status-open";
 
           var wrap = document.createElement("div");
           wrap.className = "dropdown-container";
 
           var card = document.createElement("div");
-          card.className = "category-card" + (!isUnlocked ? " locked" : "");
+          card.className = "category-card";
           card.innerHTML = `
             <div class="cat-info">
               <h3>${catData.title} ▾</h3>
-              <p>${catData.lessons.length} Lektion(en) / Prüfung verfügbar</p>
+              <p>${catData.lessons.length} Lektion(en) verfügbar</p>
             </div>
             <span class="status-badge ${statusClass}">${statusText}</span>
           `;
@@ -138,50 +44,46 @@
           dropdown.className = "dropdown-content";
           dropdown.id = "dropdown-" + index;
 
-          if (isUnlocked) {
-            catData.lessons.forEach((lesson, lIndex) => {
-              var subLink = document.createElement("a");
-              subLink.className = "sub-item";
-              
-              // Prüfen ob es die Abschlussprüfung ist
-              var isAbschluss = lesson.title.toLowerCase().includes("abschlussprüfung");
-              var icon = isAbschluss ? "🏆 " : "🔹 ";
+          catData.lessons.forEach((lesson) => {
+            var subLink = document.createElement("a");
+            subLink.className = "sub-item";
+            
+            var isAbschluss = lesson.title.toLowerCase().includes("abschlussprüfung");
+            var icon = isAbschluss ? "🏆 " : "🔹 ";
 
-              if (lesson.status === "red") {
-                subLink.classList.add("status-red");
-                subLink.innerHTML = `<span>${icon}${lesson.title}</span> 🔒 Gesperrt`;
-                subLink.href = "#";
-                subLink.onclick = function(e) {
-                  e.preventDefault();
-                  alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
-                };
-              } else {
-                subLink.classList.add(lesson.status === "green" ? "status-green" : "status-yellow");
-                var badgeLabel = isAbschluss ? "Abschlussprüfung" : (lesson.status === "green" ? "Bestanden ✓" : "Bereit ▶");
-                subLink.innerHTML = `<span>${icon}${lesson.title}</span> <span style="font-size:11px; opacity:0.8;">${badgeLabel}</span>`;
-                subLink.href = lesson.page + "?rang=" + encodeURIComponent(cat.progressKey) + "&lektion=" + encodeURIComponent(lesson.title);
-              }
-
-              dropdown.appendChild(subLink);
-            });
-
-            if (catData.lessons.length === 0) {
-              var emptyLink = document.createElement("span");
-              emptyLink.className = "sub-item";
-              emptyLink.style.color = "#666";
-              emptyLink.innerHTML = "Keine Lektionen im Tabellenblatt gefunden";
-              dropdown.appendChild(emptyLink);
+            if (lesson.status === "red") {
+              subLink.classList.add("status-red");
+              subLink.innerHTML = `<span>${icon}${lesson.title}</span> 🔒 Gesperrt`;
+              subLink.href = "#";
+              subLink.onclick = function(e) {
+                e.preventDefault();
+                alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
+              };
+            } else if (lesson.status === "green") {
+              subLink.classList.add("status-green");
+              subLink.innerHTML = `<span>${icon}${lesson.title}</span> <span style="font-size:11px; opacity:0.8;">Bestanden ✓</span>`;
+              subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
+            } else {
+              subLink.classList.add("status-yellow");
+              var badgeLabel = isAbschluss ? "Abschlussprüfung" : "Bereit ▶";
+              subLink.innerHTML = `<span>${icon}${lesson.title}</span> <span style="font-size:11px; opacity:0.8;">${badgeLabel}</span>`;
+              subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
             }
 
-            card.onclick = function() {
-              var content = document.getElementById("dropdown-" + index);
-              content.classList.toggle("show");
-            };
-          } else {
-            card.onclick = function() {
-              alert("Dieser gesamte Rang ist noch gesperrt, Kommandant!");
-            };
+            dropdown.appendChild(subLink);
+          });
+
+          if (catData.lessons.length === 0) {
+            var emptyLink = document.createElement("span");
+            emptyLink.className = "sub-item";
+            emptyLink.style.color = "#666";
+            emptyLink.innerHTML = "Keine Lektionen im Tabellenblatt gefunden";
+            dropdown.appendChild(emptyLink);
           }
+
+          card.onclick = function() {
+            dropdown.classList.toggle("show");
+          };
 
           wrap.appendChild(card);
           wrap.appendChild(dropdown);
@@ -195,5 +97,3 @@
       }
     }
   </script>
-</body>
-</html>
