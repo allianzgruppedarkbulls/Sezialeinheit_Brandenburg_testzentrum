@@ -191,6 +191,7 @@
         });
 
         let percentage = Math.round((correctCount / totalQ) * 100);
+        let lektionTitel = lehrgangData.titel || "Grundausbildung";
 
         if (percentage >= 80) {
             alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
@@ -201,6 +202,9 @@
                     body: JSON.stringify({
                         user: playerName,
                         currentRang: "Grundausbildung",
+                        lektionName: lektionTitel,
+                        status: "Bestanden",
+                        percent: percentage + "%",
                         nextRang: "Fortgeschritten"
                     })
                 });
@@ -211,6 +215,21 @@
             window.location.href = "Ausbildung.html";
         } else {
             alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
+            
+             // Optional: Auch bei Nicht-Bestehen an das Protokoll melden (mit Status "Durchgefallen")
+             try {
+                await fetch(API, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        user: playerName,
+                        currentRang: "Grundausbildung",
+                        lektionName: lektionTitel,
+                        status: "Durchgefallen",
+                        percent: percentage + "%"
+                    })
+                });
+            } catch (err) {}
+
             location.reload();
         }
     }
