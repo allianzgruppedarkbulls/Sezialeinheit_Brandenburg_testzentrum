@@ -44,17 +44,20 @@
     .sub-item.status-green { color: #fff; }
     .sub-item.status-yellow { background: #141410; color: #fff; border-color: #333; }
     .sub-item.status-red { opacity: 0.4; cursor: not-allowed; background: #0d0d0d; }
+    .sub-item.status-hidden { background: #0d0d0d; color: #666; font-style: italic; cursor: not-allowed; }
     
-    .sub-item:not(.status-red):hover { background: #ff3131; color: #000; border-color: #ff3131; }
+    .sub-item:not(.status-red):not(.status-hidden):hover { background: #ff3131; color: #000; border-color: #ff3131; }
 
     .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
     .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
     .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
     .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
+    .badge-gray { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
 
     .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
     .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
     .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
+    .status-locked { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
 
     .btn-back {
       display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
@@ -79,6 +82,9 @@
 
   <script>
     var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
+    
+    // Prüfen, ob der Spieler ein Turnierspieler ist (kann in der Config/LocalStorage hinterlegt sein, standardmäßig false)
+    var isTournamentPlayer = localStorage.getItem("darkBullsTournamentPlayer") === "true";
 
     var headerEl = document.getElementById("user-header");
     if (headerEl) {
@@ -86,11 +92,12 @@
     }
 
     function loadAkademieData() {
-      // Feste, stabile Struktur, damit hier nichts mehr hakt oder durch falsche Tabellendaten überschrieben wird
+      // Exakte, saubere Struktur nach deinen Vorgaben
       var trainingData = {
         grundausbildung: {
           title: "Grundausbildung (Basis-Taktiken)",
-          rankPassed: false,
+          statusType: "open",
+          statusText: "OFFEN",
           lessons: [
             { title: "Abkürzungen", page: "lektion_abkuerzungen.html", status: "yellow" },
             { title: "Gebäude und Wirtschaft", page: "lektion_gebaeude.html", status: "red" },
@@ -99,7 +106,8 @@
         },
         fortgeschritten: {
           title: "Fortgeschrittene Taktiken",
-          rankPassed: false,
+          statusType: "locked",
+          statusText: "GESPERRT",
           lessons: [
             { title: "Einheiten & Typen", page: "lektion_einheiten.html", status: "red" },
             { title: "Kriegsführung", page: "lektion_kriegsfuehrung.html", status: "red" }
@@ -107,10 +115,13 @@
         },
         turnier: {
           title: "Turnier & Spezialeinheit",
-          rankPassed: false,
-          lessons: [
-            { title: "Taktische Aufstellung", page: "lektion_aufstellung.html", status: "red" },
+          statusType: isTournamentPlayer ? "open" : "locked",
+          statusText: isTournamentPlayer ? "OFFEN" : "NUR TURNIER-SPIELER",
+          lessons: isTournamentPlayer ? [
+            { title: "Taktische Aufstellung", page: "lektion_aufstellung.html", status: "yellow" },
             { title: "Abschlusstest", page: "lektion_test.html", status: "red" }
+          ] : [
+            { title: "🔒 Exklusiver Bereich (Inhalt verborgen)", page: "#", status: "hidden" }
           ]
         }
       };
@@ -124,9 +135,9 @@
         var catData = trainingData[key];
         if (!catData) return;
 
-        var isPassed = catData.rankPassed;
-        var statusText = isPassed ? "BESTANDEN ✓" : "OFFEN";
-        var statusClass = isPassed ? "status-passed" : "status-open";
+        var statusClass = "status-open";
+        if (catData.statusType === "passed") statusClass = "status-passed";
+        if (catData.statusType === "locked") statusClass = "status-locked";
 
         var wrap = document.createElement("div");
         wrap.className = "dropdown-container";
@@ -136,9 +147,9 @@
         card.innerHTML = `
           <div class="cat-info">
             <h3>${catData.title} ▾</h3>
-            <p>${catData.lessons.length} Lektion(en) verfügbar</p>
+            <p>${catData.statusType === "hidden" ? "Exklusiver Bereich" : catData.lessons.length + " Lektion(en) verfügbar"}</p>
           </div>
-          <span class="status-badge ${statusClass}">${statusText}</span>
+          <span class="status-badge ${statusClass}">${catData.statusText}</span>
         `;
 
         var dropdown = document.createElement("div");
@@ -149,12 +160,17 @@
           var subLink = document.createElement("a");
           subLink.className = "sub-item";
           
-          var isAbschluss = lesson.title.toLowerCase().includes("abschlussprüfung");
-          var prefixIcon = isAbschluss ? "🏆 " : "";
-
-          if (lesson.status === "red") {
+          if (lesson.status === "hidden") {
+            subLink.classList.add("status-hidden");
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-gray">Gesperrt 🔒</span>`;
+            subLink.href = "#";
+            subLink.onclick = function(e) {
+              e.preventDefault();
+              alert("Dieser Bereich ist ausschließlich für registrierte Mitglieder der Spezialeinheit / Turnierspieler zugänglich, Kommandant.");
+            };
+          } else if (lesson.status === "red") {
             subLink.classList.add("status-red");
-            subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
             subLink.href = "#";
             subLink.onclick = function(e) {
               e.preventDefault();
@@ -162,12 +178,11 @@
             };
           } else if (lesson.status === "green") {
             subLink.classList.add("status-green");
-            subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
             subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
           } else {
             subLink.classList.add("status-yellow");
-            var badgeLabel = isAbschluss ? "Abschlussprüfung" : "Bereit ▶";
-            subLink.innerHTML = `<span>${prefixIcon}${lesson.title}</span> <span class="badge-status badge-yellow">${badgeLabel}</span>`;
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-yellow">Bereit ▶</span>`;
             subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
           }
 
