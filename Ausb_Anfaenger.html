@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>DARK BULLS - GRUNDAUSBILDUNG</title>
-    <script src="config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -38,12 +37,13 @@
         <button class="action-btn" id="nextBtn" onclick="nextStep()">Weiter ⚔️</button>
     </div>
 
-    <a href="Ausb_Anfaenger.html" class="btn-back">Zurück zur Übersicht</a>
+    <a href="Ausbildung.html" class="btn-back">Zurück zur Übersicht</a>
 </div>
 
 <script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
-    const playerName = localStorage.getItem("bulls_user") || "TestUser";
+    // Direkt feste API-URL aus deiner Tabelle hinterlegt
+    const API = "https://script.google.com/macros/s/AKfycby1Gjnhol0ou63xW20OnbTo_wugzpOTgBP2yjnx3Qzg4bQ/exec";
+    const playerName = localStorage.getItem("darkBullsUser") || "Julian";
     
     let lehrgangData = null;
     let currentIndex = 0; 
@@ -51,16 +51,13 @@
     let userAnswers = {}; 
 
     async function loadLehrgangData() {
-        console.log("Starte Laden mit API:", API);
         try {
             let res = await fetch(`${API}?action=getLehrgangInhalt&rang=Grundausbildung&schritt=1`);
             let textRes = await res.text();
-            console.log("Antwort vom Server:", textRes);
             
             lehrgangData = JSON.parse(textRes);
             document.getElementById("lehrgangTitel").innerText = lehrgangData.titel;
             
-            // Erzwinge, dass immer sauber ganz oben bei Index 0 (erste Lese-Folie) gestartet wird
             currentIndex = 0;
             renderCurrentView();
         } catch (e) {
@@ -82,7 +79,6 @@
             return;
         }
 
-        // 1. Fall: Stopp-Tafel (Spalte K)
         if (row.stoppTextK && row.stoppTextK.trim() !== "") {
             isExamMode = false;
             prevBtn.disabled = false;
@@ -90,7 +86,6 @@
             box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${row.stoppTextK}</p>`;
             nextBtn.innerText = "Prüfung starten 🚀";
         }
-        // 2. Fall: Prüfungs-Einleitung (Spalte L)
         else if (row.pruefungEinleitungL && row.pruefungEinleitungL.trim() !== "") {
             isExamMode = true;
             prevBtn.disabled = true; 
@@ -98,7 +93,6 @@
             box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${row.pruefungEinleitungL}</p>`;
             nextBtn.innerText = "Zur ersten Frage ⚔️";
         }
-        // 3. Fall: Echte Prüfungsfrage (Spalte M / frageText)
         else if (row.frageText && row.frageText.trim() !== "") {
             isExamMode = true;
             prevBtn.disabled = true; 
@@ -130,7 +124,6 @@
             let isLastQuestion = (questionNum >= totalQ);
             nextBtn.innerText = isLastQuestion ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
         }
-        // 4. Fall: Normale Lese-Folien (Standard)
         else {
             isExamMode = false;
             prevBtn.disabled = (currentIndex === 0);
@@ -205,7 +198,7 @@
                 })
             });
 
-            window.location.href = "dashboard.html";
+            window.location.href = "Ausbildung.html";
         } else {
             alert(`Leider nicht bestanden! Du hast ${correctCount} von ${effectiveTotal} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
             location.reload();
