@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>DARK BULLS - GRUNDAUSBILDUNG</title>
+    <script src="config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -42,7 +43,8 @@
 </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycby1Gjnhol0ou63xW20OnbTo_wugzpOTgBP2yjnx3Qzg4bQ/exec";
+    // Holt die URL zentral und fehlerfrei aus der config.js
+    const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
     const playerName = localStorage.getItem("darkBullsUser") || "Julian";
     
     // URL-Parameter auslesen (falls eine bestimmte Lektion aus der Übersicht angeklickt wurde)
@@ -55,6 +57,11 @@
 
     async function loadLehrgangData() {
         try {
+            if (!API) {
+                document.getElementById("contentBox").innerHTML = "Fehler: config.js nicht geladen oder SCRIPT_URL fehlt.";
+                return;
+            }
+
             let fetchUrl = `${API}?action=getLehrgangInhalt&rang=Grundausbildung`;
             if (selectedLektion) {
                 fetchUrl += `&lektion=` + encodeURIComponent(selectedLektion);
