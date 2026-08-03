@@ -18,7 +18,6 @@
     h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
     .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
 
-    /* Aufklapp- / Akkordeon-Stil für die Kategorien */
     .dropdown-container { margin-bottom: 15px; }
     .category-card {
       background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
@@ -29,7 +28,6 @@
     .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
     .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
 
-    /* Untermenü zum Aufklappen */
     .dropdown-content {
       display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
       border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
@@ -53,14 +51,14 @@
     .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
   </style>
 </head>
-<body>
+<body onload="loadAkademieData()">
 
   <div class="container">
     <h1>Akademie & Ausbildung</h1>
     <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
 
     <div id="menu-container">
-      <p style="text-align: center; color: #888;">Lade Berechtigungen...</p>
+      <p style="text-align: center; color: #888;">Lade Lehrgangsdaten aus der Tabelle...</p>
     </div>
 
     <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
@@ -70,102 +68,93 @@
     var API_BASE_URL = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
     var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
 
-    document.addEventListener("DOMContentLoaded", function() {
-      document.getElementById("user-header").innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
-      loadMenuStatus();
-    });
+    document.getElementById("user-header").innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
 
-    function loadMenuStatus() {
+    async function loadAkademieData() {
       if (!API_BASE_URL) {
-        document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler: config.js nicht geladen oder SCRIPT_URL fehlt.</p>";
+        document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler: config.js nicht geladen.</p>";
         return;
       }
 
-      fetch(API_BASE_URL + "?action=getTrainingProgress&user=" + encodeURIComponent(currentPlayer))
-        .then(res => res.json())
-        .then(progress => {
-          var container = document.getElementById("menu-container");
-          container.innerHTML = "";
+      try {
+        // 1. Fortschritt des Spielers und echte Tabellen-Inhalte gleichzeitig laden
+        let [progressRes, trainingRes] = await Promise.all([
+          fetch(API_BASE_URL + "?action=getTrainingProgress&user=" + encodeURIComponent(currentPlayer)),
+          fetch(API_BASE_URL + "?action=getTrainingData")
+        ]);
 
-          // Definition der Hauptbereiche und ihrer aufklappbaren Lektionen
-          var categories = [
-            { 
-              title: "Grundausbildung", 
-              desc: "Grundlegende Spielmechaniken & Wirtschaft", 
-              key: "Grundausbildung",
-              page: "Ausb_Anfaenger.html",
-              sublektionen: ["Einführung & Wirtschaft", "Truppenausbildung", "Kartenkontrolle"] 
-            },
-            { 
-              title: "Fortgeschrittene Taktiken", 
-              desc: "Erweiterte Strategien & Frontverläufe", 
-              key: "Fortgeschritten",
-              page: "Ausb_Fortgeschritten.html",
-              sublektionen: ["Artillerie-Taktik", "Luftüberlegenheit", "Verteidigungslinien"] 
-            },
-            { 
-              title: "Turnier & Spezialeinheit", 
-              desc: "Taktiken für Ligen & verdeckte Operationen", 
-              key: "Turnierspieler",
-              page: "Ausb_Turnier.html",
-              sublektionen: ["Koordination", "Geheime Operationen", "Endspiel-Taktik"] 
-            }
-          ];
+        let progress = await progressRes.json();
+        let trainingData = await trainingRes.json();
 
-          categories.forEach((cat, index) => {
-            var isPassed = progress[cat.key] === "Bestanden" || progress[cat.key] == 1;
-            var statusText = isPassed ? "FREIGESCHALTET ✓" : "OFFEN";
-            var statusClass = isPassed ? "status-passed" : "status-open";
+        var container = document.getElementById("menu-container");
+        container.innerHTML = "";
 
-            var wrap = document.createElement("div");
-            wrap.className = "dropdown-container";
+        // Struktur der 3 Bereiche, verknüpft mit den Daten aus dem Backend
+        var categories = [
+          { key: "grundausbildung", progressKey: "Grundausbildung", fallbackPage: "Ausb_Anfaenger.html" },
+          { key: "fortgeschritten", progressKey: "Fortgeschritten", fallbackPage: "Ausb_Fortgeschritten.html" },
+          { key: "turnier", progressKey: "Turnierspieler", fallbackPage: "Ausb_Turnier.html" }
+        ];
 
-            // Hauptkarte zum Anklicken / Aufklappen
-            var card = document.createElement("div");
-            card.className = "category-card";
-            card.innerHTML = `
-              <div class="cat-info">
-                <h3>${cat.title} ▾</h3>
-                <p>${cat.desc}</p>
-              </div>
-              <span class="status-badge ${statusClass}">${statusText}</span>
-            `;
+        categories.forEach((cat, index) => {
+          var catData = trainingData[cat.key] || { title: cat.progressKey, lessons: [] };
+          var isPassed = progress[cat.progressKey] === "Bestanden" || progress[cat.progressKey] == 1;
+          var statusText = isPassed ? "FREIGESCHALTET ✓" : "OFFEN";
+          var statusClass = isPassed ? "status-passed" : "status-open";
 
-            // Aufklappbarer Bereich
-            var dropdown = document.createElement("div");
-            dropdown.className = "dropdown-content";
-            dropdown.id = "dropdown-" + index;
+          var wrap = document.createElement("div");
+          wrap.className = "dropdown-container";
 
-            // Direkt-Link zur Hauptseite + Unterpunkte einfügen
-            var mainLink = document.createElement("a");
-            mainLink.className = "sub-item";
-            mainLink.href = cat.page;
-            mainLink.innerHTML = `<strong>⚡ Gesamten Lehrgang starten</strong>`;
-            dropdown.appendChild(mainLink);
+          // Hauptkarte (Aufklappbar)
+          var card = document.createElement("div");
+          card.className = "category-card";
+          card.innerHTML = `
+            <div class="cat-info">
+              <h3>${catData.title} ▾</h3>
+              <p>${catData.lessons.length} Lektion(en) verfügbar</p>
+            </div>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          `;
 
-            cat.sublektionen.forEach(sub => {
-              var subLink = document.createElement("a");
-              subLink.className = "sub-item";
-              subLink.href = cat.page + "?lektion=" + encodeURIComponent(sub);
-              subLink.innerHTML = `🔹 ${sub}`;
-              dropdown.appendChild(subLink);
-            });
+          // Dropdown-Inhalt mit den echten Überschriften aus Spalte B
+          var dropdown = document.createElement("div");
+          dropdown.className = "dropdown-content";
+          dropdown.id = "dropdown-" + index;
 
-            // Klick-Event zum Ein-/Auklappen
-            card.onclick = function() {
-              var content = document.getElementById("dropdown-" + index);
-              content.classList.toggle("show");
-            };
-
-            wrap.appendChild(card);
-            wrap.appendChild(dropdown);
-            container.appendChild(wrap);
+          catData.lessons.forEach(lesson => {
+            var subLink = document.createElement("a");
+            subLink.className = "sub-item";
+            // Übergibt die echte Überschrift als Lektion an die jeweilige HTML-Seite
+            subLink.href = lesson.page + "?lektion=" + encodeURIComponent(lesson.title);
+            subLink.innerHTML = `🔹 ${lesson.title}`;
+            dropdown.appendChild(subLink);
           });
-        })
-        .catch(err => {
-          console.error("Fehler beim Laden des Menüs:", err);
-          document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler beim Laden der Berechtigungen.</p>";
+
+          // Fallback, falls keine Lektionen gefunden wurden
+          if (catData.lessons.length === 0) {
+            var emptyLink = document.createElement("span");
+            emptyLink.className = "sub-item";
+            emptyLink.style.color = "#666";
+            emptyLink.innerHTML = "Keine Lektionen im Tabellenblatt gefunden";
+            dropdown.appendChild(emptyLink);
+          }
+
+          // Klick-Event zum Aufklappen
+          card.onclick = function() {
+            var content = document.getElementById("dropdown-" + index);
+            content.classList.toggle("show");
+          };
+
+          wrap.appendChild(card);
+          wrap.appendChild(dropdown);
+          container.appendChild(wrap);
+
         });
+
+      } catch (err) {
+        console.error("Fehler beim Laden:", err);
+        document.getElementById("menu-container").innerHTML = "<p style='text-align:center; color:#ff3131;'>Fehler beim Laden der Akademie-Daten.</p>";
+      }
     }
   </script>
 </body>
