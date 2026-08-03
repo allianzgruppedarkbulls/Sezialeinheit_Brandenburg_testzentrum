@@ -90,13 +90,27 @@
     }
 
     function loadAkademieData() {
+      // Prüfen, welche Lektionen im LocalStorage als bestanden hinterlegt sind (z.B. "passed_Abkürzungen")
+      var passedAbkuerzungen = localStorage.getItem("passed_Abkürzungen") === "true";
+      var passedGebaeude = localStorage.getItem("passed_Gebäude und Wirtschaft") === "true";
+      var passedForschung = localStorage.getItem("passed_Forschung") === "true";
+
+      // Status Logik für die 3 Grundausbildungs-Stationen ermitteln
+      var status1 = passedAbkuerzungen ? "green" : "yellow";
+      var status2 = passedAbkuerzungen ? (passedGebaeude ? "green" : "yellow") : "red";
+      var status3 = passedGebaeude ? (passedForschung ? "green" : "yellow") : "red";
+
+      var grundausbildungPassed = passedAbkuerzungen && passedGebaeude && passedForschung;
+
       var trainingData = {
         grundausbildung: {
           title: "Grundausbildung (Basis-Taktiken)",
-          statusType: "open",
-          statusText: "OFFEN",
+          statusType: grundausbildungPassed ? "passed" : "open",
+          statusText: grundausbildungPassed ? "BESTANDEN ✓" : "OFFEN",
           lessons: [
-            { title: "Grundausbildung (Anfänger)", page: "Ausb_Anfaenger.html", status: "yellow" }
+            { title: "Abkürzungen", page: "Ausb_Anfaenger.html", status: status1 },
+            { title: "Gebäude und Wirtschaft", page: "lektion_gebaeude.html", status: status2 },
+            { title: "Forschung", page: "lektion_forschung.html", status: status3 }
           ]
         },
         fortgeschritten: {
@@ -167,8 +181,12 @@
             subLink.href = "#";
             subLink.onclick = function(e) {
               e.preventDefault();
-              alert("Diese Lektion ist noch gesperrt! Schließe zuerst die Grundausbildung ab, Kommandant.");
+              alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
             };
+          } else if (lesson.status === "green") {
+            subLink.classList.add("status-green");
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
+            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
           } else {
             subLink.classList.add("status-yellow");
             subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-yellow">Bereit ▶</span>`;
