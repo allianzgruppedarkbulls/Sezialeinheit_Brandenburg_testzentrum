@@ -196,6 +196,10 @@
         if (percentage >= 80) {
             alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
             
+            // 1. WICHTIG: Sofort lokal im Browser speichern, damit die Übersicht (Ausbildung.html) den grünen Haken zeigt!
+            localStorage.setItem("passed_" + lektionTitel, "true");
+            
+            // 2. An Google senden (falls es durchgeht)
             try {
                 await fetch(API, {
                     method: "POST",
@@ -216,7 +220,6 @@
         } else {
             alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
             
-             // Optional: Auch bei Nicht-Bestehen an das Protokoll melden (mit Status "Durchgefallen")
              try {
                 await fetch(API, {
                     method: "POST",
@@ -232,7 +235,3 @@
 
             location.reload();
         }
-    }
-</script>
-</body>
-</html>
