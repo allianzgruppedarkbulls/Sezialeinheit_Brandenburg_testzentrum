@@ -43,11 +43,9 @@
 </div>
 
 <script>
-    // Holt die URL zentral und fehlerfrei aus der config.js
     const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
     const playerName = localStorage.getItem("darkBullsUser") || "Julian";
     
-    // URL-Parameter auslesen (falls eine bestimmte Lektion aus der Übersicht angeklickt wurde)
     const urlParams = new URLSearchParams(window.location.search);
     const selectedLektion = urlParams.get("lektion") || "";
 
@@ -198,8 +196,7 @@
             
             // Lokale Markierung setzen, damit die Übersicht (Ausbildung.html) es sofort anzeigt
             localStorage.setItem("passed_" + lektionTitel, "true");
-            
-            // An Google Apps Script senden
+
             try {
                 if (API) {
                     await fetch(API, {
