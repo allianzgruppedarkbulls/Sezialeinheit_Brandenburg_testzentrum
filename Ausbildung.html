@@ -1,227 +1,208 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>DARK BULLS - GRUNDAUSBILDUNG</title>
-    <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 750px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
-        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 3px; font-size: 28px; }
-        .subtitle { color: #f0b232; font-size: 16px; margin-bottom: 25px; text-transform: uppercase; }
-        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; white-space: pre-line; min-height: 150px; }
-        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; text-align: left; font-family: sans-serif; font-size: 15px; }
-        .quiz-option:hover { border-color: #ff3131; background: #222; }
-        .quiz-option input { margin-right: 10px; }
-        .exam-input { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #ff3131; color: #fff; font-family: 'Almendra'; font-size: 18px; border-radius: 6px; box-sizing: border-box; margin-top: 15px; }
-        .btn-container { display: flex; justify-content: space-between; gap: 15px; }
-        .action-btn { flex: 1; padding: 15px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 18px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .action-btn:hover { background: #2fb145; }
-        .secondary-btn { background: #333; color: #fff; }
-        .secondary-btn:hover { background: #444; }
-        .secondary-btn:disabled { background: #151515; color: #555; border-color: #222; cursor: not-allowed; }
-        .btn-back { display: block; margin-top: 25px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; }
-        .btn-back:hover { color: #fff; }
-    </style>
+  <meta charset="UTF-8">
+  <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
+  <script src="config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #050505; color: #ffffff; font-family: 'Almendra', serif;
+      margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+    }
+    .container {
+      width: 750px; background-color: #0f0f0f; border: 2px solid #333;
+      border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2);
+      box-sizing: border-box;
+    }
+    h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
+    .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
+
+    .dropdown-container { margin-bottom: 15px; }
+    .category-card {
+      background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: all 0.3s ease;
+    }
+    .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
+
+    .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
+    .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
+
+    .dropdown-content {
+      display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
+      border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
+    }
+    .dropdown-content.show { display: block; }
+    
+    .sub-item {
+      display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
+      padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
+      font-family: sans-serif; font-size: 14px; transition: 0.2s; border: 1px solid #222;
+    }
+    
+    .sub-item.status-green { color: #fff; }
+    .sub-item.status-yellow { background: #141410; color: #fff; border-color: #333; }
+    .sub-item.status-red { opacity: 0.4; cursor: not-allowed; background: #0d0d0d; }
+    .sub-item.status-hidden { background: #0d0d0d; color: #666; font-style: italic; cursor: not-allowed; }
+    
+    .sub-item:not(.status-red):not(.status-hidden):hover { background: #ff3131; color: #000; border-color: #ff3131; }
+
+    .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
+    .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
+    .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
+    .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
+    .badge-gray { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
+
+    .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
+    .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
+    .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
+    .status-locked { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
+
+    .btn-back {
+      display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
+      border: 1px solid #444; color: #888; padding: 12px; font-family: 'Almendra', serif; font-size: 16px;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 5px; text-decoration: none;
+    }
+    .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
+  </style>
 </head>
-<body onload="loadLehrgangData()">
-<div class="container">
-    <h1 id="lehrgangTitel">Lade Akademie...</h1>
-    <div class="subtitle" id="statusInfo">Bitte einen Moment Geduld</div>
-    
-    <div class="content-card" id="contentBox">
-        Lade Inhalte aus dem Protokoll...
-    </div>
-    
-    <div class="btn-container" id="btnContainer">
-        <button class="action-btn secondary-btn" id="prevBtn" onclick="prevStep()">Zurück</button>
-        <button class="action-btn" id="nextBtn" onclick="nextStep()">Weiter ⚔️</button>
+<body onload="loadAkademieData()">
+
+  <div class="container">
+    <h1>Akademie & Ausbildung</h1>
+    <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
+
+    <div id="menu-container">
+      <p style="text-align: center; color: #888;">Lade Lehrgangsdaten...</p>
     </div>
 
-    <a href="Ausbildung.html" class="btn-back">Zurück zur Übersicht</a>
-</div>
+    <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
+  </div>
 
-<script>
-    const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
-    const playerName = localStorage.getItem("darkBullsUser") || "Julian";
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const selectedLektion = urlParams.get("lektion") || "";
+  <script>
+    var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
+    var isTournamentPlayer = localStorage.getItem("darkBullsTournamentPlayer") === "true";
 
-    let lehrgangData = null;
-    let currentStepIndex = 0; 
-    let userAnswers = {}; 
-
-    async function loadLehrgangData() {
-        try {
-            if (!API) {
-                document.getElementById("contentBox").innerHTML = "Fehler: config.js nicht geladen oder SCRIPT_URL fehlt.";
-                return;
-            }
-
-            let fetchUrl = `${API}?action=getLehrgangInhalt&rang=Grundausbildung`;
-            if (selectedLektion) {
-                fetchUrl += `&lektion=` + encodeURIComponent(selectedLektion);
-            }
-
-            let res = await fetch(fetchUrl);
-            let textRes = await res.text();
-            
-            lehrgangData = JSON.parse(textRes);
-            document.getElementById("lehrgangTitel").innerText = lehrgangData.titel || "Grundausbildung";
-            
-            currentStepIndex = 0;
-            renderCurrentView();
-        } catch (e) {
-            console.error("Fehler beim Laden:", e);
-            document.getElementById("contentBox").innerHTML = "Fehler beim Laden der Lehrgangsdaten.";
-        }
+    var headerEl = document.getElementById("user-header");
+    if (headerEl) {
+      headerEl.innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
     }
 
-    function renderCurrentView() {
-        const box = document.getElementById("contentBox");
-        const prevBtn = document.getElementById("prevBtn");
-        const nextBtn = document.getElementById("nextBtn");
-        const status = document.getElementById("statusInfo");
+    function loadAkademieData() {
+      var passedAbkuerzungen = localStorage.getItem("passed_Abkürzungen") === "true";
+      var passedGebaeude = localStorage.getItem("passed_Gebäude und Wirtschaft") === "true";
+      var passedForschung = localStorage.getItem("passed_Forschung") === "true";
 
-        let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
+      var status1 = passedAbkuerzungen ? "green" : "yellow";
+      var status2 = passedAbkuerzungen ? (passedGebaeude ? "green" : "yellow") : "red";
+      var status3 = passedGebaeude ? (passedForschung ? "green" : "yellow") : "red";
 
-        // 1. Bereich: Normale Lese-Folien
-        if (currentStepIndex < totalFolien) {
-            prevBtn.disabled = (currentStepIndex === 0);
-            status.innerText = `Lerneinheit / Folie ${currentStepIndex + 1} von ${totalFolien}`;
-            box.innerHTML = `<p>${lehrgangData.folien[currentStepIndex]}</p>`;
-            nextBtn.innerText = (currentStepIndex === totalFolien - 1) ? "Weiter zur Prüfung ➔" : "Weiter ⚔️";
+      var grundausbildungPassed = passedAbkuerzungen && passedGebaeude && passedForschung;
+
+      var trainingData = {
+        grundausbildung: {
+          title: "Grundausbildung (Basis-Taktiken)",
+          statusType: grundausbildungPassed ? "passed" : "open",
+          statusText: grundausbildungPassed ? "BESTANDEN ✓" : "OFFEN",
+          lessons: [
+            { title: "Abkürzungen", page: "Ausb_Anfaenger.html", status: status1 },
+            { title: "Gebäude und Wirtschaft", page: "lektion_gebaeude.html", status: status2 },
+            { title: "Forschung", page: "lektion_forschung.html", status: status3 }
+          ]
+        },
+        fortgeschritten: {
+          title: "Fortgeschrittene Taktiken",
+          statusType: "locked",
+          statusText: "GESPERRT",
+          lessons: [
+            { title: "Fortgeschrittene Taktiken", page: "Ausb_Fortgeschritten.html", status: "red" }
+          ]
+        },
+        turnier: {
+          title: "Turnier & Spezialeinheit",
+          statusType: isTournamentPlayer ? "open" : "locked",
+          statusText: isTournamentPlayer ? "OFFEN" : "NUR TURNIER-SPIELER",
+          lessons: isTournamentPlayer ? [
+            { title: "Turnier-Taktik & Spezialeinheit", page: "Ausb_Turnier.html", status: "yellow" }
+          ] : [
+            { title: "🔒 Exklusiver Bereich (Inhalt verborgen)", page: "#", status: "hidden" }
+          ]
         }
-        // 2. Bereich: Stopp-Tafel (zwischen Folien und Fragen)
-        else if (currentStepIndex === totalFolien) {
-            prevBtn.disabled = false;
-            status.innerText = "Abschluss der Präsentation";
-            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${lehrgangData.stoppTextK || "Bereit für die Prüfung?"}</p>`;
-            nextBtn.innerText = "Prüfung starten 🚀";
-        }
-        // 3. Bereich: Prüfungs-Einleitung
-        else if (currentStepIndex === totalFolien + 1) {
-            prevBtn.disabled = true;
-            status.innerText = "Prüfungsmodus";
-            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${lehrgangData.pruefungEinleitungL || "Beantworte die folgenden Fragen:"}</p>`;
-            nextBtn.innerText = "Zur ersten Frage ⚔️";
-        }
-        // 4. Bereich: Echte Prüfungsfragen
-        else {
-            let questionIndex = currentStepIndex - (totalFolien + 2);
-            let fragenList = lehrgangData.fragen || [];
+      };
 
-            if (questionIndex < fragenList.length) {
-                prevBtn.disabled = true;
-                let q = fragenList[questionIndex];
-                status.innerText = `Prüfungsfrage ${questionIndex + 1} von ${fragenList.length}`;
+      var container = document.getElementById("menu-container");
+      container.innerHTML = "";
 
-                let html = `<p><strong>${q.frageText}</strong></p>`;
+      var keys = ["grundausbildung", "fortgeschritten", "turnier"];
 
-                if (q.antworten && q.antworten.length > 0) {
-                    q.antworten.forEach((ans, idx) => {
-                        let checked = (userAnswers[questionIndex] === (idx + 1)) ? "checked" : "";
-                        html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${questionIndex}, ${idx + 1})"> ${idx + 1}. ${ans}</label>`;
-                    });
-                } else {
-                    let savedVal = userAnswers[questionIndex] || "";
-                    html += `<input type="text" class="exam-input" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${questionIndex}, this.value)">`;
-                }
+      keys.forEach((key, index) => {
+        var catData = trainingData[key];
+        if (!catData) return;
 
-                box.innerHTML = html;
-                nextBtn.innerText = (questionIndex === fragenList.length - 1) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
-            }
-        }
-    }
+        var statusClass = "status-open";
+        if (catData.statusType === "passed") statusClass = "status-passed";
+        if (catData.statusType === "locked") statusClass = "status-locked";
 
-    function saveAnswer(qIndex, ansNum) {
-        userAnswers[qIndex] = ansNum;
-    }
+        var wrap = document.createElement("div");
+        wrap.className = "dropdown-container";
 
-    function saveTextAnswer(qIndex, textVal) {
-        userAnswers[qIndex] = textVal;
-    }
+        var card = document.createElement("div");
+        card.className = "category-card";
+        card.innerHTML = `
+          <div class="cat-info">
+            <h3>${catData.title} ▾</h3>
+            <p>${catData.statusType === "hidden" ? "Exklusiver Bereich" : catData.lessons.length + " Lektion(en) verfügbar"}</p>
+          </div>
+          <span class="status-badge ${statusClass}">${catData.statusText}</span>
+        `;
 
-    function prevStep() {
-        if (currentStepIndex > 0) {
-            currentStepIndex--;
-            renderCurrentView();
-        }
-    }
+        var dropdown = document.createElement("div");
+        dropdown.className = "dropdown-content";
+        dropdown.id = "dropdown-" + index;
 
-    function nextStep() {
-        let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
-        let maxSteps = totalFolien + 1 + 1 + (lehrgangData.fragen ? lehrgangData.fragen.length : 0);
+        catData.lessons.forEach((lesson) => {
+          var subLink = document.createElement("a");
+          subLink.className = "sub-item";
+          
+          if (lesson.status === "hidden") {
+            subLink.classList.add("status-hidden");
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-gray">Gesperrt 🔒</span>`;
+            subLink.href = "#";
+            subLink.onclick = function(e) {
+              e.preventDefault();
+              alert("Dieser Bereich ist ausschließlich für registrierte Mitglieder der Spezialeinheit / Turnierspieler zugänglich, Kommandant.");
+            };
+          } else if (lesson.status === "red") {
+            subLink.classList.add("status-red");
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
+            subLink.href = "#";
+            subLink.onclick = function(e) {
+              e.preventDefault();
+              alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
+            };
+          } else if (lesson.status === "green") {
+            subLink.classList.add("status-green");
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
+            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
+          } else {
+            subLink.classList.add("status-yellow");
+            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-yellow">Bereit ▶</span>`;
+            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
+          }
 
-        if (currentStepIndex < maxSteps - 1) {
-            currentStepIndex++;
-            renderCurrentView();
-        } else {
-            evaluateExam();
-        }
-    }
-
-    async function evaluateExam() {
-        let correctCount = 0;
-        let fragenList = lehrgangData.fragen || [];
-        let totalQ = fragenList.length;
-
-        if (totalQ === 0) {
-            alert("Keine Prüfungsfragen vorhanden.");
-            return;
-        }
-
-        fragenList.forEach((q, idx) => {
-            let userAns = userAnswers[idx];
-            let correctAns = q.korrekt;
-
-            if (typeof correctAns === "string" && isNaN(correctAns)) {
-                if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
-                    correctCount++;
-                }
-            } else {
-                if (parseInt(userAns) === parseInt(correctAns)) {
-                    correctCount++;
-                }
-            }
+          dropdown.appendChild(subLink);
         });
 
-        let percentage = Math.round((correctCount / totalQ) * 100);
-        let lektionTitel = lehrgangData.titel || "Grundausbildung";
+        card.onclick = function() {
+          dropdown.classList.toggle("show");
+        };
 
-        if (percentage >= 80) {
-            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
-            
-            // Lokale Markierung setzen, damit die Übersicht (Ausbildung.html) es sofort anzeigt
-            localStorage.setItem("passed_" + lektionTitel, "true");
-
-            try {
-                if (API) {
-                    await fetch(API, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            user: playerName,
-                            currentRang: "Grundausbildung",
-                            lektionName: lektionTitel,
-                            status: "Bestanden",
-                            percent: percentage + "%"
-                        })
-                    });
-                }
-            } catch (err) {
-                console.error("Fehler beim Speichern des Fortschritts:", err);
-            }
-
-            window.location.href = "Ausbildung.html";
-        } else {
-            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
-            location.reload();
-        }
+        wrap.appendChild(card);
+        wrap.appendChild(dropdown);
+        container.appendChild(wrap);
+      });
     }
-</script>
+  </script>
 </body>
 </html>
