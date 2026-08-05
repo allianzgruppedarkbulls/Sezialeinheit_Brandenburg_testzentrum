@@ -1,208 +1,160 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
-  <script src="config.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background-color: #050505; color: #ffffff; font-family: 'Almendra', serif;
-      margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-    }
-    .container {
-      width: 750px; background-color: #0f0f0f; border: 2px solid #333;
-      border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2);
-      box-sizing: border-box;
-    }
-    h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
-    .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
+    <meta charset="UTF-8">
+    <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
+    <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #050505; color: #ffffff; font-family: 'Almendra', serif;
+            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            width: 750px; background-color: #0f0f0f; border: 2px solid #333;
+            border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2);
+            box-sizing: border-box;
+        }
+        h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
+        .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
 
-    .dropdown-container { margin-bottom: 15px; }
-    .category-card {
-      background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
-      display: flex; justify-content: space-between; align-items: center;
-      cursor: pointer; transition: all 0.3s ease;
-    }
-    .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
+        .dropdown-container { margin-bottom: 15px; }
+        .category-card {
+            background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
 
-    .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
-    .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
+        .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
+        .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
 
-    .dropdown-content {
-      display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
-      border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
-    }
-    .dropdown-content.show { display: block; }
-    
-    .sub-item {
-      display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
-      padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
-      font-family: sans-serif; font-size: 14px; transition: 0.2s; border: 1px solid #222;
-    }
-    
-    .sub-item.status-green { color: #fff; }
-    .sub-item.status-yellow { background: #141410; color: #fff; border-color: #333; }
-    .sub-item.status-red { opacity: 0.4; cursor: not-allowed; background: #0d0d0d; }
-    .sub-item.status-hidden { background: #0d0d0d; color: #666; font-style: italic; cursor: not-allowed; }
-    
-    .sub-item:not(.status-red):not(.status-hidden):hover { background: #ff3131; color: #000; border-color: #ff3131; }
+        .dropdown-content {
+            display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
+            border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
+        }
+        .dropdown-content.show { display: block; }
+        
+        .sub-item {
+            display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
+            padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
+            font-family: sans-serif; font-size: 14px; transition: 0.2s; border: 1px solid #222;
+        }
+        
+        .sub-item:hover { background: #ff3131; color: #000; border-color: #ff3131; }
 
-    .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
-    .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
-    .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
-    .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
-    .badge-gray { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
+        .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
+        .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
+        .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
+        .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
 
-    .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
-    .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
-    .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
-    .status-locked { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
+        .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
+        .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
+        .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
 
-    .btn-back {
-      display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
-      border: 1px solid #444; color: #888; padding: 12px; font-family: 'Almendra', serif; font-size: 16px;
-      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 5px; text-decoration: none;
-    }
-    .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
-  </style>
+        .btn-back {
+            display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
+            border: 1px solid #444; color: #888; padding: 12px; font-family: 'Almendra', serif; font-size: 16px;
+            letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 5px; text-decoration: none;
+        }
+        .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
+    </style>
 </head>
 <body onload="loadAkademieData()">
 
-  <div class="container">
-    <h1>Akademie & Ausbildung</h1>
-    <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
+    <div class="container">
+        <h1>Akademie & Ausbildung</h1>
+        <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
 
-    <div id="menu-container">
-      <p style="text-align: center; color: #888;">Lade Lehrgangsdaten...</p>
+        <div id="menu-container">
+            <p style="text-align: center; color: #888;">Lade Lehrgangsdaten aus der Datenbank...</p>
+        </div>
+
+        <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
     </div>
 
-    <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
-  </div>
+    <script>
+        const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
+        const currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
 
-  <script>
-    var currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
-    var isTournamentPlayer = localStorage.getItem("darkBullsTournamentPlayer") === "true";
-
-    var headerEl = document.getElementById("user-header");
-    if (headerEl) {
-      headerEl.innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
-    }
-
-    function loadAkademieData() {
-      var passedAbkuerzungen = localStorage.getItem("passed_Abkürzungen") === "true";
-      var passedGebaeude = localStorage.getItem("passed_Gebäude und Wirtschaft") === "true";
-      var passedForschung = localStorage.getItem("passed_Forschung") === "true";
-
-      var status1 = passedAbkuerzungen ? "green" : "yellow";
-      var status2 = passedAbkuerzungen ? (passedGebaeude ? "green" : "yellow") : "red";
-      var status3 = passedGebaeude ? (passedForschung ? "green" : "yellow") : "red";
-
-      var grundausbildungPassed = passedAbkuerzungen && passedGebaeude && passedForschung;
-
-      var trainingData = {
-        grundausbildung: {
-          title: "Grundausbildung (Basis-Taktiken)",
-          statusType: grundausbildungPassed ? "passed" : "open",
-          statusText: grundausbildungPassed ? "BESTANDEN ✓" : "OFFEN",
-          lessons: [
-            { title: "Abkürzungen", page: "Ausb_Anfaenger.html", status: status1 },
-            { title: "Gebäude und Wirtschaft", page: "lektion_gebaeude.html", status: status2 },
-            { title: "Forschung", page: "lektion_forschung.html", status: status3 }
-          ]
-        },
-        fortgeschritten: {
-          title: "Fortgeschrittene Taktiken",
-          statusType: "locked",
-          statusText: "GESPERRT",
-          lessons: [
-            { title: "Fortgeschrittene Taktiken", page: "Ausb_Fortgeschritten.html", status: "red" }
-          ]
-        },
-        turnier: {
-          title: "Turnier & Spezialeinheit",
-          statusType: isTournamentPlayer ? "open" : "locked",
-          statusText: isTournamentPlayer ? "OFFEN" : "NUR TURNIER-SPIELER",
-          lessons: isTournamentPlayer ? [
-            { title: "Turnier-Taktik & Spezialeinheit", page: "Ausb_Turnier.html", status: "yellow" }
-          ] : [
-            { title: "🔒 Exklusiver Bereich (Inhalt verborgen)", page: "#", status: "hidden" }
-          ]
+        var headerEl = document.getElementById("user-header");
+        if (headerEl) {
+            headerEl.innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
         }
-      };
 
-      var container = document.getElementById("menu-container");
-      container.innerHTML = "";
+        async function loadAkademieData() {
+            try {
+                if (!API) {
+                    document.getElementById("menu-container").innerHTML = "<p style='color:red; text-align:center;'>Fehler: SCRIPT_URL in config.js fehlt.</p>";
+                    return;
+                }
 
-      var keys = ["grundausbildung", "fortgeschritten", "turnier"];
+                // Wir holen uns die Struktur & den Fortschritt dynamisch über die API
+                let res = await fetch(`${API}?action=getAkademieUebersicht&user=${encodeURIComponent(currentPlayer)}`);
+                let data = await res.json();
 
-      keys.forEach((key, index) => {
-        var catData = trainingData[key];
-        if (!catData) return;
+                let container = document.getElementById("menu-container");
+                container.innerHTML = "";
 
-        var statusClass = "status-open";
-        if (catData.statusType === "passed") statusClass = "status-passed";
-        if (catData.statusType === "locked") statusClass = "status-locked";
+                // Beispielhafte dynamische Verarbeitung der Kategorien aus der Tabelle
+                let categories = data.kategorien || [
+                    {
+                        rang: "Grundausbildung",
+                        titel: "Grundausbildung (Basis-Taktiken)",
+                        status: "OFFEN",
+                        lektionen: [
+                            { name: "Abkürzungen", status: "Bereit" },
+                            { name: "Gebäude und Wirtschaft", status: "Ausstehend" },
+                            { name: "Forschung", status: "Ausstehend" }
+                        ]
+                    }
+                ];
 
-        var wrap = document.createElement("div");
-        wrap.className = "dropdown-container";
+                categories.forEach((cat, index) => {
+                    var wrap = document.createElement("div");
+                    wrap.className = "dropdown-container";
 
-        var card = document.createElement("div");
-        card.className = "category-card";
-        card.innerHTML = `
-          <div class="cat-info">
-            <h3>${catData.title} ▾</h3>
-            <p>${catData.statusType === "hidden" ? "Exklusiver Bereich" : catData.lessons.length + " Lektion(en) verfügbar"}</p>
-          </div>
-          <span class="status-badge ${statusClass}">${catData.statusText}</span>
-        `;
+                    var card = document.createElement("div");
+                    card.className = "category-card";
+                    card.innerHTML = `
+                        <div class="cat-info">
+                            <h3>${cat.titel} ▾</h3>
+                            <p>${cat.lektionen.length} Lektion(en) verfügbar</p>
+                        </div>
+                        <span class="status-badge ${cat.status === 'BESTANDEN' ? 'status-passed' : 'status-open'}">${cat.status}</span>
+                    `;
 
-        var dropdown = document.createElement("div");
-        dropdown.className = "dropdown-content";
-        dropdown.id = "dropdown-" + index;
+                    var dropdown = document.createElement("div");
+                    dropdown.className = "dropdown-content";
+                    dropdown.id = "dropdown-" + index;
 
-        catData.lessons.forEach((lesson) => {
-          var subLink = document.createElement("a");
-          subLink.className = "sub-item";
-          
-          if (lesson.status === "hidden") {
-            subLink.classList.add("status-hidden");
-            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-gray">Gesperrt 🔒</span>`;
-            subLink.href = "#";
-            subLink.onclick = function(e) {
-              e.preventDefault();
-              alert("Dieser Bereich ist ausschließlich für registrierte Mitglieder der Spezialeinheit / Turnierspieler zugänglich, Kommandant.");
-            };
-          } else if (lesson.status === "red") {
-            subLink.classList.add("status-red");
-            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-red">Gesperrt 🔒</span>`;
-            subLink.href = "#";
-            subLink.onclick = function(e) {
-              e.preventDefault();
-              alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
-            };
-          } else if (lesson.status === "green") {
-            subLink.classList.add("status-green");
-            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-green">Bestanden ✓</span>`;
-            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
-          } else {
-            subLink.classList.add("status-yellow");
-            subLink.innerHTML = `<span>${lesson.title}</span> <span class="badge-status badge-yellow">Bereit ▶</span>`;
-            subLink.href = lesson.page + "?rang=" + key + "&lektion=" + encodeURIComponent(lesson.title);
-          }
+                    cat.lektionen.forEach((les) => {
+                        var subLink = document.createElement("a");
+                        subLink.className = "sub-item";
+                        
+                        // Jede Lektion verweist sauber auf unsere zentrale Ansicht und übergibt den Namen per URL
+                        subLink.href = `Ausb_Anfaenger.html?rang=${encodeURIComponent(cat.rang)}&lektion=${encodeURIComponent(les.name)}`;
+                        
+                        let badgeClass = les.status === "Bestanden" ? "badge-green" : "badge-yellow";
+                        subLink.innerHTML = `<span>${les.name}</span> <span class="badge-status ${badgeClass}">${les.status}</span>`;
+                        
+                        dropdown.appendChild(subLink);
+                    });
 
-          dropdown.appendChild(subLink);
-        });
+                    card.onclick = function() {
+                        dropdown.classList.toggle("show");
+                    };
 
-        card.onclick = function() {
-          dropdown.classList.toggle("show");
-        };
+                    wrap.appendChild(card);
+                    wrap.appendChild(dropdown);
+                    container.appendChild(wrap);
+                });
 
-        wrap.appendChild(card);
-        wrap.appendChild(dropdown);
-        container.appendChild(wrap);
-      });
-    }
-  </script>
+            } catch (e) {
+                console.error("Fehler beim Laden der Akademie-Übersicht:", e);
+                document.getElementById("menu-container").innerHTML = "<p style='color:red; text-align:center;'>Fehler beim Laden der Daten aus der Datenbank.</p>";
+            }
+        }
+    </script>
 </body>
 </html>
