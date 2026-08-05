@@ -196,14 +196,11 @@
         if (percentage >= 80) {
             alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
             
-            // 1. WICHTIG: Sofort lokal im Browser speichern, damit die Übersicht (Ausbildung.html) den grünen Haken zeigt!
-            localStorage.setItem("passed_" + lektionTitel, "true");
-            
-            // 2. An Google senden (falls es durchgeht)
             try {
                 await fetch(API, {
                     method: "POST",
                     body: JSON.stringify({
+                        action: "advanceTrainingProgress",
                         user: playerName,
                         currentRang: "Grundausbildung",
                         lektionName: lektionTitel,
@@ -224,6 +221,7 @@
                 await fetch(API, {
                     method: "POST",
                     body: JSON.stringify({
+                        action: "advanceTrainingProgress", // <--- HIER AUCH!
                         user: playerName,
                         currentRang: "Grundausbildung",
                         lektionName: lektionTitel,
