@@ -149,12 +149,17 @@
 
     function nextStep() {
         let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
-        let maxSteps = totalFolien + 1 + 1 + (lehrgangData.fragen ? lehrgangData.fragen.length : 0);
+        // Gesamtschritte = Folien (0 bis N-1) + Stopp-Tafel + Einleitung + Fragen-Anfang bis Ende
+        let fragenLength = lehrgangData.fragen ? lehrgangData.fragen.length : 0;
+        let startFragenIndex = totalFolien + 2; // Ab hier fangen die Fragen an
+        let maxExamIndex = startFragenIndex + fragenLength - 1; // Letzte Frage
 
-        if (currentStepIndex < maxSteps - 1) {
+        // Wenn wir uns noch auf den Folien, der Stopp-Tafel oder vor der letzten Frage befinden: normal weiterzählen
+        if (currentStepIndex < maxExamIndex) {
             currentStepIndex++;
             renderCurrentView();
         } else {
+            // Wenn wir bei der letzten Frage sind und "Weiter" drücken -> Prüfung auswerten!
             evaluateExam();
         }
     }
