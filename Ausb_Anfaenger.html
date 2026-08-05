@@ -43,16 +43,14 @@
 </div>
 
 <script>
-    // Holt die URL zentral und fehlerfrei aus der config.js
     const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
     const playerName = localStorage.getItem("darkBullsUser") || "Julian";
     
-    // URL-Parameter auslesen (falls eine bestimmte Lektion aus der Übersicht angeklickt wurde)
     const urlParams = new URLSearchParams(window.location.search);
     const selectedLektion = urlParams.get("lektion") || "";
 
     let lehrgangData = null;
-    let currentStepIndex = 0; // 0 bis (folien.length - 1) sind Folien, danach Stopp-Tafel, danach Prüfung
+    let currentStepIndex = 0;
     let userAnswers = {}; 
 
     async function loadLehrgangData() {
@@ -89,28 +87,24 @@
 
         let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
 
-        // 1. Bereich: Normale Lese-Folien
         if (currentStepIndex < totalFolien) {
             prevBtn.disabled = (currentStepIndex === 0);
             status.innerText = `Lerneinheit / Folie ${currentStepIndex + 1} von ${totalFolien}`;
             box.innerHTML = `<p>${lehrgangData.folien[currentStepIndex]}</p>`;
             nextBtn.innerText = (currentStepIndex === totalFolien - 1) ? "Weiter zur Prüfung ➔" : "Weiter ⚔️";
         }
-        // 2. Bereich: Stopp-Tafel (zwischen Folien und Fragen)
         else if (currentStepIndex === totalFolien) {
             prevBtn.disabled = false;
             status.innerText = "Abschluss der Präsentation";
             box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${lehrgangData.stoppTextK || "Bereit für die Prüfung?"}</p>`;
             nextBtn.innerText = "Prüfung starten 🚀";
         }
-        // 3. Bereich: Prüfungs-Einleitung
         else if (currentStepIndex === totalFolien + 1) {
             prevBtn.disabled = true;
             status.innerText = "Prüfungsmodus";
             box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${lehrgangData.pruefungEinleitungL || "Beantworte die folgenden Fragen:"}</p>`;
             nextBtn.innerText = "Zur ersten Frage ⚔️";
         }
-        // 4. Bereich: Echte Prüfungsfragen
         else {
             let questionIndex = currentStepIndex - (totalFolien + 2);
             let fragenList = lehrgangData.fragen || [];
@@ -221,7 +215,7 @@
                 await fetch(API, {
                     method: "POST",
                     body: JSON.stringify({
-                        action: "advanceTrainingProgress", // <--- HIER AUCH!
+                        action: "advanceTrainingProgress",
                         user: playerName,
                         currentRang: "Grundausbildung",
                         lektionName: lektionTitel,
@@ -233,3 +227,7 @@
 
             location.reload();
         }
+    }
+</script>
+</body>
+</html>
