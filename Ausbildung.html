@@ -2,15 +2,18 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dark Bulls - Akademie</title>
+    <!-- Zentrale Konfiguration laden -->
+    <script src="config.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
         h1 { color: #ffcc00; text-align: center; }
         .container { max-width: 800px; margin: 0 auto; }
         .rubrik-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
         .rubrik-title { font-size: 1.2em; font-weight: bold; color: #ff9900; margin-bottom: 10px; }
-        .lesson-list { list-style: none; padding: 0; }
-        .lesson-item { padding: 8px; margin: 5px 0; background: #2a2a2a; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .lesson-list { list-style: none; padding: 0; margin: 0; }
+        .lesson-item { padding: 10px; margin: 6px 0; background: #2a2a2a; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
         .status-green { color: #4caf50; font-weight: bold; }
         .status-yellow { color: #ffeb3b; font-weight: bold; }
         .status-red { color: #f44336; font-weight: bold; }
@@ -32,16 +35,21 @@
 </div>
 
 <script>
-    // Trage hier die Web-App-URL deiner bereitgestellten Google Apps Script Datei ein
-    const SCRIPT_URL = "HIER_DEINE_WEB_APP_URL_EINTRAGEN";
-    
-    // Beispiel-User (kann dynamisch z.B. aus dem URL-Parameter oder Login geholt werden)
+    // URL-Parameter auslesen
     const urlParams = new URLSearchParams(window.location.search);
     const currentUser = urlParams.get('user') || "Julian"; 
 
     document.getElementById("userNameDisplay").innerText = currentUser;
 
     function loadAkademieData() {
+        // Prüfen ob die zentrale config.js und SCRIPT_URL vorhanden sind
+        if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
+            document.getElementById("akademieContent").innerHTML = `<p style="color: red; text-align: center;">Fehler: config.js oder SCRIPT_URL nicht gefunden!</p>`;
+            return;
+        }
+
+        const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
+
         fetch(`${SCRIPT_URL}?action=getTrainingData&user=${encodeURIComponent(currentUser)}`)
             .then(response => response.json())
             .then(data => {
@@ -53,7 +61,6 @@
                     return;
                 }
 
-                // Durchlaufe die Rubriken (Grundausbildung, Fortgeschritten, Turnier)
                 for (let key in data) {
                     let rubrik = data[key];
                     let card = document.createElement("div");
@@ -96,12 +103,12 @@
 
                     listHtml += `</ul>`;
                     card.innerHTML = titleHtml + listHtml;
-                    container.appendChild(card;
+                    container.appendChild(card);
                 }
             })
             .catch(err => {
                 console.error("Fehler beim Laden:", err);
-                document.getElementById("akademieContent").innerHTML = `<p style="color: red;">Verbindungsfehler zur Datenbank.</p>`;
+                document.getElementById("akademieContent").innerHTML = `<p style="color: red; text-align: center;">Verbindungsfehler zur Datenbank.</p>`;
             });
     }
 
