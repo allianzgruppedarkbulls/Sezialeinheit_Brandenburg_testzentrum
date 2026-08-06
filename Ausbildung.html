@@ -2,260 +2,116 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>DARK BULLS - AKADEMIE ÜBERSICHT</title>
-    <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <title>Dark Bulls - Akademie</title>
     <style>
-        body {
-            background-color: #050505; color: #ffffff; font-family: 'Almendra', serif;
-            margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        }
-        .container {
-            width: 750px; background-color: #0f0f0f; border: 2px solid #333;
-            border-radius: 15px; padding: 40px; box-shadow: 0 0 60px 15px rgba(255, 49, 49, 0.2);
-            box-sizing: border-box;
-        }
-        h1 { color: #ff3131; text-transform: uppercase; text-align: center; margin-bottom: 5px; letter-spacing: 3px; font-size: 28px; text-shadow: 0 0 15px rgba(255, 49, 49, 0.5); }
-        .subtitle { color: #888; font-size: 16px; text-align: center; margin-bottom: 30px; text-transform: uppercase; }
-
-        .dropdown-container { margin-bottom: 15px; }
-        .category-card {
-            background: #121212; border: 1px solid #333; border-radius: 10px; padding: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: all 0.3s ease;
-        }
-        .category-card:hover { border-color: #ff3131; box-shadow: 0 0 15px rgba(255, 49, 49, 0.2); }
-
-        .cat-info h3 { margin: 0 0 5px 0; font-size: 20px; color: #fff; }
-        .cat-info p { margin: 0; color: #888; font-size: 14px; font-family: sans-serif; }
-
-        .dropdown-content {
-            display: none; background: #0a0a0a; border: 1px solid #222; border-top: none;
-            border-radius: 0 0 10px 10px; padding: 15px; margin-top: -5px;
-        }
-        .dropdown-content.show { display: block; }
-        
-        .sub-item {
-            display: flex; justify-content: space-between; align-items: center; color: #bbb; text-decoration: none; 
-            padding: 12px 15px; margin-bottom: 6px; background: #151515; border-radius: 6px; 
-            font-family: sans-serif; font-size: 14px; transition: 0.2s; border: 1px solid #222;
-        }
-        
-        .sub-item.status-green { color: #fff; }
-        .sub-item.status-yellow { background: #141410; color: #fff; border-color: #333; }
-        .sub-item.status-red { opacity: 0.4; cursor: not-allowed; background: #0d0d0d; }
-        .sub-item.status-hidden { background: #0d0d0d; color: #666; font-style: italic; cursor: not-allowed; }
-        
-        .sub-item:not(.status-red):not(.status-hidden):hover { background: #ff3131; color: #000; border-color: #ff3131; }
-
-        .badge-status { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; }
-        .badge-green { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
-        .badge-yellow { color: #e3b341; background: rgba(227, 179, 65, 0.1); border: 1px solid #e3b341; }
-        .badge-red { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
-        .badge-gray { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
-
-        .status-badge { font-size: 12px; font-family: sans-serif; font-weight: bold; padding: 6px 12px; border-radius: 4px; }
-        .status-passed { color: #39d353; background: rgba(57, 211, 83, 0.1); border: 1px solid #39d353; }
-        .status-open { color: #ff3131; background: rgba(255, 49, 49, 0.1); border: 1px solid #ff3131; }
-        .status-locked { color: #888; background: rgba(136, 136, 136, 0.1); border: 1px solid #444; }
-
-        .btn-back {
-            display: block; width: 100%; text-align: center; margin-top: 30px; background: transparent;
-            border: 1px solid #444; color: #888; padding: 12px; font-family: 'Almendra', serif; font-size: 16px;
-            letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 5px; text-decoration: none;
-        }
-        .btn-back:hover { border-color: #ff3131; color: #ff3131; box-shadow: 0 0 10px rgba(255, 49, 49, 0.3); }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        h1 { color: #ffcc00; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .rubrik-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .rubrik-title { font-size: 1.2em; font-weight: bold; color: #ff9900; margin-bottom: 10px; }
+        .lesson-list { list-style: none; padding: 0; }
+        .lesson-item { padding: 8px; margin: 5px 0; background: #2a2a2a; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .status-green { color: #4caf50; font-weight: bold; }
+        .status-yellow { color: #ffeb3b; font-weight: bold; }
+        .status-red { color: #f44336; font-weight: bold; }
+        .locked { color: #777; font-style: italic; }
+        button { background: #ff9900; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ffcc00; }
+        button:disabled { background: #444; color: #777; cursor: not-allowed; }
     </style>
 </head>
-<body onload="loadAkademieData()">
+<body>
 
-    <div class="container">
-        <h1>Akademie & Ausbildung</h1>
-        <div class="subtitle" id="user-header">Kommandant: Lade... | Status-Übersicht</div>
-
-        <div id="menu-container">
-            <p style="text-align: center; color: #888;">Lade Lehrgangsdaten aus der Datenbank...</p>
-        </div>
-
-        <a href="index.html" class="btn-back">Zurück zum Hauptmenü</a>
+<div class="container">
+    <h1>Dark Bulls Akademie</h1>
+    <p style="text-align: center;">Eingeloggt als: <span id="userNameDisplay" style="color: #ffcc00; font-weight: bold;">Lade...</span></p>
+    
+    <div id="akademieContent">
+        <p style="text-align: center;">Lade Ausbildungsdaten...</p>
     </div>
+</div>
 
-    <script>
-        const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
-        const currentPlayer = localStorage.getItem("darkBullsUser") || "Julian";
-        const isTournamentPlayer = localStorage.getItem("darkBullsTournamentPlayer") === "true";
+<script>
+    // Trage hier die Web-App-URL deiner bereitgestellten Google Apps Script Datei ein
+    const SCRIPT_URL = "HIER_DEINE_WEB_APP_URL_EINTRAGEN";
+    
+    // Beispiel-User (kann dynamisch z.B. aus dem URL-Parameter oder Login geholt werden)
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUser = urlParams.get('user') || "Julian"; 
 
-        var headerEl = document.getElementById("user-header");
-        if (headerEl) {
-            headerEl.innerText = "Kommandant: " + currentPlayer + " | Status-Übersicht";
-        }
+    document.getElementById("userNameDisplay").innerText = currentUser;
 
-        async function loadAkademieData() {
-            try {
-                if (!API) {
-                    document.getElementById("menu-container").innerHTML = "<p style='color:red; text-align:center;'>Fehler: SCRIPT_URL in config.js fehlt.</p>";
+    function loadAkademieData() {
+        fetch(`${SCRIPT_URL}?action=getTrainingData&user=${encodeURIComponent(currentUser)}`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById("akademieContent");
+                container.innerHTML = "";
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: red;">Fehler: ${data.error}</p>`;
                     return;
                 }
 
-                // Wir fragen den echten Status des Spielers aus der Google-Tabelle ab
-                let res = await fetch(`${API}?action=getAkademieUebersicht&user=${encodeURIComponent(currentPlayer)}`);
-                let data = await res.json();
+                // Durchlaufe die Rubriken (Grundausbildung, Fortgeschritten, Turnier)
+                for (let key in data) {
+                    let rubrik = data[key];
+                    let card = document.createElement("div");
+                    card.className = "rubrik-card";
 
-                // Falls die Tabelle Daten liefert, nutzen wir diese – ansonsten bauen wir die feste Struktur mit echter Tabellen-Logik auf
-                // Wir holen uns die absolvierten Lektionen des Spielers aus den Daten (oder leeren Array, falls neu)
-                let gespeicherteFortschritte = data.fortschritte || {}; 
-                // Beispiel: Wenn Julian "Abkürzungen" bestanden hat, steht das in der Tabelle
+                    let titleHtml = `<div class="rubrik-title">${rubrik.title}</div>`;
+                    let listHtml = `<ul class="lesson-list">`;
 
-                // Wir definieren die feste Struktur der Akademie, lesen den Status aber dynamisch aus den Tabellendaten aus
-                var trainingData = {
-                    grundausbildung: {
-                        title: "Grundausbildung (Basis-Taktiken)",
-                        rangName: "Grundausbildung",
-                        lessons: [
-                            { title: "Abkürzungen" },
-                            { title: "Gebäude und Wirtschaft" },
-                            { title: "Forschung" }
-                        ]
-                    },
-                    fortgeschritten: {
-                        title: "Fortgeschrittene Taktiken",
-                        rangName: "Fortgeschritten",
-                        lessons: [
-                            { title: "Fortgeschrittene Taktiken" }
-                        ]
-                    },
-                    turnier: {
-                        title: "Turnier & Spezialeinheit",
-                        rangName: "Turnier",
-                        lessons: [
-                            { title: "Turnier-Taktik & Spezialeinheit" }
-                        ]
-                    }
-                };
+                    if (rubrik.lessons && rubrik.lessons.length > 0) {
+                        rubrik.lessons.forEach(lesson => {
+                            let statusText = "";
+                            let statusClass = "";
+                            
+                            if (lesson.status === "green") {
+                                statusText = "Bestanden / Offen";
+                                statusClass = "status-green";
+                            } else if (lesson.status === "yellow") {
+                                statusText = "In Bearbeitung";
+                                statusClass = "status-yellow";
+                            } else if (lesson.status === "red") {
+                                statusText = "Gesperrt (Vorherige Lektion nötig)";
+                                statusClass = "status-red";
+                            } else if (lesson.status === "locked") {
+                                statusText = "Rang erforderlich";
+                                statusClass = "locked";
+                            }
 
-                var container = document.getElementById("menu-container");
-                container.innerHTML = "";
-
-                let keys = ["grundausbildung", "fortgeschritten", "turnier"];
-                let previousGroupPassed = true; // Steuerung für Sperren
-
-                keys.forEach((key, index) => {
-                    var catData = trainingData[key];
-                    if (!catData) return;
-
-                    let lessonsHTML = [];
-                    let groupPassedCount = 0;
-                    let canAccessNextLesson = true;
-
-                    catData.lessons.forEach((les, lesIdx) => {
-                        // Prüfen ob DIESE Lektion in der Google-Tabelle als "Bestanden" markiert ist
-                        // Wir prüfen data.eintraege (das sind die Zeilen aus der Excel-Tabelle für den User)
-                        let isPassed = false;
-                        if (data.eintraege) {
-                            let match = data.eintraege.find(e => e.lektion === les.title && e.status === "Bestanden");
-                            if (match) isPassed = true;
-                        }
-
-                        let lessonStatus = "red";
-                        let badgeText = "Gesperrt 🔒";
-                        let badgeClass = "badge-red";
-                        let itemClass = "status-red";
-                        let isClickable = false;
-
-                        if (isPassed) {
-                            lessonStatus = "green";
-                            badgeText = "Bestanden ✓";
-                            badgeClass = "badge-green";
-                            itemClass = "status-green";
-                            isClickable = true;
-                            groupPassedCount++;
-                        } else if (canAccessNextLesson && previousGroupPassed) {
-                            // Die nächste offene Lektion wird "Bereit" (Gelb)
-                            lessonStatus = "yellow";
-                            badgeText = "Bereit ▶";
-                            badgeClass = "badge-yellow";
-                            itemClass = "status-yellow";
-                            isClickable = true;
-                            // Danach muss der Spieler diese erst bestehen, bevor die nächste aufgeht
-                            canAccessNextLesson = false; 
-                        } else {
-                            // Alles danach bleibt gesperrt
-                            canAccessNextLesson = false;
-                        }
-
-                        // Spezieller Check für Turnier-Bereich
-                        if (key === "turnier" && !isTournamentPlayer) {
-                            lessonStatus = "hidden";
-                            badgeText = "Gesperrt 🔒";
-                            badgeClass = "badge-gray";
-                            itemClass = "status-hidden";
-                            isClickable = false;
-                        }
-
-                        let subLink = document.createElement("a");
-                        subLink.className = `sub-item ${itemClass}`;
-                        
-                        if (isClickable) {
-                            subLink.href = `Ausb_Anfaenger.html?rang=${encodeURIComponent(catData.rangName)}&lektion=${encodeURIComponent(les.title)}`;
-                        } else {
-                            subLink.href = "#";
-                            subLink.onclick = function(e) {
-                                e.preventDefault();
-                                if (lessonStatus === "hidden") {
-                                    alert("Dieser Bereich ist ausschließlich für registrierte Mitglieder der Spezialeinheit zugänglich, Kommandant.");
-                                } else {
-                                    alert("Diese Lektion ist noch gesperrt! Schließe zuerst die vorherigen Stationen ab, Kommandant.");
-                                }
-                            };
-                        }
-
-                        subLink.innerHTML = `<span>${les.title}</span> <span class="badge-status ${badgeClass}">${badgeText}</span>`;
-                        lessonsHTML.push(subLink);
-                    });
-
-                    // Prüfen ob die gesamte Kategorie bestanden ist
-                    let categoryPassed = (groupPassedCount === catData.lessons.length);
-                    let catStatusText = categoryPassed ? "BESTANDEN ✓" : (groupPassedCount > 0 ? "IN ARBEIT" : "OFFEN");
-                    let catStatusClass = categoryPassed ? "status-passed" : "status-open";
-
-                    // Wenn Grundausbildung nicht komplett bestanden ist, sperren wir Fortgeschrittene für die nächste Iteration
-                    if (!categoryPassed && key === "grundausbildung") {
-                        previousGroupPassed = false;
+                            listHtml += `
+                                <li class="lesson-item">
+                                    <span>${lesson.title}</span>
+                                    <div>
+                                        <span class="${statusClass}" style="margin-right: 15px; font-size: 0.9em;">${statusText}</span>
+                                        <button ${lesson.status === "red" || lesson.status === "locked" ? "disabled" : ""} onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Starten</button>
+                                    </div>
+                                </li>`;
+                        });
+                    } else {
+                        listHtml += `<li class="lesson-item"><span class="locked">Keine Inhalte verfügbar oder gesperrt für deinen Rang.</span></li>`;
                     }
 
-                    var wrap = document.createElement("div");
-                    wrap.className = "dropdown-container";
+                    listHtml += `</ul>`;
+                    card.innerHTML = titleHtml + listHtml;
+                    container.appendChild(card;
+                }
+            })
+            .catch(err => {
+                console.error("Fehler beim Laden:", err);
+                document.getElementById("akademieContent").innerHTML = `<p style="color: red;">Verbindungsfehler zur Datenbank.</p>`;
+            });
+    }
 
-                    var card = document.createElement("div");
-                    card.className = "category-card";
-                    card.innerHTML = `
-                        <div class="cat-info">
-                            <h3>${catData.title} ▾</h3>
-                            <p>${catData.lessons.length} Lektion(en) verfügbar</p>
-                        </div>
-                        <span class="status-badge ${catStatusClass}">${catStatusText}</span>
-                    `;
+    function openLesson(page, rang, lektion) {
+        window.location.href = `${page}?user=${encodeURIComponent(currentUser)}&rang=${rang}&lektion=${encodeURIComponent(lektion)}`;
+    }
 
-                    var dropdown = document.createElement("div");
-                    dropdown.className = "dropdown-content";
-                    dropdown.id = "dropdown-" + index;
+    // Beim Laden ausführen
+    loadAkademieData();
+</script>
 
-                    lessonsHTML.forEach(el => dropdown.appendChild(el));
-
-                    card.onclick = function() {
-                        dropdown.classList.toggle("show");
-                    };
-
-                    wrap.appendChild(card);
-                    wrap.appendChild(dropdown);
-                    container.appendChild(wrap);
-                });
-
-            } catch (e) {
-                console.error("Fehler beim Laden der Akademie-Übersicht:", e);
-                document.getElementById("menu-container").innerHTML = "<p style='color:red; text-align:center;'>Fehler beim Laden der Daten aus der Datenbank.</p>";
-            }
-        }
-    </script>
 </body>
 </html>
