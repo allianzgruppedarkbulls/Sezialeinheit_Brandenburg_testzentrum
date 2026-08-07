@@ -2,45 +2,191 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>DARK BULLS - FORTGESCHRITTENEN AUSBILDUNG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Bulls - Lehrgang</title>
+    <!-- Zentrale Konfiguration laden -->
     <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 650px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; }
-        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 3px; font-size: 30px; }
-        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; }
-        .btn-back { display: block; margin-top: 30px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 16px; }
-        .btn-back:hover { color: #fff; }
-        #status-info { margin-bottom: 15px; color: #f0b232; font-size: 14px; }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 20px; }
+        h1 { color: #ffcc00; text-align: center; }
+        .section-title { color: #ff9900; font-size: 1.2em; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .slide-box { background: #2a2a2a; padding: 15px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; white-space: pre-line; }
+        .question-box { background: #252525; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ff9900; }
+        .answer-option { display: block; margin: 8px 0; background: #2a2a2a; padding: 10px; border-radius: 4px; cursor: pointer; border: 1px solid #444; }
+        .answer-option:hover { background: #333; border-color: #ff9900; }
+        .answer-option input { margin-right: 10px; }
+        button { background: #ff9900; color: #000; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; display: block; width: 100%; margin-top: 20px; }
+        button:hover { background: #ffcc00; }
+        .hidden { display: none; }
+        .success-msg { color: #4caf50; font-weight: bold; text-align: center; font-size: 1.2em; }
     </style>
 </head>
-<body onload="checkProgress()">
+<body>
+
 <div class="container">
-    <h1>Akademie: Fortgeschritten</h1>
-    <div id="status-info">Lade Status aus dem Protokoll...</div>
+    <h1 id="lehrgangTitel">Lade Lehrgang...</h1>
     
-    <div class="content-card">
-        <h3>Taktische Truppenführung & Frontkoordination</h3>
-        <p>Willkommen im fortgeschrittenen Bereich. Hier lernst du komplexe Manöver, Frontabsprachen und das Timing für Großoffensiven.</p>
+    <div id="contentArea">
+        <!-- Inhalte / Folien -->
+        <div class="section-title">Lehrmaterial & Folien</div>
+        <div id="slidesContainer" class="slide-box">Lade Folien...</div>
+        
+        <button id="startQuizBtn" onclick="showQuiz()">Zur Prüfung / Fragen starten</button>
     </div>
-    
-    <a href="dashboard.html" class="btn-back">Zurück zum Hauptmenü</a>
+
+    <div id="quizArea" class="hidden">
+        <div class="section-title">Wissensüberprüfung</div>
+        <div id="questionsContainer"></div>
+        <button onclick="submitQuiz()">Prüfung abschicken</button>
+    </div>
+
+    <div id="resultArea" class="hidden">
+        <div id="resultMessage" class="success-msg"></div>
+        <button onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
+    </div>
 </div>
 
 <script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
-    const playerName = localStorage.getItem("bulls_user") || "TestUser";
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentUser = urlParams.get('user') || "Julian";
+    const currentRang = urlParams.get('rang') || "grundausbildung";
+    const currentLektion = urlParams.get('lektion') || "";
 
-    async function checkProgress() {
-        try {
-            let res = await fetch(`${API}?action=getTrainingProgress&user=${encodeURIComponent(playerName)}&rang=Fortgeschritten`);
-            let data = await res.json();
-            document.getElementById("status-info").innerText = `Aktueller Status: ${data.status}`;
-        } catch (e) {
-            console.error("Fehler beim Laden des Fortgeschrittenen-Status", e);
+    let loadedQuestions = [];
+
+    function loadLessonContent() {
+        if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
+            alert("Fehler: config.js nicht gefunden!");
+            return;
+        }
+
+        const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
+        const url = `${SCRIPT_URL}?action=getLehrgangInhalt&rang=${encodeURIComponent(currentRang)}&lektion=${encodeURIComponent(currentLektion)}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("lehrgangTitel").innerText = data.titel || currentLektion;
+                
+                // Folien anzeigen
+                let slidesHtml = "";
+                if (data.folien && data.folien.length > 0) {
+                    data.folien.forEach((slide, index) => {
+                        slidesHtml += `<p><strong>Folie ${index + 1}:</strong><br>${slide}</p>`;
+                    });
+                } else {
+                    slidesHtml = "<p>Keine zusätzlichen Folien vorhanden.</p>";
+                }
+                document.getElementById("slidesContainer").innerHTML = slidesHtml;
+
+                // Fragen speichern für später
+                loadedQuestions = data.fragen || [];
+            })
+            .catch(err => {
+                console.error("Fehler beim Laden der Lektion:", err);
+                document.getElementById("slidesContainer").innerHTML = "<p style='color: red;'>Fehler beim Laden der Inhalte.</p>";
+            });
+    }
+
+    function showQuiz() {
+        if (loadedQuestions.length === 0) {
+            alert("Keine Fragen für diese Lektion hinterlegt. Du kannst direkt abschließen.");
+            submitDirectly();
+            return;
+        }
+
+        document.getElementById("contentArea").classList.add("hidden");
+        document.getElementById("quizArea").classList.remove("hidden");
+
+        let qContainer = document.getElementById("questionsContainer");
+        qContainer.innerHTML = "";
+
+        loadedQuestions.forEach((q, qIndex) => {
+            let qHtml = `<div class="question-box"><p><strong>Frage ${qIndex + 1}:</strong> ${q.frageText}</p>`;
+            
+            q.antworten.forEach((ans, aIndex) => {
+                qHtml += `
+                    <label class="answer-option">
+                        <input type="radio" name="question_${qIndex}" value="${ans}">
+                        ${ans}
+                    </label>`;
+            });
+
+            qHtml += `</div>`;
+            qContainer.innerHTML += qHtml;
+        });
+    }
+
+    function submitQuiz() {
+        // Antworten prüfen
+        let allAnswered = true;
+        let correctCount = 0;
+
+        loadedQuestions.forEach((q, qIndex) => {
+            const selected = document.querySelector(`input[name="question_${qIndex}"]:checked`);
+            if (!selected) {
+                allAnswered = false;
+            } else {
+                // Vergleich mit korrekter Antwort (Trim & LowerCase für Sicherheit)
+                if (selected.value.trim().toLowerCase() === q.korrekt.trim().toLowerCase()) {
+                    correctCount++;
+                }
+            }
+        });
+
+        if (!allAnswered) {
+            alert("Bitte beantworte alle Fragen, bevor du die Prüfung abschickst!");
+            return;
+        }
+
+        // Benötigt z.B. 100% Richtigkeit oder angepasste Logik
+        if (correctCount >= loadedQuestions.length) {
+            saveProgressToDatabase("Bestanden", "100%");
+        } else {
+            alert(`Leider nicht bestanden. Du hast ${correctCount} von ${loadedQuestions.length} Fragen richtig.`);
         }
     }
+
+    function submitDirectly() {
+        saveProgressToDatabase("Bestanden", "100%");
+    }
+
+    function saveProgressToDatabase(status, percent) {
+        const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
+        
+        const payload = {
+            user: currentUser,
+            currentRang: currentRang,
+            lektionName: currentLektion,
+            status: status,
+            percent: percent
+        };
+
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(response => {
+            document.getElementById("quizArea").classList.add("hidden");
+            document.getElementById("contentArea").classList.add("hidden");
+            document.getElementById("resultArea").classList.remove("hidden");
+            
+            if (response.success) {
+                document.getElementById("resultMessage").innerText = "Erfolgreich abgeschlossen! Fortschritt wurde gespeichert.";
+            } else {
+                document.getElementById("resultMessage").innerHTML = `<span style="color: red;">Fehler beim Speichern: ${response.error}</span>`;
+            }
+        })
+        .catch(err => {
+            console.error("Netzwerkfehler:", err);
+            alert("Fehler beim Übertragen an die Datenbank.");
+        });
+    }
+
+    loadLessonContent();
 </script>
+
 </body>
 </html>
