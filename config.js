@@ -3,5 +3,4 @@
 window.BULLS_CONFIG = {
   // Google Apps Script WebApp-URL (als API für Login/Chat/Admin)
   SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxJy6xF4ihTJU9r8MvLtQarfk0d-zrZK4dHfxJmsqLptIYn61KutHluPev5BsqkA_vjDg/exec",
-};
-
+}
