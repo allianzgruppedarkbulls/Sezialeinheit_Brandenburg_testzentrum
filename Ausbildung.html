@@ -10,6 +10,7 @@
         body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
         h1 { color: #ffcc00; text-align: center; }
         .container { max-width: 800px; margin: 0 auto; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #1e1e1e; padding: 10px 15px; border-radius: 8px; border: 1px solid #333; }
         .rubrik-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
         .rubrik-title { font-size: 1.2em; font-weight: bold; color: #ff9900; margin-bottom: 10px; }
         .lesson-list { list-style: none; padding: 0; margin: 0; }
@@ -21,13 +22,20 @@
         button { background: #ff9900; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background: #ffcc00; }
         button:disabled { background: #444; color: #777; cursor: not-allowed; }
+        .admin-btn { background: #e53935; color: #fff; }
+        .admin-btn:hover { background: #f44336; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Dark Bulls Akademie</h1>
-    <p style="text-align: center;">Eingeloggt als: <span id="userNameDisplay" style="color: #ffcc00; font-weight: bold;">Lade...</span></p>
+    
+    <div class="header-bar">
+        <div>Eingeloggt als: <span id="userNameDisplay" style="color: #ffcc00; font-weight: bold;">Lade...</span></div>
+        <button id="adminBtn" class="admin-btn hidden" onclick="window.location.href='Akademie_Admin.html'">Admin-Protokoll</button>
+    </div>
     
     <div id="akademieContent">
         <p style="text-align: center;">Lade Ausbildungsdaten...</p>
@@ -35,14 +43,12 @@
 </div>
 
 <script>
-    // URL-Parameter auslesen
     const urlParams = new URLSearchParams(window.location.search);
     const currentUser = urlParams.get('user') || "Julian"; 
 
     document.getElementById("userNameDisplay").innerText = currentUser;
 
     function loadAkademieData() {
-        // Prüfen ob die zentrale config.js und SCRIPT_URL vorhanden sind
         if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
             document.getElementById("akademieContent").innerHTML = `<p style="color: red; text-align: center;">Fehler: config.js oder SCRIPT_URL nicht gefunden!</p>`;
             return;
@@ -60,6 +66,16 @@
                     container.innerHTML = `<p style="color: red;">Fehler: ${data.error}</p>`;
                     return;
                 }
+
+                // Prüfen ob Admin/ELO für den Admin-Button
+                // Wir holen zusätzlich die Rolle über den ersten Request oder über getTrainingProgress
+                fetch(`${SCRIPT_URL}?action=getTrainingProgress&user=${encodeURIComponent(currentUser)}&rang=Grundausbildung`)
+                    .then(res => res.json())
+                    .then(userMeta => {
+                        if (userMeta.role && (userMeta.role.toLowerCase() === "admin" || userMeta.role.toLowerCase() === "elo")) {
+                            document.getElementById("adminBtn").classList.remove("hidden");
+                        }
+                    }).catch(e => console.log("Rollenprüfung für Admin-Button übersprungen"));
 
                 for (let key in data) {
                     let rubrik = data[key];
@@ -116,7 +132,6 @@
         window.location.href = `${page}?user=${encodeURIComponent(currentUser)}&rang=${rang}&lektion=${encodeURIComponent(lektion)}`;
     }
 
-    // Beim Laden ausführen
     loadAkademieData();
 </script>
 
