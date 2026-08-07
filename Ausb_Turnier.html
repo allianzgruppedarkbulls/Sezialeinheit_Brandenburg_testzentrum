@@ -8,18 +8,21 @@
     <script src="config.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 20px; }
-        h1 { color: #ffcc00; text-align: center; }
-        .section-title { color: #ff9900; font-size: 1.2em; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .slide-box { background: #2a2a2a; padding: 15px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; white-space: pre-line; }
-        .question-box { background: #252525; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ff9900; }
-        .answer-option { display: block; margin: 8px 0; background: #2a2a2a; padding: 10px; border-radius: 4px; cursor: pointer; border: 1px solid #444; }
-        .answer-option:hover { background: #333; border-color: #ff9900; }
+        .container { max-width: 800px; margin: 0 auto; background: #1e1e1e; border: 1px solid #441111; border-radius: 8px; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        h1 { color: #ff4444; text-align: center; }
+        .section-title { color: #ff5555; font-size: 1.2em; margin-bottom: 15px; border-bottom: 1px solid #331111; padding-bottom: 5px; }
+        .slide-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; border: 1px solid #331a1a; min-height: 120px; }
+        .question-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ff4444; border: 1px solid #331a1a; }
+        .answer-option { display: block; margin: 10px 0; background: #2a1f1f; padding: 12px; border-radius: 4px; cursor: pointer; border: 1px solid #442222; }
+        .answer-option:hover { background: #3a2525; border-color: #ff4444; }
         .answer-option input { margin-right: 10px; }
-        button { background: #ff9900; color: #000; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; display: block; width: 100%; margin-top: 20px; }
-        button:hover { background: #ffcc00; }
+        .btn-container { display: flex; gap: 10px; margin-top: 20px; }
+        button { background: #cc2222; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; flex: 1; }
+        button:hover { background: #ff4444; }
+        button:disabled { background: #332222; color: #777; cursor: not-allowed; border: 1px solid #442222; }
         .hidden { display: none; }
         .success-msg { color: #4caf50; font-weight: bold; text-align: center; font-size: 1.2em; }
+        .step-indicator { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -27,23 +30,33 @@
 <div class="container">
     <h1 id="lehrgangTitel">Lade Lehrgang...</h1>
     
+    <!-- FOLIEN BEREICH -->
     <div id="contentArea">
-        <!-- Inhalte / Folien -->
         <div class="section-title">Lehrmaterial & Folien</div>
-        <div id="slidesContainer" class="slide-box">Lade Folien...</div>
+        <div id="slideCounter" class="step-indicator">Folie 1 von 1</div>
+        <div id="slideBox" class="slide-box">Lade Folien...</div>
         
-        <button id="startQuizBtn" onclick="showQuiz()">Zur Prüfung / Fragen starten</button>
+        <div class="btn-container">
+            <button id="prevSlideBtn" onclick="prevSlide()" disabled>Zurück</button>
+            <button id="nextSlideBtn" onclick="nextSlide()">Weiter</button>
+        </div>
     </div>
 
+    <!-- QUIZ BEREICH (Frage für Frage) -->
     <div id="quizArea" class="hidden">
         <div class="section-title">Wissensüberprüfung</div>
-        <div id="questionsContainer"></div>
-        <button onclick="submitQuiz()">Prüfung abschicken</button>
+        <div id="questionCounter" class="step-indicator">Frage 1 von 1</div>
+        <div id="singleQuestionContainer"></div>
+        
+        <div class="btn-container">
+            <button id="nextQuestionBtn" onclick="nextQuestion()">Nächste Frage</button>
+        </div>
     </div>
 
+    <!-- ERGEBNIS BEREICH -->
     <div id="resultArea" class="hidden">
         <div id="resultMessage" class="success-msg"></div>
-        <button onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
+        <button style="margin-top: 20px;" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
     </div>
 </div>
 
@@ -53,7 +66,12 @@
     const currentRang = urlParams.get('rang') || "grundausbildung";
     const currentLektion = urlParams.get('lektion') || "";
 
+    let loadedFolien = [];
+    let currentSlideIndex = 0;
+
     let loadedQuestions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = {}; // Speichert die gegebenen Antworten des Users
 
     function loadLessonContent() {
         if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
@@ -69,87 +87,146 @@
             .then(data => {
                 document.getElementById("lehrgangTitel").innerText = data.titel || currentLektion;
                 
-                // Folien anzeigen
-                let slidesHtml = "";
-                if (data.folien && data.folien.length > 0) {
-                    data.folien.forEach((slide, index) => {
-                        slidesHtml += `<p><strong>Folie ${index + 1}:</strong><br>${slide}</p>`;
-                    });
-                } else {
-                    slidesHtml = "<p>Keine zusätzlichen Folien vorhanden.</p>";
-                }
-                document.getElementById("slidesContainer").innerHTML = slidesHtml;
-
-                // Fragen speichern für später
+                loadedFolien = data.folien || ["Willkommen zum Lehrgang."];
                 loadedQuestions = data.fragen || [];
+
+                currentSlideIndex = 0;
+                renderSlide();
             })
             .catch(err => {
                 console.error("Fehler beim Laden der Lektion:", err);
-                document.getElementById("slidesContainer").innerHTML = "<p style='color: red;'>Fehler beim Laden der Inhalte.</p>";
+                document.getElementById("slideBox").innerHTML = "<p style='color: red;'>Fehler beim Laden der Inhalte.</p>";
             });
     }
 
-    function showQuiz() {
+    // --- FOLIEN LOGIK (Einzeln durchklicken) ---
+    function renderSlide() {
+        document.getElementById("slideCounter").innerText = `Folie ${currentSlideIndex + 1} von ${loadedFolien.length}`;
+        document.getElementById("slideBoxinnerHTML = `<p>${loadedFolien[currentSlideIndex]}</p>`;`; // Korrektur unten im Block beachtet
+        
+        // Buttons steuern
+        document.getElementById("prevSlideBtn").disabled = (currentSlideIndex === 0);
+        
+        let nextBtn = document.getElementById("nextSlideBtn");
+        if (currentSlideIndex === loadedFolien.length - 1) {
+            nextBtn.innerText = "Zur Prüfung / Fragen starten";
+        } else {
+            nextBtn.innerText = "Weiter";
+        }
+    }
+
+    // Korrektur für innerHTML Zuweisung
+    function renderSlide() {
+        document.getElementById("slideCounter").innerText = `Folie ${currentSlideIndex + 1} von ${loadedFolien.length}`;
+        document.getElementById("slideBox").innerHTML = `<p>${loadedFolien[currentSlideIndex]}</p>`;
+        
+        document.getElementById("prevSlideBtn").disabled = (currentSlideIndex === 0);
+        
+        let nextBtn = document.getElementById("nextSlideBtn");
+        if (currentSlideIndex === loadedFolien.length - 1) {
+            nextBtn.innerText = "Zur Prüfung starten";
+        } else {
+            nextBtn.innerText = "Weiter";
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            renderSlide();
+        }
+    }
+
+    function nextSlide() {
+        if (currentSlideIndex < loadedFolien.length - 1) {
+            currentSlideIndex++;
+            renderSlide();
+        } else {
+            // Prüfung starten -> Kein Zurück mehr!
+            startQuiz();
+        }
+    }
+
+    // --- QUIZ LOGIK (Frage für Frage) ---
+    function startQuiz() {
         if (loadedQuestions.length === 0) {
-            alert("Keine Fragen für diese Lektion hinterlegt. Du kannst direkt abschließen.");
-            submitDirectly();
+            alert("Keine Fragen für diese Lektion hinterlegt. Lektion wird direkt abgeschlossen.");
+            saveProgressToDatabase("Bestanden", "100%");
             return;
         }
 
         document.getElementById("contentArea").classList.add("hidden");
         document.getElementById("quizArea").classList.remove("hidden");
-
-        let qContainer = document.getElementById("questionsContainer");
-        qContainer.innerHTML = "";
-
-        loadedQuestions.forEach((q, qIndex) => {
-            let qHtml = `<div class="question-box"><p><strong>Frage ${qIndex + 1}:</strong> ${q.frageText}</p>`;
-            
-            q.antworten.forEach((ans, aIndex) => {
-                qHtml += `
-                    <label class="answer-option">
-                        <input type="radio" name="question_${qIndex}" value="${ans}">
-                        ${ans}
-                    </label>`;
-            });
-
-            qHtml += `</div>`;
-            qContainer.innerHTML += qHtml;
-        });
+        
+        currentQuestionIndex = 0;
+        renderQuestion();
     }
 
-    function submitQuiz() {
-        // Antworten prüfen
-        let allAnswered = true;
-        let correctCount = 0;
-
-        loadedQuestions.forEach((q, qIndex) => {
-            const selected = document.querySelector(`input[name="question_${qIndex}"]:checked`);
-            if (!selected) {
-                allAnswered = false;
-            } else {
-                // Vergleich mit korrekter Antwort (Trim & LowerCase für Sicherheit)
-                if (selected.value.trim().toLowerCase() === q.korrekt.trim().toLowerCase()) {
-                    correctCount++;
-                }
-            }
+    function renderQuestion() {
+        document.getElementById("questionCounter").innerText = `Frage ${currentQuestionIndex + 1} von ${loadedQuestions.length}`;
+        
+        let q = loadedQuestions[currentQuestionIndex];
+        let qContainer = document.getElementById("singleQuestionContainer");
+        
+        let qHtml = `<div class="question-box"><p><strong>${q.frageText}</strong></p>`;
+        
+        q.antworten.forEach((ans, aIndex) => {
+            // Prüfen ob bereits eine Antwort gegeben wurde
+            let isChecked = (userAnswers[currentQuestionIndex] === ans) ? "checked" : "";
+            qHtml += `
+                <label class="answer-option">
+                    <input type="radio" name="current_question" value="${ans}" ${isChecked}>
+                    ${ans}
+                </label>`;
         });
 
-        if (!allAnswered) {
-            alert("Bitte beantworte alle Fragen, bevor du die Prüfung abschickst!");
+        qHtml += `</div>`;
+        qContainer.innerHTML = qHtml;
+
+        let nextBtn = document.getElementById("nextQuestionBtn");
+        if (currentQuestionIndex === loadedQuestions.length - 1) {
+            nextBtn.innerText = "Prüfung abschicken";
+        } else {
+            nextBtn.innerText = "Nächste Frage";
+        }
+    }
+
+    function nextQuestion() {
+        // Aktuelle Auswahl speichern
+        const selected = document.querySelector(`input[name="current_question"]:checked`);
+        if (!selected) {
+            alert("Bitte wähle eine Antwort aus, bevor du fortfährst!");
             return;
         }
 
-        // Benötigt z.B. 100% Richtigkeit oder angepasste Logik
-        if (correctCount >= loadedQuestions.length) {
-            saveProgressToDatabase("Bestanden", "100%");
+        userAnswers[currentQuestionIndex] = selected.value;
+
+        if (currentQuestionIndex < loadedQuestions.length - 1) {
+            currentQuestionIndex++;
+            renderQuestion();
         } else {
-            alert(`Leider nicht bestanden. Du hast ${correctCount} von ${loadedQuestions.length} Fragen richtig.`);
+            // Letzte Frage -> Auswerten
+            evaluateQuiz();
         }
     }
 
-    function submitDirectly() {
-        saveProgressToDatabase("Bestanden", "100%");
+    function evaluateQuiz() {
+        let correctCount = 0;
+
+        loadedQuestions.forEach((q, index) => {
+            let givenAnswer = userAnswers[index] || "";
+            if (givenAnswer.trim().toLowerCase() === q.korrekt.trim().toLowerCase()) {
+                correctCount++;
+            }
+        });
+
+        if (correctCount >= loadedQuestions.length) {
+            saveProgressToDatabase("Bestanden", "100%");
+        } else {
+            alert(`Leider nicht bestanden. Du hast ${correctCount} von ${loadedQuestions.length} Fragen richtig beantwortet. Versuche es noch einmal!`);
+            // Zurück zur Übersicht oder Neustart der Lektion
+            window.location.href = `Ausbildung.html?user=${encodeURIComponent(currentUser)}`;
+        }
     }
 
     function saveProgressToDatabase(status, percent) {
