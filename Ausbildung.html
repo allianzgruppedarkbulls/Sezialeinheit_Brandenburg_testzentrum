@@ -8,21 +8,21 @@
     <script src="config.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
-        h1 { color: #ffcc00; text-align: center; }
+        h1 { color: #ff4444; text-align: center; text-shadow: 0 0 10px rgba(255, 68, 68, 0.3); }
         .container { max-width: 800px; margin: 0 auto; }
-        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #1e1e1e; padding: 10px 15px; border-radius: 8px; border: 1px solid #333; }
-        .rubrik-card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-        .rubrik-title { font-size: 1.2em; font-weight: bold; color: #ff9900; margin-bottom: 10px; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #1e1e1e; padding: 10px 15px; border-radius: 8px; border: 1px solid #441111; }
+        .rubrik-card { background: #1e1e1e; border: 1px solid #441111; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .rubrik-title { font-size: 1.2em; font-weight: bold; color: #ff5555; margin-bottom: 10px; border-bottom: 1px solid #331111; padding-bottom: 5px; }
         .lesson-list { list-style: none; padding: 0; margin: 0; }
-        .lesson-item { padding: 10px; margin: 6px 0; background: #2a2a2a; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .lesson-item { padding: 10px; margin: 6px 0; background: #251a1a; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #331a1a; }
         .status-green { color: #4caf50; font-weight: bold; }
         .status-yellow { color: #ffeb3b; font-weight: bold; }
-        .status-red { color: #f44336; font-weight: bold; }
+        .status-red { color: #ff5555; font-weight: bold; }
         .locked { color: #777; font-style: italic; }
-        button { background: #ff9900; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #ffcc00; }
-        button:disabled { background: #444; color: #777; cursor: not-allowed; }
-        .admin-btn { background: #e53935; color: #fff; }
+        button { background: #cc2222; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ff4444; }
+        button:disabled { background: #332222; color: #777; cursor: not-allowed; border: 1px solid #442222; }
+        .admin-btn { background: #d32f2f; color: #fff; }
         .admin-btn:hover { background: #f44336; }
         .hidden { display: none; }
     </style>
@@ -33,7 +33,7 @@
     <h1>Dark Bulls Akademie</h1>
     
     <div class="header-bar">
-        <div>Eingeloggt als: <span id="userNameDisplay" style="color: #ffcc00; font-weight: bold;">Lade...</span></div>
+        <div>Eingeloggt als: <span id="userNameDisplay" style="color: #ff5555; font-weight: bold;">Lade...</span></div>
         <button id="adminBtn" class="admin-btn hidden" onclick="window.location.href='Akademie_Admin.html'">Admin-Protokoll</button>
     </div>
     
@@ -67,15 +67,23 @@
                     return;
                 }
 
-                // Prüfen ob Admin/ELO für den Admin-Button
-                // Wir holen zusätzlich die Rolle über den ersten Request oder über getTrainingProgress
+                // Admin-Button Berechtigung prüfen
                 fetch(`${SCRIPT_URL}?action=getTrainingProgress&user=${encodeURIComponent(currentUser)}&rang=Grundausbildung`)
                     .then(res => res.json())
                     .then(userMeta => {
                         if (userMeta.role && (userMeta.role.toLowerCase() === "admin" || userMeta.role.toLowerCase() === "elo")) {
                             document.getElementById("adminBtn").classList.remove("hidden");
                         }
-                    }).catch(e => console.log("Rollenprüfung für Admin-Button übersprungen"));
+                    }).catch(e => console.log("Rollenprüfung übersprungen"));
+
+                // Prüfen, ob die Abschlussprüfung der Grundausbildung bestanden ist
+                let grundausbildungBestanden = false;
+                if (data.grundausbildung && data.grundausbildung.lessons) {
+                    let abschlussPruefung = data.grundausbildung.lessons.find(l => l.title.toLowerCase().includes("abschlussprüfung"));
+                    if (abschlussPruefung && abschlussPruefung.status === "green") {
+                        grundausbildungBestanden = true;
+                    }
+                }
 
                 for (let key in data) {
                     let rubrik = data[key];
@@ -85,23 +93,46 @@
                     let titleHtml = `<div class="rubrik-title">${rubrik.title}</div>`;
                     let listHtml = `<ul class="lesson-list">`;
 
+                    let isRubrikLocked = false;
+                    // Fortgeschritten und Turnier sperren, solange Grundausbildung nicht komplett abgeschlossen ist
+                    if ((key === "fortgeschritten" || key === "turnier") && !grundausbildungBestanden) {
+                        isRubrikLocked = true;
+                    }
+
                     if (rubrik.lessons && rubrik.lessons.length > 0) {
+                        let validLessonsCount = 0;
+
                         rubrik.lessons.forEach(lesson => {
+                            let titleLower = lesson.title.trim().toLowerCase();
+                            
+                            // Filter für Spalten-Header oder Platzhalter
+                            if (titleLower.includes("lektions_name") || titleLower === "1" || titleLower === "titel" || titleLower === "") {
+                                return; 
+                            }
+
+                            validLessonsCount++;
                             let statusText = "";
                             let statusClass = "";
-                            
-                            if (lesson.status === "green") {
-                                statusText = "Bestanden / Offen";
-                                statusClass = "status-green";
-                            } else if (lesson.status === "yellow") {
-                                statusText = "In Bearbeitung";
-                                statusClass = "status-yellow";
-                            } else if (lesson.status === "red") {
-                                statusText = "Gesperrt (Vorherige Lektion nötig)";
-                                statusClass = "status-red";
-                            } else if (lesson.status === "locked") {
-                                statusText = "Rang erforderlich";
+                            let isDisabled = false;
+
+                            if (isRubrikLocked) {
+                                statusText = "Gesperrt (Grundausbildung nötig)";
                                 statusClass = "locked";
+                                isDisabled = true;
+                            } else {
+                                if (lesson.status === "green") {
+                                    statusText = "Bestanden / Offen";
+                                    statusClass = "status-green";
+                                } else if (lesson.status === "yellow") {
+                                    statusText = "In Bearbeitung";
+                                    statusClass = "status-yellow";
+                                } else if (lesson.status === "red") {
+                                    statusText = "Gesperrt (Vorherige Lektion nötig)";
+                                    statusClass = "status-red";
+                                } else {
+                                    statusText = "In Bearbeitung";
+                                    statusClass = "status-yellow";
+                                }
                             }
 
                             listHtml += `
@@ -109,12 +140,16 @@
                                     <span>${lesson.title}</span>
                                     <div>
                                         <span class="${statusClass}" style="margin-right: 15px; font-size: 0.9em;">${statusText}</span>
-                                        <button ${lesson.status === "red" || lesson.status === "locked" ? "disabled" : ""} onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Starten</button>
+                                        <button ${isDisabled || lesson.status === "red" ? "disabled" : ""} onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Starten</button>
                                     </div>
                                 </li>`;
                         });
+
+                        if (validLessonsCount === 0) {
+                            listHtml += `<li class="lesson-item"><span class="locked">Keine Inhalte verfügbar.</span></li>`;
+                        }
                     } else {
-                        listHtml += `<li class="lesson-item"><span class="locked">Keine Inhalte verfügbar oder gesperrt für deinen Rang.</span></li>`;
+                        listHtml += `<li class="lesson-item"><span class="locked">Keine Inhalte verfügbar.</span></li>`;
                     }
 
                     listHtml += `</ul>`;
