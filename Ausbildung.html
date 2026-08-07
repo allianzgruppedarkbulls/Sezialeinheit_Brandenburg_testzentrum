@@ -114,26 +114,24 @@
                             let statusText = "";
                             let statusClass = "";
                             let isDisabled = false;
-
-                            if (isRubrikLocked) {
-                                statusText = "Gesperrt (Grundausbildung nötig)";
-                                statusClass = "locked";
-                                isDisabled = true;
-                            } else {
-                                if (lesson.status === "green") {
-                                    statusText = "Bestanden / Offen";
-                                    statusClass = "status-green";
-                                } else if (lesson.status === "yellow") {
-                                    statusText = "In Bearbeitung";
-                                    statusClass = "status-yellow";
-                                } else if (lesson.status === "red") {
-                                    statusText = "Gesperrt (Vorherige Lektion nötig)";
-                                    statusClass = "status-red";
-                                } else {
-                                    statusText = "In Bearbeitung";
-                                    statusClass = "status-yellow";
-                                }
-                            }
+// Ersetze diesen Block in deiner foreach-Schleife:
+if (isRubrikLocked) {
+    statusText = "Gesperrt (Grundausbildung nötig)";
+    statusClass = "locked";
+    isDisabled = true;
+} else {
+    // Hier prüfen wir jetzt hart, ob die Lektion explizit den Status "green" hat
+    if (lesson.status === "green") {
+        statusText = "Bestanden";
+        statusClass = "status-green";
+    } else if (lesson.status === "yellow") {
+        statusText = "In Bearbeitung";
+        statusClass = "status-yellow";
+    } else {
+        statusText = "Offen / In Bearbeitung";
+        statusClass = "status-yellow";
+    }
+}
 
                             listHtml += `
                                 <li class="lesson-item">
