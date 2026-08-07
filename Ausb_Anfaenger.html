@@ -2,237 +2,191 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>DARK BULLS - GRUNDAUSBILDUNG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Bulls - Lehrgang</title>
+    <!-- Zentrale Konfiguration laden -->
     <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 750px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 60px rgba(255, 49, 49, 0.2); text-align: center; box-sizing: border-box; }
-        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 3px; font-size: 28px; }
-        .subtitle { color: #f0b232; font-size: 16px; margin-bottom: 25px; text-transform: uppercase; }
-        .content-card { background: #121212; border: 1px solid #ff3131; border-radius: 10px; padding: 25px; margin-bottom: 25px; text-align: left; line-height: 1.6; font-size: 18px; white-space: pre-line; min-height: 150px; }
-        .quiz-option { display: block; background: #1a1a1a; padding: 12px 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; text-align: left; font-family: sans-serif; font-size: 15px; }
-        .quiz-option:hover { border-color: #ff3131; background: #222; }
-        .quiz-option input { margin-right: 10px; }
-        .exam-input { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #ff3131; color: #fff; font-family: 'Almendra'; font-size: 18px; border-radius: 6px; box-sizing: border-box; margin-top: 15px; }
-        .btn-container { display: flex; justify-content: space-between; gap: 15px; }
-        .action-btn { flex: 1; padding: 15px; background: #39d353; border: none; color: #000; font-family: 'Almendra'; font-size: 18px; font-weight: bold; text-transform: uppercase; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .action-btn:hover { background: #2fb145; }
-        .secondary-btn { background: #333; color: #fff; }
-        .secondary-btn:hover { background: #444; }
-        .secondary-btn:disabled { background: #151515; color: #555; border-color: #222; cursor: not-allowed; }
-        .btn-back { display: block; margin-top: 25px; color: #666; text-decoration: none; text-transform: uppercase; font-size: 14px; }
-        .btn-back:hover { color: #fff; }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 20px; }
+        h1 { color: #ffcc00; text-align: center; }
+        .section-title { color: #ff9900; font-size: 1.2em; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .slide-box { background: #2a2a2a; padding: 15px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; white-space: pre-line; }
+        .question-box { background: #252525; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ff9900; }
+        .answer-option { display: block; margin: 8px 0; background: #2a2a2a; padding: 10px; border-radius: 4px; cursor: pointer; border: 1px solid #444; }
+        .answer-option:hover { background: #333; border-color: #ff9900; }
+        .answer-option input { margin-right: 10px; }
+        button { background: #ff9900; color: #000; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; display: block; width: 100%; margin-top: 20px; }
+        button:hover { background: #ffcc00; }
+        .hidden { display: none; }
+        .success-msg { color: #4caf50; font-weight: bold; text-align: center; font-size: 1.2em; }
     </style>
 </head>
-<body onload="loadLehrgangData()">
+<body>
+
 <div class="container">
-    <h1 id="lehrgangTitel">Lade Akademie...</h1>
-    <div class="subtitle" id="statusInfo">Bitte einen Moment Geduld</div>
+    <h1 id="lehrgangTitel">Lade Lehrgang...</h1>
     
-    <div class="content-card" id="contentBox">
-        Lade Inhalte aus dem Protokoll...
-    </div>
-    
-    <div class="btn-container" id="btnContainer">
-        <button class="action-btn secondary-btn" id="prevBtn" onclick="prevStep()">Zurück</button>
-        <button class="action-btn" id="nextBtn" onclick="nextStep()">Weiter ⚔️</button>
+    <div id="contentArea">
+        <!-- Inhalte / Folien -->
+        <div class="section-title">Lehrmaterial & Folien</div>
+        <div id="slidesContainer" class="slide-box">Lade Folien...</div>
+        
+        <button id="startQuizBtn" onclick="showQuiz()">Zur Prüfung / Fragen starten</button>
     </div>
 
-    <a href="Ausbildung.html" class="btn-back">Zurück zur Übersicht</a>
+    <div id="quizArea" class="hidden">
+        <div class="section-title">Wissensüberprüfung</div>
+        <div id="questionsContainer"></div>
+        <button onclick="submitQuiz()">Prüfung abschicken</button>
+    </div>
+
+    <div id="resultArea" class="hidden">
+        <div id="resultMessage" class="success-msg"></div>
+        <button onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
+    </div>
 </div>
 
 <script>
-    const API = window.BULLS_CONFIG ? window.BULLS_CONFIG.SCRIPT_URL : "";
-    const playerName = localStorage.getItem("darkBullsUser") || "Julian";
-    
     const urlParams = new URLSearchParams(window.location.search);
-    const selectedLektion = urlParams.get("lektion") || "";
+    const currentUser = urlParams.get('user') || "Julian";
+    const currentRang = urlParams.get('rang') || "grundausbildung";
+    const currentLektion = urlParams.get('lektion') || "";
 
-    let lehrgangData = null;
-    let currentStepIndex = 0;
-    let userAnswers = {}; 
+    let loadedQuestions = [];
 
-    async function loadLehrgangData() {
-        try {
-            if (!API) {
-                document.getElementById("contentBox").innerHTML = "Fehler: config.js nicht geladen oder SCRIPT_URL fehlt.";
-                return;
-            }
-
-            let fetchUrl = `${API}?action=getLehrgangInhalt&rang=Grundausbildung`;
-            if (selectedLektion) {
-                fetchUrl += `&lektion=` + encodeURIComponent(selectedLektion);
-            }
-
-            let res = await fetch(fetchUrl);
-            let textRes = await res.text();
-            
-            lehrgangData = JSON.parse(textRes);
-            document.getElementById("lehrgangTitel").innerText = lehrgangData.titel || "Grundausbildung";
-            
-            currentStepIndex = 0;
-            renderCurrentView();
-        } catch (e) {
-            console.error("Fehler beim Laden:", e);
-            document.getElementById("contentBox").innerHTML = "Fehler beim Laden der Lehrgangsdaten.";
-        }
-    }
-
-    function renderCurrentView() {
-        const box = document.getElementById("contentBox");
-        const prevBtn = document.getElementById("prevBtn");
-        const nextBtn = document.getElementById("nextBtn");
-        const status = document.getElementById("statusInfo");
-
-        let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
-
-        if (currentStepIndex < totalFolien) {
-            prevBtn.disabled = (currentStepIndex === 0);
-            status.innerText = `Lerneinheit / Folie ${currentStepIndex + 1} von ${totalFolien}`;
-            box.innerHTML = `<p>${lehrgangData.folien[currentStepIndex]}</p>`;
-            nextBtn.innerText = (currentStepIndex === totalFolien - 1) ? "Weiter zur Prüfung ➔" : "Weiter ⚔️";
-        }
-        else if (currentStepIndex === totalFolien) {
-            prevBtn.disabled = false;
-            status.innerText = "Abschluss der Präsentation";
-            box.innerHTML = `<h3 style="color:#ff3131;">Fast geschafft!</h3><p>${lehrgangData.stoppTextK || "Bereit für die Prüfung?"}</p>`;
-            nextBtn.innerText = "Prüfung starten 🚀";
-        }
-        else if (currentStepIndex === totalFolien + 1) {
-            prevBtn.disabled = true;
-            status.innerText = "Prüfungsmodus";
-            box.innerHTML = `<h3 style="color:#f0b232;">Prüfung</h3><p>${lehrgangData.pruefungEinleitungL || "Beantworte die folgenden Fragen:"}</p>`;
-            nextBtn.innerText = "Zur ersten Frage ⚔️";
-        }
-        else {
-            let questionIndex = currentStepIndex - (totalFolien + 2);
-            let fragenList = lehrgangData.fragen || [];
-
-            if (questionIndex < fragenList.length) {
-                prevBtn.disabled = true;
-                let q = fragenList[questionIndex];
-                status.innerText = `Prüfungsfrage ${questionIndex + 1} von ${fragenList.length}`;
-
-                let html = `<p><strong>${q.frageText}</strong></p>`;
-
-                if (q.antworten && q.antworten.length > 0) {
-                    q.antworten.forEach((ans, idx) => {
-                        let checked = (userAnswers[questionIndex] === (idx + 1)) ? "checked" : "";
-                        html += `<label class="quiz-option"><input type="radio" name="examQ" value="${idx + 1}" ${checked} onclick="saveAnswer(${questionIndex}, ${idx + 1})"> ${idx + 1}. ${ans}</label>`;
-                    });
-                } else {
-                    let savedVal = userAnswers[questionIndex] || "";
-                    html += `<input type="text" class="exam-input" placeholder="Antwort hier eintippen..." value="${savedVal}" oninput="saveTextAnswer(${questionIndex}, this.value)">`;
-                }
-
-                box.innerHTML = html;
-                nextBtn.innerText = (questionIndex === fragenList.length - 1) ? "Prüfung auswerten 🎯" : "Nächste Frage ➔";
-            }
-        }
-    }
-
-    function saveAnswer(qIndex, ansNum) {
-        userAnswers[qIndex] = ansNum;
-    }
-
-    function saveTextAnswer(qIndex, textVal) {
-        userAnswers[qIndex] = textVal;
-    }
-
-    function prevStep() {
-        if (currentStepIndex > 0) {
-            currentStepIndex--;
-            renderCurrentView();
-        }
-    }
-
-    function nextStep() {
-        let totalFolien = lehrgangData.folien ? lehrgangData.folien.length : 0;
-        // Gesamtschritte = Folien (0 bis N-1) + Stopp-Tafel + Einleitung + Fragen-Anfang bis Ende
-        let fragenLength = lehrgangData.fragen ? lehrgangData.fragen.length : 0;
-        let startFragenIndex = totalFolien + 2; // Ab hier fangen die Fragen an
-        let maxExamIndex = startFragenIndex + fragenLength - 1; // Letzte Frage
-
-        // Wenn wir uns noch auf den Folien, der Stopp-Tafel oder vor der letzten Frage befinden: normal weiterzählen
-        if (currentStepIndex < maxExamIndex) {
-            currentStepIndex++;
-            renderCurrentView();
-        } else {
-            // Wenn wir bei der letzten Frage sind und "Weiter" drücken -> Prüfung auswerten!
-            evaluateExam();
-        }
-    }
-
-    async function evaluateExam() {
-        let correctCount = 0;
-        let fragenList = lehrgangData.fragen || [];
-        let totalQ = fragenList.length;
-
-        if (totalQ === 0) {
-            alert("Keine Prüfungsfragen vorhanden.");
+    function loadLessonContent() {
+        if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
+            alert("Fehler: config.js nicht gefunden!");
             return;
         }
 
-        fragenList.forEach((q, idx) => {
-            let userAns = userAnswers[idx];
-            let correctAns = q.korrekt;
+        const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
+        const url = `${SCRIPT_URL}?action=getLehrgangInhalt&rang=${encodeURIComponent(currentRang)}&lektion=${encodeURIComponent(currentLektion)}`;
 
-            if (typeof correctAns === "string" && isNaN(correctAns)) {
-                if (userAns && userAns.toString().trim().toLowerCase() === correctAns.trim().toLowerCase()) {
-                    correctCount++;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("lehrgangTitel").innerText = data.titel || currentLektion;
+                
+                // Folien anzeigen
+                let slidesHtml = "";
+                if (data.folien && data.folien.length > 0) {
+                    data.folien.forEach((slide, index) => {
+                        slidesHtml += `<p><strong>Folie ${index + 1}:</strong><br>${slide}</p>`;
+                    });
+                } else {
+                    slidesHtml = "<p>Keine zusätzlichen Folien vorhanden.</p>";
                 }
+                document.getElementById("slidesContainer").innerHTML = slidesHtml;
+
+                // Fragen speichern für später
+                loadedQuestions = data.fragen || [];
+            })
+            .catch(err => {
+                console.error("Fehler beim Laden der Lektion:", err);
+                document.getElementById("slidesContainer").innerHTML = "<p style='color: red;'>Fehler beim Laden der Inhalte.</p>";
+            });
+    }
+
+    function showQuiz() {
+        if (loadedQuestions.length === 0) {
+            alert("Keine Fragen für diese Lektion hinterlegt. Du kannst direkt abschließen.");
+            submitDirectly();
+            return;
+        }
+
+        document.getElementById("contentArea").classList.add("hidden");
+        document.getElementById("quizArea").classList.remove("hidden");
+
+        let qContainer = document.getElementById("questionsContainer");
+        qContainer.innerHTML = "";
+
+        loadedQuestions.forEach((q, qIndex) => {
+            let qHtml = `<div class="question-box"><p><strong>Frage ${qIndex + 1}:</strong> ${q.frageText}</p>`;
+            
+            q.antworten.forEach((ans, aIndex) => {
+                qHtml += `
+                    <label class="answer-option">
+                        <input type="radio" name="question_${qIndex}" value="${ans}">
+                        ${ans}
+                    </label>`;
+            });
+
+            qHtml += `</div>`;
+            qContainer.innerHTML += qHtml;
+        });
+    }
+
+    function submitQuiz() {
+        // Antworten prüfen
+        let allAnswered = true;
+        let correctCount = 0;
+
+        loadedQuestions.forEach((q, qIndex) => {
+            const selected = document.querySelector(`input[name="question_${qIndex}"]:checked`);
+            if (!selected) {
+                allAnswered = false;
             } else {
-                if (parseInt(userAns) === parseInt(correctAns)) {
+                // Vergleich mit korrekter Antwort (Trim & LowerCase für Sicherheit)
+                if (selected.value.trim().toLowerCase() === q.korrekt.trim().toLowerCase()) {
                     correctCount++;
                 }
             }
         });
 
-        let percentage = Math.round((correctCount / totalQ) * 100);
-        let lektionTitel = lehrgangData.titel || "Grundausbildung";
+        if (!allAnswered) {
+            alert("Bitte beantworte alle Fragen, bevor du die Prüfung abschickst!");
+            return;
+        }
 
-        if (percentage >= 80) {
-            alert(`Glückwunsch Kommandant! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Prüfung bestanden! 🎖️`);
-            
-            try {
-                await fetch(API, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "advanceTrainingProgress",
-                        user: playerName,
-                        currentRang: "Grundausbildung",
-                        lektionName: lektionTitel,
-                        status: "Bestanden",
-                        percent: percentage + "%",
-                        nextRang: "Fortgeschritten"
-                    })
-                });
-            } catch (err) {
-                console.error("Fehler beim Speichern des Fortschritts:", err);
-            }
-
-            window.location.href = "Ausbildung.html";
+        // Benötigt z.B. 100% Richtigkeit oder angepasste Logik
+        if (correctCount >= loadedQuestions.length) {
+            saveProgressToDatabase("Bestanden", "100%");
         } else {
-            alert(`Leider nicht bestanden! Du hast ${correctCount} von ${totalQ} Fragen richtig (${percentage}%). Es werden mindestens 80% benötigt.`);
-            
-             try {
-                await fetch(API, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "advanceTrainingProgress",
-                        user: playerName,
-                        currentRang: "Grundausbildung",
-                        lektionName: lektionTitel,
-                        status: "Durchgefallen",
-                        percent: percentage + "%"
-                    })
-                });
-            } catch (err) {}
-
-            location.reload();
+            alert(`Leider nicht bestanden. Du hast ${correctCount} von ${loadedQuestions.length} Fragen richtig.`);
         }
     }
+
+    function submitDirectly() {
+        saveProgressToDatabase("Bestanden", "100%");
+    }
+
+    function saveProgressToDatabase(status, percent) {
+        const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
+        
+        const payload = {
+            user: currentUser,
+            currentRang: currentRang,
+            lektionName: currentLektion,
+            status: status,
+            percent: percent
+        };
+
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(response => {
+            document.getElementById("quizArea").classList.add("hidden");
+            document.getElementById("contentArea").classList.add("hidden");
+            document.getElementById("resultArea").classList.remove("hidden");
+            
+            if (response.success) {
+                document.getElementById("resultMessage").innerText = "Erfolgreich abgeschlossen! Fortschritt wurde gespeichert.";
+            } else {
+                document.getElementById("resultMessage").innerHTML = `<span style="color: red;">Fehler beim Speichern: ${response.error}</span>`;
+            }
+        })
+        .catch(err => {
+            console.error("Netzwerkfehler:", err);
+            alert("Fehler beim Übertragen an die Datenbank.");
+        });
+    }
+
+    loadLessonContent();
 </script>
+
 </body>
 </html>
