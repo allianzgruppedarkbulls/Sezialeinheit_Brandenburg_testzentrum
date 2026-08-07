@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Bulls - Ausbildungs-Protokoll (Admin)</title>
+    <!-- Zentrale Konfiguration laden -->
+    <script src="config.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 20px; }
+        h1 { color: #ffcc00; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #252525; border-radius: 6px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #ff9900; color: #000; font-weight: bold; }
+        tr:hover { background: #2a2a2a; }
+        .status-bestanden { color: #4caf50; font-weight: bold; }
+        .status-bearbeitung { color: #ffeb3b; font-weight: bold; }
+        .back-btn { background: #ff9900; color: #000; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+        .back-btn:hover { background: #ffcc00; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="back-btn" onclick="window.location.href='Ausbildung.html'">Zurück zur Akademie</button>
+    <h1>Ausbildungs-Protokoll (Übersicht)</h1>
+    
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mitglied</th>
+                    <th>Rang / Bereich</th>
+                    <th>Status</th>
+                    <th>Lektion</th>
+                    <th>Prozent</th>
+                    <th>Datum</th>
+                </tr>
+            </thead>
+            <tbody id="protocolTableBody">
+                <tr>
+                    <td colspan="6" style="text-align: center;">Lade Protokoll-Daten...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function loadProtocolData() {
+        if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
+            document.getElementById("protocolTableBody").innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Fehler: config.js oder SCRIPT_URL nicht gefunden!</td></tr>`;
+            return;
+        }
+
+        const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
+
+        // Lädt alle Einträge aus der Protokoll-Tabelle via Backend
+        fetch(`${SCRIPT_URL}?action=getAkademieUebersicht`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById("protocolTableBody");
+                tbody.innerHTML = "";
+
+                if (data.error) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Fehler: ${data.error}</td></tr>`;
+                    return;
+                }
+
+                const eintraege = data.eintraege || [];
+
+                if (eintraege.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">Keine Protokoll-Einträge vorhanden.</td></tr>`;
+                    return;
+                }
+
+                eintraege.forEach(row => {
+                    let statusClass = row.status === "Bestanden" ? "status-bestanden" : "status-bearbeitung";
+                    
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${row.user || "-"}</td>
+                        <td>${row.rang || "-"}</td>
+                        <td class="${statusClass}">${row.status || "-"}</td>
+                        <td>${row.lektion || "-"}</td>
+                        <td>${row.prozent || "-"}</td>
+                        <td>${row.datum || "-"}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                console.error("Fehler beim Laden des Protokolls:", err);
+                document.getElementById("protocolTableBody").innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Verbindungsfehler zur Datenbank.</td></tr>`;
+            });
+    }
+
+    loadProtocolData();
+</script>
+
+</body>
+</html>
