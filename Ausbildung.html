@@ -99,49 +99,59 @@
                         isRubrikLocked = true;
                     }
 
-                    if (rubrik.lessons && rubrik.lessons.length > 0) {
-                        let validLessonsCount = 0;
+                  // ... [vor der forEach Schleife]
+if (rubrik.lessons && rubrik.lessons.length > 0) {
+    let validLessonsCount = 0;
+    
+    // NEU: Diese Variable steuert die Kette
+    let previousPassed = true; 
 
-                        rubrik.lessons.forEach(lesson => {
-                            let titleLower = lesson.title.trim().toLowerCase();
-                            
-                            // Filter für Spalten-Header oder Platzhalter
-                            if (titleLower.includes("lektions_name") || titleLower === "1" || titleLower === "titel" || titleLower === "") {
-                                return; 
-                            }
+    rubrik.lessons.forEach(lesson => {
+        let titleLower = lesson.title.trim().toLowerCase();
+        if (titleLower.includes("lektions_name") || titleLower === "1" || titleLower === "titel" || titleLower === "") {
+            return; 
+        }
 
-                            validLessonsCount++;
-                            let statusText = "";
-                            let statusClass = "";
-                            let isDisabled = false;
-// Ersetze diesen Block in deiner foreach-Schleife:
-if (isRubrikLocked) {
-    statusText = "Gesperrt (Grundausbildung nötig)";
-    statusClass = "locked";
-    isDisabled = true;
-} else {
-    // Hier prüfen wir jetzt hart, ob die Lektion explizit den Status "green" hat
-    if (lesson.status === "green") {
-        statusText = "Bestanden";
-        statusClass = "status-green";
-    } else if (lesson.status === "yellow") {
-        statusText = "In Bearbeitung";
-        statusClass = "status-yellow";
-    } else {
-        statusText = "Offen / In Bearbeitung";
-        statusClass = "status-yellow";
-    }
-}
+        validLessonsCount++;
+        let statusText = "";
+        let statusClass = "";
+        let isDisabled = false;
 
-                            listHtml += `
-                                <li class="lesson-item">
-                                    <span>${lesson.title}</span>
-                                    <div>
-                                        <span class="${statusClass}" style="margin-right: 15px; font-size: 0.9em;">${statusText}</span>
-                                        <button ${isDisabled || lesson.status === "red" ? "disabled" : ""} onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Starten</button>
-                                    </div>
-                                </li>`;
-                        });
+        if (isRubrikLocked) {
+            statusText = "Gesperrt (Grundausbildung nötig)";
+            statusClass = "locked";
+            isDisabled = true;
+        } else {
+            // LOGIK: Ist die Lektion bestanden?
+            if (lesson.status === "green") {
+                statusText = "Bestanden";
+                statusClass = "status-green";
+                previousPassed = true; // Kette bleibt offen
+            } 
+            // Ist es die erste Lektion, die noch NICHT grün ist?
+            else if (previousPassed) {
+                statusText = "In Bearbeitung";
+                statusClass = "status-yellow";
+                previousPassed = false; // Ab hier wird alles danach gesperrt
+            } 
+            // Alle folgenden Lektionen in der Kette
+            else {
+                statusText = "Gesperrt (Vorherige Lektion nötig)";
+                statusClass = "status-red";
+                isDisabled = true;
+            }
+        }
+
+        listHtml += `
+            <li class="lesson-item">
+                <span>${lesson.title}</span>
+                <div>
+                    <span class="${statusClass}" style="margin-right: 15px; font-size: 0.9em;">${statusText}</span>
+                    <button ${isDisabled ? "disabled" : ""} onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Starten</button>
+                </div>
+            </li>`;
+    });
+    // ... [restlicher Code]
 
                         if (validLessonsCount === 0) {
                             listHtml += `<li class="lesson-item"><span class="locked">Keine Inhalte verfügbar.</span></li>`;
