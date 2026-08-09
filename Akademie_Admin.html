@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dark Bulls - Ausbildungs-Protokoll (Admin)</title>
-    <!-- Zentrale Konfiguration laden -->
     <script src="config.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
@@ -23,61 +22,58 @@
 
         /* Modal / Popup Styling */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); overflow: auto; }
-        .modal-content { background-color: #1e1e1e; margin: 5% auto; padding: 25px; border: 1px solid #cc2222; width: 80%; max-width: 700px; border-radius: 8px; box-shadow: 0 0 20px rgba(204,34,34,0.3); }
+        .modal-content { background-color: #1e1e1e; margin: 3% auto; padding: 25px; border: 1px solid #cc2222; width: 85%; max-width: 750px; border-radius: 8px; box-shadow: 0 0 20px rgba(204,34,34,0.3); }
         .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: #ff4444; }
-        
-        .question-card { background: #251a1a; border: 1px solid #331a1a; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .question-card.richtig { border-left: 4px solid #4caf50; }
-        .question-card.falsch { border-left: 4px solid #ff4444; }
-        .ans-row { margin-top: 8px; font-size: 0.9em; }
+
+        /* Originalgetreue Quiz-Optik im Modal */
+        .question-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #331a1a; }
+        .answer-option { display: block; margin: 10px 0; background: #2a1f1f; padding: 12px; border-radius: 4px; border: 1px solid #442222; text-align: left; position: relative; }
+        .answer-option.correct-answer { border-color: #2ecc71; background: #16261a; } /* Grüner Rahmen für die richtige Antwort */
+        .answer-option input { margin-right: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <button class="back-btn" onclick="window.location.href='Ausbildung.html'">Zurück zur Akademie</button>
-    <h1>Ausbildungs-Protokoll (Admin-Ansicht)</h1>
+    <h1>Ausbildungs-Protokoll (Mitglieder-Übersicht)</h1>
     
     <div style="overflow-x: auto;">
         <table>
             <thead>
                 <tr>
                     <th>Mitglied</th>
-                    <th>Rang / Bereich</th>
-                    <th>Status</th>
-                    <th>Lektion</th>
-                    <th>Prozent</th>
-                    <th>Datum</th>
-                    <th>Prüfungsdetails</th>
+                    <th>Abgeschlossene Lektionen</th>
+                    <th>Aktion</th>
                 </tr>
             </thead>
             <tbody id="protocolTableBody">
                 <tr>
-                    <td colspan="7" style="text-align: center;">Lade Protokoll-Daten...</td>
+                    <td colspan="3" style="text-align: center;">Lade Mitglieder-Protokoll...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- POPUP MODAL FÜR PRÜFUNGSDETAILS -->
+<!-- MODAL: HISTORIE ODER PRÜFUNGS-ANSICHT -->
 <div id="detailsModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h2 id="modalTitle" style="color: #ff4444; margin-top: 0;">Prüfungsdetails</h2>
-        <div id="modalBody" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-            <!-- Hier werden die Fragen dynamisch eingefügt -->
+        <h2 id="modalTitle" style="color: #ff4444; margin-top: 0;">Details</h2>
+        <div id="modalBody" style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
+            <!-- Inhalt wird dynamisch befüllt -->
         </div>
     </div>
 </div>
 
 <script>
-    let globalEintraege = [];
+    let userGruppen = {};
 
     function loadProtocolData() {
         if (!window.BULLS_CONFIG || !window.BULLS_CONFIG.SCRIPT_URL) {
-            document.getElementById("protocolTableBody").innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Fehler: config.js oder SCRIPT_URL nicht gefunden!</td></tr>`;
+            document.getElementById("protocolTableBody").innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Fehler: config.js oder SCRIPT_URL nicht gefunden!</td></tr>`;
             return;
         }
 
@@ -90,87 +86,140 @@
                 tbody.innerHTML = "";
 
                 if (data.error) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Fehler: ${data.error}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Fehler: ${data.error}</td></tr>`;
                     return;
                 }
 
-                globalEintraege = data.eintraege || [];
+                let eintraege = data.eintraege || [];
+                userGruppen = {};
 
-                if (globalEintraege.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; font-style: italic;">Keine Protokoll-Einträge vorhanden.</td></tr>`;
+                // Daten im Browser dynamisch nach Mitgliedern gruppieren
+                eintraege.forEach(row => {
+                    let name = row.user || "Unbekannt";
+                    if (!userGruppen[name]) userGruppen[name] = [];
+                    userGruppen[name].push(row);
+                });
+
+                if (Object.keys(userGruppen).length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888; font-style: italic;">Keine Protokoll-Einträge vorhanden.</td></tr>`;
                     return;
                 }
 
-                globalEintraege.forEach((row, index) => {
-                    let statusClass = row.status === "Bestanden" ? "status-bestanden" : "status-bearbeitung";
-                    
-                    // Prüfen ob Spalte G (details) Daten enthält
-                    let detailsBtnHtml = `<span style="color: #555; font-size: 0.85em;">Keine Daten</span>`;
-                    if (row.details && row.details.trim() !== "") {
-                        detailsBtnHtml = `<button class="details-btn" onclick="openDetails(${index})">Details ansehen 🔍</button>`;
-                    }
+                // Ebene 1: Jedes Mitglied in einer eigenen Zeile anzeigen
+                Object.keys(userGruppen).forEach(userName => {
+                    let lektionen = userGruppen[userName];
+                    let bestandenCount = lektionen.filter(l => l.status === "Bestanden").length;
 
                     let tr = document.createElement("tr");
                     tr.innerHTML = `
-                        <td>${row.user || "-"}</td>
-                        <td>${row.rang || "-"}</td>
-                        <td class="${statusClass}">${row.status || "-"}</td>
-                        <td>${row.lektion || "-"}</td>
-                        <td>${row.prozent || "-"}</td>
-                        <td>${row.datum || "-"}</td>
-                        <td>${detailsBtnHtml}</td>
+                        <td><strong>${userName}</strong></td>
+                        <td>${bestandenCount} von ${lektionen.length} Lektion(en) absolviert</td>
+                        <td><button class="details-btn" onclick="openUserHistory('${userName}')">Historie ansehen 📂</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
             })
             .catch(err => {
                 console.error("Fehler beim Laden des Protokolls:", err);
-                document.getElementById("protocolTableBody").innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Verbindungsfehler zur Datenbank.</td></tr>`;
+                document.getElementById("protocolTableBody").innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Verbindungsfehler zur Datenbank.</td></tr>`;
             });
     }
 
-    function openDetails(index) {
-        let entry = globalEintraege[index];
-        if (!entry || !entry.details) return;
+    // Ebene 2: Zeigt die Historie (alle Prüfungen) des ausgewählten Mitglieds
+    function openUserHistory(userName) {
+        let lektionen = userGruppen[userName];
+        document.getElementById("modalTitle.innerText = `Historie von: ${userName}`; // korrigiert unten
+        document.getElementById("modalTitle").innerText = `Ausbildungs-Historie: ${userName}`;
+        
+        let modalBody = document.getElementById("modalBody");
+        modalBody.innerHTML = "";
 
-        document.getElementById("modalTitle").innerText = `Prüfung: ${entry.user} (${entry.lektion})`;
+        lektionen.forEach((item, index) => {
+            let statusClass = item.status === "Bestanden" ? "status-bestanden" : "status-bearbeitung";
+            let hasDetails = item.details && item.details.trim() !== "";
+
+            let div = document.createElement("div");
+            div.className = "question-box";
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>${item.lektion}</strong> (${item.rang})<br>
+                        <span style="font-size: 0.85em; color: #aaa;">Datum: ${item.datum || "-"} | Prozent: ${item.prozent || "-"}</span>
+                    </div>
+                    <div>
+                        <span class="${statusClass}" style="margin-right: 15px;">${item.status}</span>
+                        ${hasDetails ? `<button class="details-btn" onclick="openExamTestView('${userName}', ${index})">Prüfung ansehen 🔍</button>` : `<span style="color:#666; font-size:0.85em;">Keine Fragen-Daten</span>`}
+                    </div>
+                </div>
+            `;
+            modalBody.appendChild(div);
+        });
+
+        document.getElementById("detailsModal").style.display = "block";
+    }
+
+    // Ebene 3: Zeigt die echte Prüfung exakt so an, wie der User sie absolviert hat
+    function openExamTestView(userName, index) {
+        let item = userGruppen[userName][index];
+        document.getElementById("modalTitle").innerText = `Prüfungstest: ${item.lektion} (${userName})`;
         let modalBody = document.getElementById("modalBody");
         modalBody.innerHTML = "";
 
         try {
-            let detailsArray = JSON.parse(entry.details);
+            let detailsArray = JSON.parse(item.details);
 
-            detailsArray.forEach((item, qIndex) => {
-                let isRichtig = (item.status && item.status.toLowerCase() === "richtig");
-                let cardClass = isRichtig ? "richtig" : "falsch";
-                let statusText = isRichtig ? '<span style="color: #4caf50; font-weight: bold;">Richtig ✓</span>' : '<span style="color: #ff4444; font-weight: bold;">Falsch ✗</span>';
-
+            detailsArray.forEach((q, qIndex) => {
                 let card = document.createElement("div");
-                card.className = `question-card ${cardClass}`;
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <strong>Frage ${qIndex + 1}: ${item.frage}</strong>
-                        <div>${statusText}</div>
+                card.className = "question-box";
+                
+                let qHtml = `<p><strong>Frage ${qIndex + 1}: ${q.frage}</strong></p>`;
+
+                // Da wir in den Details den Fragetext und die gewählte/korrekte Antwort speichern,
+                // simulieren wir die Antwort-Boxen optisch exakt im Original-Design:
+                let userChoice = (q.gewaehlt || "").trim();
+                let correctChoice = (q.korrekt || "").trim();
+
+                // Wir bauen die gewählte Antwort und die korrekte Antwort ein
+                // (Falls das Log im JSON nur die Antworten speichert, fangen wir sie hier sicher ab)
+                let isRichtig = (q.status && q.status.toLowerCase() === "richtig");
+
+                let ansBoxClass = isRichtig ? "answer-option correct-answer" : "answer-option";
+                
+                qHtml += `
+                    <div class="${ansBoxClass}">
+                        <input type="radio" checked disabled>
+                        Antwort des Users: <strong>${userChoice || "Keine Angabe"}</strong> 
+                        ${isRichtig ? '<span style="color: #2ecc71; float: right;">(Richtig ✓)</span>' : '<span style="color: #ff4444; float: right;">(Falsch ✗)</span>'}
                     </div>
-                    <div class="ans-row">Antwort des Users: <strong>${item.gewaehlt || "Keine Antwort"}</strong></div>
-                    ${!isRichtig ? `<div class="ans-row" style="color: #a3e4d7;">Richtige Antwort wäre: <strong>${item.korrekt}</strong></div>` : ""}
                 `;
+
+                if (!isRichtig) {
+                    qHtml += `
+                        <div class="answer-option correct-answer" style="margin-top: 5px;">
+                            <input type="radio" disabled>
+                            Richtige Antwort wäre gewesen: <strong>${correctChoice}</strong>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = qHtml;
                 modalBody.appendChild(card);
             });
 
+            // Zurück-Button um wieder in die Historie zu springen
+            let backButtonHtml = `<button class="back-btn" onclick="openUserHistory('${userName}')" style="margin-top: 10px; width: 100%;">← Zurück zur Historie</button>`;
+            modalBody.innerHTML += backButtonHtml;
+
         } catch (e) {
-            modalBody.innerHTML = `<p style="color: red;">Fehler beim Lesen der Prüfungsdetails (Ungültiges Format).</p>`;
+            modalBody.innerHTML = `<p style="color: red;">Fehler beim Laden der Prüfungsdetails.</p>`;
             console.error(e);
         }
-
-        document.getElementById("detailsModal").style.display = "block";
     }
 
     function closeModal() {
         document.getElementById("detailsModal").style.display = "none";
     }
 
-    // Schließen bei Klick außerhalb des Fensters
     window.onclick = function(event) {
         let modal = document.getElementById("detailsModal");
         if (event.target === modal) {
