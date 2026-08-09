@@ -14,7 +14,7 @@
         .slide-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; border: 1px solid #331a1a; min-height: 120px; white-space: pre-line; }
         .warning-box { background: #251a1a; padding: 25px; border-radius: 6px; margin-bottom: 20px; border: 2px solid #cc2222; text-align: center; }
         .question-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ff4444; border: 1px solid #331a1a; }
-        .answer-option { display: block; margin: 10px 0; background: #2a1f1f; padding: 12px; border-radius: 4px; cursor: pointer; border: 1px solid #442222; }
+        .answer-option { display: block; margin: 10px 0; background: #2a1f1f; padding: 12px; border-radius: 4px; cursor: pointer; border: 1px solid #442222; text-align: left; }
         .answer-option:hover { background: #3a2525; border-color: #ff4444; }
         .answer-option input { margin-right: 10px; }
         .btn-container { display: flex; gap: 10px; margin-top: 20px; }
@@ -46,16 +46,19 @@
         </div>
     </div>
 
-    <!-- STOPP- / WARNBILDSCHIRM (Spalte K) -->
+    <!-- STOPP- / WARNBILDSCHIRM (Mit Zurück-Button & vollem Text) -->
     <div id="stopArea" class="hidden">
         <div class="warning-box">
             <h2 style="color: #ff4444; margin-top: 0;">Achtung!</h2>
             <div id="stopTextBox" style="white-space: pre-line; margin-bottom: 20px; line-height: 1.5; text-align: left;">Lade Stopp-Text...</div>
-            <button class="btn-green" onclick="enterExamIntro()">Prüfung starten</button>
+            <div class="btn-container">
+                <button onclick="backToSlides()">Zurück zur Präsentation</button>
+                <button class="btn-green" onclick="enterExamIntro()">Prüfung endgültig starten</button>
+            </div>
         </div>
     </div>
 
-    <!-- QUIZ BEREICH (Frage für Frage) -->
+    <!-- QUIZ BEREICH -->
     <div id="quizArea" class="hidden">
         <div class="section-title" id="quizHeaderTitle">Wissensüberprüfung</div>
         <div id="questionCounter" class="step-indicator">Frage 1 von 1</div>
@@ -66,7 +69,7 @@
         </div>
     </div>
 
-    <!-- ERGEBNIS BEREICH (Schicke Box statt Alert) -->
+    <!-- ERGEBNIS BEREICH -->
     <div id="resultArea" class="hidden">
         <div id="resultContainerBox"></div>
     </div>
@@ -141,11 +144,17 @@
             currentSlideIndex++;
             renderSlide();
         } else {
-            // Ende erreicht -> Stopp-Text aus Spalte K anzeigen
+            // Ende erreicht -> Ganzen Stopp-Text aus Spalte K anzeigen
             document.getElementById("contentArea").classList.add("hidden");
             document.getElementById("stopTextBox").innerText = stopText;
             document.getElementById("stopArea").classList.remove("hidden");
         }
+    }
+
+    function backToSlides() {
+        // Vom Stopp-Bildschirm zurück zur letzten Folie springen
+        document.getElementById("stopArea").classList.add("hidden");
+        document.getElementById("contentArea").classList.remove("hidden");
     }
 
     function enterExamIntro() {
@@ -172,6 +181,7 @@
         let qHtml = `<div class="question-box"><p><strong>${q.frageText}</strong></p>`;
         
         q.antworten.forEach((ans, aIndex) => {
+            // Wir speichern den Index (1-basiert) oder den Text ab
             let isChecked = (userAnswers[currentQuestionIndex] === ans) ? "checked" : "";
             qHtml += `
                 <label class="answer-option">
@@ -215,8 +225,20 @@
             let givenAnswer = (userAnswers[index] || "").trim();
             let correctAnswer = (q.korrekt || "").trim();
             
-            // Fehlertoleranter Abgleich (sowohl Text als auch Index/Nummer-Abgleich)
+            // Fehlertoleranter Abgleich:
+            // Prüft Textvergleich ODER ob die Nummer der Antwort mit der hinterlegten Lösung übereinstimmt
+            let isMatch = false;
             if (givenAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                isMatch = true;
+            } else {
+                // Finde heraus, der wievielte Index (1 bis 5) die gegebene Antwort ist
+                let answerIndex = q.antworten.findIndex(a => a.trim().toLowerCase() === givenAnswer.toLowerCase()) + 1;
+                if (answerIndex.toString() === correctAnswer) {
+                    isMatch = true;
+                }
+            }
+
+            if (isMatch) {
                 correctCount++;
             }
         });
@@ -225,7 +247,7 @@
         let passed = (correctCount >= loadedQuestions.length);
 
         if (passed) {
-            saveProgressToDatabase("Bestanden", percent + "%", correctCount, loadedQuestions.length);
+            saveProgressToDatabase("Bestanden", percent + "%");
         } else {
             showFailScreen(correctCount, loadedQuestions.length, percent);
         }
@@ -247,7 +269,7 @@
         resArea.classList.remove("hidden");
     }
 
-    function saveProgressToDatabase(status, percentText, correct, total) {
+    function saveProgressToDatabase(status, percentText) {
         const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
         
         const payload = {
@@ -274,7 +296,7 @@
             resBox.className = "success-box";
             resBox.innerHTML = `
                 <h2 style="color: #2ecc71; margin-top: 0;">Hervorragend gemacht!</h2>
-                <p style="font-size: 1.1em; margin: 15px 0;">Du hast alle <strong>${total} von ${total}</strong> Fragen richtig beantwortet (100%).</p>
+                <p style="font-size: 1.1em; margin: 15px 0;">Du hast alle Fragen richtig beantwortet (100%).</p>
                 <p style="color: #a3e4d7; font-size: 0.9em; margin-bottom: 20px;">Der Lehrgang wurde erfolgreich abgeschlossen und in der Datenbank vermerkt.</p>
                 <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
             `;
