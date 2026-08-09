@@ -65,7 +65,7 @@
             <div class="btn-stack">
                 <button class="card-btn" id="btn-statistik" onclick="window.location.href='Per_Statistik.html'">Eigene Statistik</button>
                 <button class="card-btn" id="btn-pin" onclick="window.location.href='Per_Pin.html'">Pin ändern</button>
-                <button class="card-btn" id="btn-ausbildung" onclick="window.location.href='Ausbildung.html'">Akademie / Schulung</button>
+                <button class="card-btn" id="btn-ausbildung" onclick="openAkademieWithUser()">Akademie / Schulung</button>
                 <button class="card-btn" id="btn-support" onclick="window.location.href='Chat_Support.html'">Support Chat</button>
             </div>
         </div>
@@ -228,6 +228,11 @@
             sessionStorage.clear();
             window.location.href = "index.html";
         }
+
+        function openAkademieWithUser() {
+    const activeUser = localStorage.getItem('bulls_user') || 'Julian';
+    window.location.href = `Ausbildung.html?user=${encodeURIComponent(activeUser)}`;
+}
     </script>
 </body>
 </html>
