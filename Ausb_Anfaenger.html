@@ -267,13 +267,14 @@
         const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
         
         // KORREKTE PAYLOAD-NAMEN PASSEND ZUR TABELLE (user, rang, status, lektion, prozent)
-        const payload = {
-            user: currentUser,
-            rang: currentRang,
-            status: status,
-            lektion: currentLektion,
-            prozent: percentText
-        };
+       const payload = {
+    action: "advanceTrainingProgress",
+    user: currentUser,
+    currentRang: currentRang, // (Hinweis: Im Apps Script wird currentRang statt rang erwartet)
+    status: status,
+    lektionName: currentLektion, // (Im Apps Script heißt es lektionName)
+    percent: percentText
+};
 
         fetch(SCRIPT_URL, {
             method: "POST",
