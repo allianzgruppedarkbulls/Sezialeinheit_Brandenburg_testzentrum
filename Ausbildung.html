@@ -29,8 +29,10 @@
         .btn-bereit { background: linear-gradient(to bottom, #d4af37, #aa820a); color: #000; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: inherit; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .btn-bereit:hover { background: linear-gradient(to bottom, #ffd700, #d4af37); }
 
+        .btn-bestanden { background: rgba(76, 175, 80, 0.15); color: #4caf50; border: 1px solid #4caf50; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .btn-bestanden:hover { background: rgba(76, 175, 80, 0.3); }
+
         .badge-gesperrt { color: #777; font-size: 0.85em; background: #1a1a1a; border: 1px solid #2a2a2a; padding: 4px 10px; border-radius: 4px; }
-        .badge-bestanden { color: #4caf50; font-size: 0.85em; font-weight: bold; }
 
         .admin-btn { background: #d32f2f; color: #fff; padding: 6px 12px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; }
         .admin-btn:hover { background: #f44336; }
@@ -145,7 +147,8 @@
                                 isDisabled = true;
                             } else {
                                 if (lesson.status === "green") {
-                                    badgeHtml = `<span class="badge-bestanden">Bestanden ✓</span>`;
+                                    // Bestandene Lektionen sind jetzt über einen Button jederzeit wieder aufrufbar
+                                    badgeHtml = `<button class="btn-bestanden" onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Ansehen ✓</button>`;
                                     previousPassed = true;
                                 } else if (previousPassed) {
                                     badgeHtml = `<button class="btn-bereit" onclick="openLesson('${lesson.page}', '${key}', '${lesson.title}')">Bereit ►</button>`;
