@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    <!-- STOPP- / WARNBILDSCHIRM (Mit Zurück-Button & vollem Text) -->
+    <!-- STOPP- / WARNBILDSCHIRM (Mit Zurück-Button & vollem Text aus Spalte K) -->
     <div id="stopArea" class="hidden">
         <div class="warning-box">
             <h2 style="color: #ff4444; margin-top: 0;">Achtung!</h2>
@@ -144,7 +144,6 @@
             currentSlideIndex++;
             renderSlide();
         } else {
-            // Ende erreicht -> Ganzen Stopp-Text aus Spalte K anzeigen
             document.getElementById("contentArea").classList.add("hidden");
             document.getElementById("stopTextBox").innerText = stopText;
             document.getElementById("stopArea").classList.remove("hidden");
@@ -152,7 +151,6 @@
     }
 
     function backToSlides() {
-        // Vom Stopp-Bildschirm zurück zur letzten Folie springen
         document.getElementById("stopArea").classList.add("hidden");
         document.getElementById("contentArea").classList.remove("hidden");
     }
@@ -181,7 +179,6 @@
         let qHtml = `<div class="question-box"><p><strong>${q.frageText}</strong></p>`;
         
         q.antworten.forEach((ans, aIndex) => {
-            // Wir speichern den Index (1-basiert) oder den Text ab
             let isChecked = (userAnswers[currentQuestionIndex] === ans) ? "checked" : "";
             qHtml += `
                 <label class="answer-option">
@@ -225,13 +222,10 @@
             let givenAnswer = (userAnswers[index] || "").trim();
             let correctAnswer = (q.korrekt || "").trim();
             
-            // Fehlertoleranter Abgleich:
-            // Prüft Textvergleich ODER ob die Nummer der Antwort mit der hinterlegten Lösung übereinstimmt
             let isMatch = false;
             if (givenAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
                 isMatch = true;
             } else {
-                // Finde heraus, der wievielte Index (1 bis 5) die gegebene Antwort ist
                 let answerIndex = q.antworten.findIndex(a => a.trim().toLowerCase() === givenAnswer.toLowerCase()) + 1;
                 if (answerIndex.toString() === correctAnswer) {
                     isMatch = true;
@@ -272,12 +266,13 @@
     function saveProgressToDatabase(status, percentText) {
         const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
         
+        // KORREKTE PAYLOAD-NAMEN PASSEND ZUR TABELLE (user, rang, status, lektion, prozent)
         const payload = {
             user: currentUser,
-            currentRang: currentRang,
-            lektionName: currentLektion,
+            rang: currentRang,
             status: status,
-            percent: percentText
+            lektion: currentLektion,
+            prozent: percentText
         };
 
         fetch(SCRIPT_URL, {
