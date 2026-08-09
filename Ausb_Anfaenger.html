@@ -24,7 +24,8 @@
         .btn-green { background: #2ecc71; color: #000; }
         .btn-green:hover { background: #27ae60; }
         .hidden { display: none; }
-        .success-msg { color: #4caf50; font-weight: bold; text-align: center; font-size: 1.2em; }
+        .success-box { background: #16261a; border: 2px solid #2ecc71; padding: 25px; border-radius: 6px; text-align: center; }
+        .fail-box { background: #261616; border: 2px solid #cc2222; padding: 25px; border-radius: 6px; text-align: center; }
         .step-indicator { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 10px; }
     </style>
 </head>
@@ -45,11 +46,11 @@
         </div>
     </div>
 
-    <!-- STOPP- / WARNBILDSCHIRM (Spalte K & L) -->
+    <!-- STOPP- / WARNBILDSCHIRM (Spalte K) -->
     <div id="stopArea" class="hidden">
         <div class="warning-box">
             <h2 style="color: #ff4444; margin-top: 0;">Achtung!</h2>
-            <div id="stopTextBox" style="white-space: pre-line; margin-bottom: 20px; line-height: 1.5;">Du hast das Ende der Präsentation erreicht. Ab hier beginnt die Prüfung und du kannst nicht mehr zurückgehen.</div>
+            <div id="stopTextBox" style="white-space: pre-line; margin-bottom: 20px; line-height: 1.5; text-align: left;">Lade Stopp-Text...</div>
             <button class="btn-green" onclick="enterExamIntro()">Prüfung starten</button>
         </div>
     </div>
@@ -65,10 +66,9 @@
         </div>
     </div>
 
-    <!-- ERGEBNIS BEREICH -->
+    <!-- ERGEBNIS BEREICH (Schicke Box statt Alert) -->
     <div id="resultArea" class="hidden">
-        <div id="resultMessage" class="success-msg"></div>
-        <button style="margin-top: 20px;" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
+        <div id="resultContainerBox"></div>
     </div>
 </div>
 
@@ -102,8 +102,8 @@
                 document.getElementById("lehrgangTitel").innerText = data.titel || currentLektion;
                 
                 loadedFolien = data.folien || ["Willkommen zum Lehrgang."];
-                stopText = data.stoppText || "Du hast das Ende der Präsentation erreicht. Mit dem folgenden Button bestätigst du den Start der Prüfung.";
-                pruefungEinleitung = data.pruefungEinleitung || "Willkommen zur Wissensüberprüfung.";
+                stopText = data.stoppText || "Du hast das Ende der Präsentation erreicht.";
+                pruefungEinleitung = data.pruefungEinleitung || "Wissensüberprüfung";
                 loadedQuestions = data.fragen || [];
 
                 currentSlideIndex = 0;
@@ -117,7 +117,6 @@
 
     function renderSlide() {
         document.getElementById("slideCounter").innerText = `Folie ${currentSlideIndex + 1} von ${loadedFolien.length}`;
-        document.getElementById("slideBox.innerHTML") // safety
         document.getElementById("slideBox").innerHTML = loadedFolien[currentSlideIndex];
         
         document.getElementById("prevSlideBtn").disabled = (currentSlideIndex === 0);
@@ -142,7 +141,7 @@
             currentSlideIndex++;
             renderSlide();
         } else {
-            // Ende der Folien erreicht -> Stopp-Bildschirm anzeigen!
+            // Ende erreicht -> Stopp-Text aus Spalte K anzeigen
             document.getElementById("contentArea").classList.add("hidden");
             document.getElementById("stopTextBox").innerText = stopText;
             document.getElementById("stopArea").classList.remove("hidden");
@@ -150,11 +149,9 @@
     }
 
     function enterExamIntro() {
-        // Vom Stopp-Bildschirm in die Prüfung wechseln
         document.getElementById("stopArea").classList.add("hidden");
         
         if (loadedQuestions.length === 0) {
-            alert("Keine Fragen für diese Lektion hinterlegt. Lektion wird direkt abgeschlossen.");
             saveProgressToDatabase("Bestanden", "100%");
             return;
         }
@@ -215,22 +212,42 @@
         let correctCount = 0;
 
         loadedQuestions.forEach((q, index) => {
-            let givenAnswer = userAnswers[index] || "";
-            // Exakter Abgleich mit Getrimmtem String und Kleinschreibung für maximale Fehlertoleranz
-            if (givenAnswer.trim().toLowerCase() === q.korrekt.trim().toLowerCase()) {
+            let givenAnswer = (userAnswers[index] || "").trim();
+            let correctAnswer = (q.korrekt || "").trim();
+            
+            // Fehlertoleranter Abgleich (sowohl Text als auch Index/Nummer-Abgleich)
+            if (givenAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
                 correctCount++;
             }
         });
 
-        if (correctCount >= loadedQuestions.length) {
-            saveProgressToDatabase("Bestanden", "100%");
+        let percent = Math.round((correctCount / loadedQuestions.length) * 100);
+        let passed = (correctCount >= loadedQuestions.length);
+
+        if (passed) {
+            saveProgressToDatabase("Bestanden", percent + "%", correctCount, loadedQuestions.length);
         } else {
-            alert(`Leider nicht bestanden. Du hast ${correctCount} von ${loadedQuestions.length} Fragen richtig beantwortet. Versuche es noch einmal!`);
-            window.location.href = `Ausbildung.html?user=${encodeURIComponent(currentUser)}`;
+            showFailScreen(correctCount, loadedQuestions.length, percent);
         }
     }
 
-    function saveProgressToDatabase(status, percent) {
+    function showFailScreen(correct, total, percent) {
+        document.getElementById("quizArea").classList.add("hidden");
+        let resArea = document.getElementById("resultArea");
+        let resBox = document.getElementById("resultContainerBox");
+
+        resBox.className = "fail-box";
+        resBox.innerHTML = `
+            <h2 style="color: #ff4444; margin-top: 0;">Leider nicht bestanden!</h2>
+            <p style="font-size: 1.1em; margin: 15px 0;">Du hast <strong>${correct} von ${total}</strong> Fragen richtig beantwortet (${percent}%).</p>
+            <p style="color: #aaa; font-size: 0.9em; margin-bottom: 20px;">Für diesen Lehrgang sind 100% Richtigkeit erforderlich. Versuche es einfach noch einmal!</p>
+            <button onclick="window.location.reload()" style="margin-right: 10px;">Lehrgang wiederholen</button>
+            <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
+        `;
+        resArea.classList.remove("hidden");
+    }
+
+    function saveProgressToDatabase(status, percentText, correct, total) {
         const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
         
         const payload = {
@@ -238,7 +255,7 @@
             currentRang: currentRang,
             lektionName: currentLektion,
             status: status,
-            percent: percent
+            percent: percentText
         };
 
         fetch(SCRIPT_URL, {
@@ -250,13 +267,18 @@
             document.getElementById("quizArea").classList.add("hidden");
             document.getElementById("stopArea").classList.add("hidden");
             document.getElementById("contentArea").classList.add("hidden");
-            document.getElementById("resultArea").classList.remove("hidden");
             
-            if (response.success) {
-                document.getElementById("resultMessage").innerText = "Erfolgreich abgeschlossen! Fortschritt wurde gespeichert.";
-            } else {
-                document.getElementById("resultMessage").innerHTML = `<span style="color: red;">Fehler beim Speichern: ${response.error}</span>`;
-            }
+            let resArea = document.getElementById("resultArea");
+            let resBox = document.getElementById("resultContainerBox");
+
+            resBox.className = "success-box";
+            resBox.innerHTML = `
+                <h2 style="color: #2ecc71; margin-top: 0;">Hervorragend gemacht!</h2>
+                <p style="font-size: 1.1em; margin: 15px 0;">Du hast alle <strong>${total} von ${total}</strong> Fragen richtig beantwortet (100%).</p>
+                <p style="color: #a3e4d7; font-size: 0.9em; margin-bottom: 20px;">Der Lehrgang wurde erfolgreich abgeschlossen und in der Datenbank vermerkt.</p>
+                <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
+            `;
+            resArea.classList.remove("hidden");
         })
         .catch(err => {
             console.error("Netzwerkfehler:", err);
