@@ -159,7 +159,7 @@
         document.getElementById("stopArea").classList.add("hidden");
         
         if (loadedQuestions.length === 0) {
-            saveProgressToDatabase("Bestanden", "100%");
+            saveProgressToDatabase("Bestanden", "100%", []);
             return;
         }
 
@@ -217,6 +217,7 @@
 
     function evaluateQuiz() {
         let correctCount = 0;
+        let ergebnisLog = []; // NEU: Sammelt die Details für Spalte G
 
         loadedQuestions.forEach((q, index) => {
             let givenAnswer = (userAnswers[index] || "").trim();
@@ -235,13 +236,21 @@
             if (isMatch) {
                 correctCount++;
             }
+
+            // NEU: Für jede Frage das Detail-Objekt anlegen
+            ergebnisLog.push({
+                frage: q.frageText,
+                gewaehlt: givenAnswer,
+                korrekt: correctAnswer,
+                status: isMatch ? "Richtig" : "Falsch"
+            });
         });
 
         let percent = Math.round((correctCount / loadedQuestions.length) * 100);
         let passed = (correctCount >= loadedQuestions.length);
 
         if (passed) {
-            saveProgressToDatabase("Bestanden", percent + "%");
+            saveProgressToDatabase("Bestanden", percent + "%", ergebnisLog);
         } else {
             showFailScreen(correctCount, loadedQuestions.length, percent);
         }
@@ -263,18 +272,18 @@
         resArea.classList.remove("hidden");
     }
 
-    function saveProgressToDatabase(status, percentText) {
+    function saveProgressToDatabase(status, percentText, detailsArray) {
         const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
         
-        // KORREKTE PAYLOAD-NAMEN PASSEND ZUR TABELLE (user, rang, status, lektion, prozent)
-       const payload = {
-    action: "advanceTrainingProgress",
-    user: currentUser,
-    currentRang: currentRang, // (Hinweis: Im Apps Script wird currentRang statt rang erwartet)
-    status: status,
-    lektionName: currentLektion, // (Im Apps Script heißt es lektionName)
-    percent: percentText
-};
+        const payload = {
+            action: "advanceTrainingProgress",
+            user: currentUser,
+            currentRang: currentRang,
+            lektionName: currentLektion,
+            status: status,
+            percent: percentText,
+            details: detailsArray // NEU: Überträgt das Frage-Antwort-Log an das Apps Script
+        };
 
         fetch(SCRIPT_URL, {
             method: "POST",
@@ -306,6 +315,3 @@
 
     loadLessonContent();
 </script>
-
-</body>
-</html>
