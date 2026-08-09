@@ -11,7 +11,8 @@
         .container { max-width: 800px; margin: 0 auto; background: #1e1e1e; border: 1px solid #441111; border-radius: 8px; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
         h1 { color: #ff4444; text-align: center; }
         .section-title { color: #ff5555; font-size: 1.2em; margin-bottom: 15px; border-bottom: 1px solid #331111; padding-bottom: 5px; }
-        .slide-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; border: 1px solid #331a1a; min-height: 120px; }
+        .slide-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 20px; line-height: 1.6; border: 1px solid #331a1a; min-height: 120px; white-space: pre-line; }
+        .warning-box { background: #251a1a; padding: 25px; border-radius: 6px; margin-bottom: 20px; border: 2px solid #cc2222; text-align: center; }
         .question-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ff4444; border: 1px solid #331a1a; }
         .answer-option { display: block; margin: 10px 0; background: #2a1f1f; padding: 12px; border-radius: 4px; cursor: pointer; border: 1px solid #442222; }
         .answer-option:hover { background: #3a2525; border-color: #ff4444; }
@@ -20,6 +21,8 @@
         button { background: #cc2222; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1em; flex: 1; }
         button:hover { background: #ff4444; }
         button:disabled { background: #332222; color: #777; cursor: not-allowed; border: 1px solid #442222; }
+        .btn-green { background: #2ecc71; color: #000; }
+        .btn-green:hover { background: #27ae60; }
         .hidden { display: none; }
         .success-msg { color: #4caf50; font-weight: bold; text-align: center; font-size: 1.2em; }
         .step-indicator { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 10px; }
@@ -42,9 +45,18 @@
         </div>
     </div>
 
+    <!-- STOPP- / WARNBILDSCHIRM (Spalte K & L) -->
+    <div id="stopArea" class="hidden">
+        <div class="warning-box">
+            <h2 style="color: #ff4444; margin-top: 0;">Achtung!</h2>
+            <div id="stopTextBox" style="white-space: pre-line; margin-bottom: 20px; line-height: 1.5;">Du hast das Ende der Präsentation erreicht. Ab hier beginnt die Prüfung und du kannst nicht mehr zurückgehen.</div>
+            <button class="btn-green" onclick="enterExamIntro()">Prüfung starten</button>
+        </div>
+    </div>
+
     <!-- QUIZ BEREICH (Frage für Frage) -->
     <div id="quizArea" class="hidden">
-        <div class="section-title">Wissensüberprüfung</div>
+        <div class="section-title" id="quizHeaderTitle">Wissensüberprüfung</div>
         <div id="questionCounter" class="step-indicator">Frage 1 von 1</div>
         <div id="singleQuestionContainer"></div>
         
@@ -69,6 +81,8 @@
     let loadedFolien = [];
     let currentSlideIndex = 0;
 
+    let stopText = "";
+    let pruefungEinleitung = "";
     let loadedQuestions = [];
     let currentQuestionIndex = 0;
     let userAnswers = {};
@@ -88,6 +102,8 @@
                 document.getElementById("lehrgangTitel").innerText = data.titel || currentLektion;
                 
                 loadedFolien = data.folien || ["Willkommen zum Lehrgang."];
+                stopText = data.stoppText || "Du hast das Ende der Präsentation erreicht. Mit dem folgenden Button bestätigst du den Start der Prüfung.";
+                pruefungEinleitung = data.pruefungEinleitung || "Willkommen zur Wissensüberprüfung.";
                 loadedQuestions = data.fragen || [];
 
                 currentSlideIndex = 0;
@@ -101,13 +117,14 @@
 
     function renderSlide() {
         document.getElementById("slideCounter").innerText = `Folie ${currentSlideIndex + 1} von ${loadedFolien.length}`;
-        document.getElementById("slideBox").innerHTML = `<p>${loadedFolien[currentSlideIndex]}</p>`;
+        document.getElementById("slideBox.innerHTML") // safety
+        document.getElementById("slideBox").innerHTML = loadedFolien[currentSlideIndex];
         
         document.getElementById("prevSlideBtn").disabled = (currentSlideIndex === 0);
         
         let nextBtn = document.getElementById("nextSlideBtn");
         if (currentSlideIndex === loadedFolien.length - 1) {
-            nextBtn.innerText = "Zur Prüfung starten";
+            nextBtn.innerText = "Zur Prüfung weiter";
         } else {
             nextBtn.innerText = "Weiter";
         }
@@ -125,19 +142,25 @@
             currentSlideIndex++;
             renderSlide();
         } else {
-            startQuiz();
+            // Ende der Folien erreicht -> Stopp-Bildschirm anzeigen!
+            document.getElementById("contentArea").classList.add("hidden");
+            document.getElementById("stopTextBox").innerText = stopText;
+            document.getElementById("stopArea").classList.remove("hidden");
         }
     }
 
-    function startQuiz() {
+    function enterExamIntro() {
+        // Vom Stopp-Bildschirm in die Prüfung wechseln
+        document.getElementById("stopArea").classList.add("hidden");
+        
         if (loadedQuestions.length === 0) {
             alert("Keine Fragen für diese Lektion hinterlegt. Lektion wird direkt abgeschlossen.");
             saveProgressToDatabase("Bestanden", "100%");
             return;
         }
 
-        document.getElementById("contentArea").classList.add("hidden");
         document.getElementById("quizArea").classList.remove("hidden");
+        document.getElementById("quizHeaderTitle").innerText = pruefungEinleitung;
         
         currentQuestionIndex = 0;
         renderQuestion();
@@ -193,6 +216,7 @@
 
         loadedQuestions.forEach((q, index) => {
             let givenAnswer = userAnswers[index] || "";
+            // Exakter Abgleich mit Getrimmtem String und Kleinschreibung für maximale Fehlertoleranz
             if (givenAnswer.trim().toLowerCase() === q.korrekt.trim().toLowerCase()) {
                 correctCount++;
             }
@@ -224,6 +248,7 @@
         .then(res => res.json())
         .then(response => {
             document.getElementById("quizArea").classList.add("hidden");
+            document.getElementById("stopArea").classList.add("hidden");
             document.getElementById("contentArea").classList.add("hidden");
             document.getElementById("resultArea").classList.remove("hidden");
             
