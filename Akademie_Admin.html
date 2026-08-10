@@ -29,7 +29,7 @@
         /* Originalgetreue Quiz-Optik im Modal */
         .question-box { background: #251a1a; padding: 20px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #331a1a; }
         .answer-option { display: block; margin: 10px 0; background: #2a1f1f; padding: 12px; border-radius: 4px; border: 1px solid #442222; text-align: left; position: relative; }
-        .answer-option.correct-answer { border-color: #2ecc71; background: #16261a; } /* Grüner Rahmen für die richtige Antwort */
+        .answer-option.correct-answer { border-color: #2ecc71; background: #16261a; }
         .answer-option input { margin-right: 10px; }
     </style>
 </head>
@@ -57,14 +57,12 @@
     </div>
 </div>
 
-<!-- MODAL: HISTORIE ODER PRÜFUNGS-ANSICHT -->
+<!-- MODAL -->
 <div id="detailsModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <h2 id="modalTitle" style="color: #ff4444; margin-top: 0;">Details</h2>
-        <div id="modalBody" style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
-            <!-- Inhalt wird dynamisch befüllt -->
-        </div>
+        <div id="modalBody" style="max-height: 500px; overflow-y: auto; padding-right: 5px;"></div>
     </div>
 </div>
 
@@ -93,7 +91,6 @@
                 let eintraege = data.eintraege || [];
                 userGruppen = {};
 
-                // Daten im Browser dynamisch nach Mitgliedern gruppieren
                 eintraege.forEach(row => {
                     let name = row.user || "Unbekannt";
                     if (!userGruppen[name]) userGruppen[name] = [];
@@ -105,7 +102,6 @@
                     return;
                 }
 
-                // Ebene 1: Jedes Mitglied in einer eigenen Zeile anzeigen
                 Object.keys(userGruppen).forEach(userName => {
                     let lektionen = userGruppen[userName];
                     let bestandenCount = lektionen.filter(l => l.status === "Bestanden").length;
@@ -125,10 +121,8 @@
             });
     }
 
-    // Ebene 2: Zeigt die Historie (alle Prüfungen) des ausgewählten Mitglieds
     function openUserHistory(userName) {
         let lektionen = userGruppen[userName];
-        document.getElementById("modalTitle.innerText = `Historie von: ${userName}`; // korrigiert unten
         document.getElementById("modalTitle").innerText = `Ausbildungs-Historie: ${userName}`;
         
         let modalBody = document.getElementById("modalBody");
@@ -158,7 +152,6 @@
         document.getElementById("detailsModal").style.display = "block";
     }
 
-    // Ebene 3: Zeigt die echte Prüfung exakt so an, wie der User sie absolviert hat
     function openExamTestView(userName, index) {
         let item = userGruppen[userName][index];
         document.getElementById("modalTitle").innerText = `Prüfungstest: ${item.lektion} (${userName})`;
@@ -173,14 +166,8 @@
                 card.className = "question-box";
                 
                 let qHtml = `<p><strong>Frage ${qIndex + 1}: ${q.frage}</strong></p>`;
-
-                // Da wir in den Details den Fragetext und die gewählte/korrekte Antwort speichern,
-                // simulieren wir die Antwort-Boxen optisch exakt im Original-Design:
                 let userChoice = (q.gewaehlt || "").trim();
                 let correctChoice = (q.korrekt || "").trim();
-
-                // Wir bauen die gewählte Antwort und die korrekte Antwort ein
-                // (Falls das Log im JSON nur die Antworten speichert, fangen wir sie hier sicher ab)
                 let isRichtig = (q.status && q.status.toLowerCase() === "richtig");
 
                 let ansBoxClass = isRichtig ? "answer-option correct-answer" : "answer-option";
@@ -206,7 +193,6 @@
                 modalBody.appendChild(card);
             });
 
-            // Zurück-Button um wieder in die Historie zu springen
             let backButtonHtml = `<button class="back-btn" onclick="openUserHistory('${userName}')" style="margin-top: 10px; width: 100%;">← Zurück zur Historie</button>`;
             modalBody.innerHTML += backButtonHtml;
 
