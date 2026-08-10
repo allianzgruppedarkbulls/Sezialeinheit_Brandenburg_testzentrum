@@ -2,6 +2,6 @@
 // Diese Datei kannst du in GitHub Pages sicher veröffentlichen.
 window.BULLS_CONFIG = {
   // Google Apps Script WebApp-URL (als API für Login/Chat/Admin)
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxtMjm-ngbJadPpFKPX9AB6l5Gz4jafmthle65-x_CVbCaUGYwvcO6IyjxYPAuDguo46Q/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyQmCeEphG1dOtPU3dgR3KoBEw5jFJBXeLfnIqO3TxV6d7KtYwR14cGOxbZ1HFOYUhglQ/exec",
 }
 
