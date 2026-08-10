@@ -105,8 +105,8 @@
                 document.getElementById("lehrgangTitel").innerText = data.titel || currentLektion;
                 
                 loadedFolien = data.folien || ["Willkommen zum Lehrgang."];
-                stopText = data.stoppText || "Du hast das Ende der Präsentation erreicht.";
-                pruefungEinleitung = data.pruefungEinleitung || "Wissensüberprüfung";
+                stopText = data.stoppTextK || "Du hast das Ende der Präsentation erreicht.";
+                pruefungEinleitung = data.pruefungEinleitungL || "Wissensüberprüfung";
                 loadedQuestions = data.fragen || [];
 
                 currentSlideIndex = 0;
