@@ -232,9 +232,7 @@ function evaluateQuiz() {
                 }
             }
 
-            if (isMatch) {
-                correctCount++;
-            }
+            if (isMatch) correctCount++;
 
             ergebnisLog.push({
                 frage: q.frageText,
@@ -245,80 +243,59 @@ function evaluateQuiz() {
         });
 
         let percent = Math.round((correctCount / loadedQuestions.length) * 100);
-        
-        // HIER DIE 80%-GRENZE:
         let passed = (percent >= 80);
 
-        if (passed) {
-            saveProgressToDatabase("Bestanden", percent + "%", ergebnisLog, function() {
+        saveProgressToDatabase(passed ? "Bestanden" : "Nicht bestanden", percent + "%", ergebnisLog, function() {
+            if (passed) {
                 showSuccessScreen(percent);
-            });
-        } else {
-            // Speichert JETZT AUCH die Fehlversuche in der Datenbank ab!
-            saveProgressToDatabase("Nicht bestanden", percent + "%", ergebnisLog, function() {
+            } else {
                 showFailScreen(correctCount, loadedQuestions.length, percent);
-            });
-        }
+            }
+        });
     }
 
     function showFailScreen(correct, total, percent) {
         document.getElementById("quizArea").classList.add("hidden");
         let resArea = document.getElementById("resultArea");
-        let resBox = document.getElementById("resultContainerBox");
-
-        resBox.className = "fail-box";
-        resBox.innerHTML = `
-            <h2 style="color: #ff4444; margin-top: 0;">Leider nicht bestanden!</h2>
-            <p style="font-size: 1.1em; margin: 15px 0;">Du hast <strong>${correct} von ${total}</strong> Fragen richtig beantwortet (${percent}%).</p>
-            <p style="color: #aaa; font-size: 0.9em; margin-bottom: 20px;">Für diesen Lehrgang sind mindestens 80% Richtigkeit erforderlich. Versuche es einfach noch einmal!</p>
-            <button onclick="window.location.reload()" style="margin-right: 10px;">Lehrgang wiederholen</button>
-            <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
-        `;
         resArea.classList.remove("hidden");
+        document.getElementById("resultContainerBox").className = "fail-box";
+        document.getElementById("resultContainerBox").innerHTML = `
+            <h2>Leider nicht bestanden!</h2>
+            <p>Du hast <strong>${correct} von ${total}</strong> Fragen richtig (${percent}%).</p>
+            <button onclick="window.location.reload()">Wiederholen</button>
+            <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück</button>
+        `;
     }
 
     function showSuccessScreen(percent) {
         document.getElementById("quizArea").classList.add("hidden");
         document.getElementById("stopArea").classList.add("hidden");
         document.getElementById("contentArea").classList.add("hidden");
-        
         let resArea = document.getElementById("resultArea");
-        let resBox = document.getElementById("resultContainerBox");
-
-        resBox.className = "success-box";
-        resBox.innerHTML = `
-            <h2 style="color: #2ecc71; margin-top: 0;">Hervorragend gemacht!</h2>
-            <p style="font-size: 1.1em; margin: 15px 0;">Du hast die Prüfung mit ${percent}% bestanden.</p>
-            <p style="color: #a3e4d7; font-size: 0.9em; margin-bottom: 20px;">Der Lehrgang wurde erfolgreich abgeschlossen und in der Datenbank vermerkt.</p>
-            <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück zur Akademie</button>
-        `;
         resArea.classList.remove("hidden");
+        document.getElementById("resultContainerBox").className = "success-box";
+        document.getElementById("resultContainerBox").innerHTML = `
+            <h2>Bestanden!</h2>
+            <p>Ergebnis: ${percent}%.</p>
+            <button class="btn-green" onclick="window.location.href='Ausbildung.html?user=' + encodeURIComponent(currentUser)">Zurück</button>
+        `;
     }
 
     function saveProgressToDatabase(status, percentText, detailsArray, callback) {
         const SCRIPT_URL = window.BULLS_CONFIG.SCRIPT_URL;
-        
-        const payload = {
-            action: "advanceTrainingProgress",
-            user: currentUser,
-            currentRang: currentRang,
-            lektionName: currentLektion,
-            status: status,
-            percent: percentText,
-            details: detailsArray
-        };
-
         fetch(SCRIPT_URL, {
             method: "POST",
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                action: "advanceTrainingProgress",
+                user: currentUser,
+                currentRang: currentRang,
+                lektionName: currentLektion,
+                status: status,
+                percent: percentText,
+                details: detailsArray
+            })
         })
         .then(res => res.json())
-        .then(response => {
-            if (callback) callback();
-        })
-        .catch(err => {
-            console.error("Netzwerkfehler:", err);
-            alert("Fehler beim Übertragen an die Datenbank.");
-            if (callback) callback();
-        });
+        .then(() => callback())
+        .catch(err => { console.error(err); callback(); });
     }
