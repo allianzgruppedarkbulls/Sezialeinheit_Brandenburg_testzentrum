@@ -215,45 +215,52 @@
         }
     }
 
-    function evaluateQuiz() {
+   function evaluateQuiz() {
         let correctCount = 0;
         let ergebnisLog = [];
 
         loadedQuestions.forEach((q, index) => {
             let givenAnswer = (userAnswers[index] || "").trim();
-            let correctAnswer = (q.korrekt || "").trim();
+            let rawCorrect = (q.korrekt || "").trim();
             
             let isMatch = false;
-            if (givenAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+            let correctText = rawCorrect;
+
+            // Prüfen, ob die richtige Antwort im Backend als Zahl (Index) hinterlegt ist
+            let num = parseInt(rawCorrect);
+            if (!isNaN(num) && num > 0 && num <= q.antworten.length) {
+                correctText = q.antworten[num - 1].trim();
+            }
+
+            // Vergleich (entweder als direkter Text oder über den Index)
+            let answerIndex = q.antworten.findIndex(a => a.trim().toLowerCase() === givenAnswer.toLowerCase()) + 1;
+            
+            if (givenAnswer.toLowerCase() === correctText.toLowerCase()) {
                 isMatch = true;
-            } else {
-                let answerIndex = q.antworten.findIndex(a => a.trim().toLowerCase() === givenAnswer.toLowerCase()) + 1;
-                if (answerIndex.toString() === correctAnswer) {
-                    isMatch = true;
-                }
+            } else if (answerIndex.toString() === rawCorrect) {
+                isMatch = true;
+                correctText = q.antworten[num - 1].trim();
             }
 
             if (isMatch) {
                 correctCount++;
             }
 
+            // Hier wird nun immer der echte Klartext der richtigen Antwort übergeben!
             ergebnisLog.push({
                 frage: q.frageText,
                 gewaehlt: givenAnswer,
-                korrekt: correctAnswer,
+                korrekt: correctText,
                 status: isMatch ? "Richtig" : "Falsch"
             });
         });
 
         let percent = Math.round((correctCount / loadedQuestions.length) * 100);
-        
-        // NEU: Ab 80% bestanden statt 100%
         let passed = (percent >= 80);
 
         if (passed) {
             saveProgressToDatabase("Bestanden", percent + "%", ergebnisLog, true);
         } else {
-            // NEU: Sendet auch bei Nicht-Bestehen die Daten an die Datenbank
             saveProgressToDatabase("Nicht bestanden", percent + "%", ergebnisLog, false);
         }
     }
