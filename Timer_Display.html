@@ -2,40 +2,76 @@
 <html>
 <head>
     <base target="_top">
+    <meta charset="utf-8">
+    <title>Dark Bulls - Live Timer</title>
+    <!-- config.js muss als Basis immer zuerst geladen werden -->
+    <script src="config.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #1a1a1a; color: #fff; }
-        #countdown { font-size: 3em; margin-top: 20px; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
+        .timer-card { background: #2c3e50; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #e74c3c; }
+        .timer-card h3 { margin: 0 0 5px 0; color: #ecf0f1; }
+        .meta { font-size: 0.9em; color: #bdc3c7; }
+        .countdown { font-size: 1.4em; font-weight: bold; margin-top: 8px; color: #f1c40f; }
     </style>
 </head>
 <body>
-    <h2 id="event-title">Lade Event...</h2>
-    <div id="countdown">00:00:00</div>
+    <h2>Aktive Einsätze & Timer</h2>
+    <div id="timer-container">Lade Timer-Daten...</div>
 
     <script>
-        const API = "HIER_DEINE_SCRIPT_URL"; // Bitte hier deine Web-App URL einfügen
-
-        async function loadTimer() {
-            const res = await fetch(API + "?action=getTimerSettings");
-            const data = await res.json();
-            document.getElementById('event-title').innerText = data.title;
-            
-            setInterval(() => {
-                const target = new Date(data.targetDate).getTime();
-                const now = new Date().getTime();
-                const diff = target - now;
-
-                if (diff > 0) {
-                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((diff % (1000 * 60)) / 1000);
-                    document.getElementById('countdown').innerText = `${d}d ${h}h ${m}m ${s}s`;
-                } else {
-                    document.getElementById('countdown').innerText = "ABGELAUFEN";
+        async function loadTimers() {
+            try {
+                const res = await fetch(API_URL + "?action=getPrivateTimers");
+                const timers = await res.json();
+                const container = document.getElementById('timer-container');
+                
+                if (!timers || timers.length === 0 || timers.error) {
+                    container.innerHTML = "<p>Keine aktiven Timer gefunden.</p>";
+                    return;
                 }
+
+                container.innerHTML = "";
+
+                timers.forEach(t => {
+                    if (t.active !== "Aktiv") return;
+                    
+                    const card = document.createElement('div');
+                    card.className = "timer-card";
+                    card.innerHTML = `
+                        <h3>${t.timerName}</h3>
+                        <div class="meta">Map: ${t.mapId} | User: ${t.userId}</div>
+                        <div class="countdown" data-target="${t.targetSeconds}">Berechne Zeit...</div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                startCountdowns();
+            } catch (err) {
+                document.getElementById('timer-container').innerHTML = "<p>Fehler beim Laden der Timer.</p>";
+            }
+        }
+
+        function startCountdowns() {
+            setInterval(() => {
+                document.querySelectorAll('.countdown').forEach(el => {
+                    const target = parseInt(el.getAttribute('data-target'), 10);
+                    const now = Math.floor(Date.now() / 1000);
+                    const diff = target - now;
+
+                    if (diff > 0) {
+                        const d = Math.floor(diff / (3600 * 24));
+                        const h = Math.floor((diff % (3600 * 24)) / 3600);
+                        const m = Math.floor((diff % 3600) / 60);
+                        const s = diff % 60;
+                        el.innerText = `${d}T ${h}h ${m}m ${s}s`;
+                    } else {
+                        el.innerText = "ZEIT ABGELAUFEN";
+                    }
+                });
             }, 1000);
         }
-        loadTimer();
+
+        loadTimers();
     </script>
 </body>
 </html>
