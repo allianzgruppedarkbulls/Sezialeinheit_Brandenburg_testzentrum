@@ -3,144 +3,386 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Bulls - Timer Privat & Schnell-Counter</title>
+    <title>Call of War - Private Taktik & Alarm-Timer (Dark Bulls)</title>
     <style>
         :root {
-            --bg-color: #0b0b0b;
-            --panel-bg: #141414;
-            --border-color: #ff1a1a;
-            --text-main: #f0f0f0;
-            --text-muted: #aaaaaa;
-            --neon-red: #ff0033;
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --border-color: #444;
+            --neon-red: #b30000;
             --neon-green: #00ffcc;
-            --neon-glow: 0 0 10px rgba(255, 0, 51, 0.5);
         }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { color: var(--neon-red); text-shadow: var(--neon-glow); text-transform: uppercase; margin: 0; font-size: 1.5rem; }
-        .live-clock { font-family: monospace; font-size: 1.3rem; color: var(--neon-green); background: #111; padding: 5px 12px; border-radius: 4px; border: 1px solid #333; }
-        .card { background-color: var(--panel-bg); border: 1px solid var(--border-color); box-shadow: var(--neon-glow); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .btn { background-color: var(--neon-red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .btn:hover { opacity: 0.9; transform: scale(1.01); }
-        .btn-delete { background: #444; padding: 6px 12px; font-size: 0.8rem; }
-        input { background: #1f1f1f; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 12px; }
-        .back-btn { background: #222; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 15px; font-weight: bold; border: 1px solid #444; }
-        .timer-display-box { background: #111; border-left: 5px solid var(--neon-green); padding: 15px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .countdown-font { font-family: monospace; font-size: 1.5rem; color: var(--neon-green); font-weight: bold; }
-        .target-time-label { font-size: 0.9rem; color: var(--text-muted); }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        body { background-color: var(--bg-color); color: #e0e0e0; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* Browser-Reiter Oben */
+        .browser-tabs { display: flex; align-items: center; gap: 5px; border-bottom: 2px solid #222; padding-bottom: 8px; margin-bottom: 20px; overflow-x: auto; }
+        .map-tab { background: #252525; color: #aaa; border: 1px solid #333; padding: 8px 15px; border-radius: 6px 6px 0 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; }
+        .map-tab.active { background: var(--panel-bg); color: #fff; border-color: var(--neon-red); border-bottom: 2px solid var(--panel-bg); margin-bottom: -10px; padding-bottom: 12px; }
+        .map-tab .close-tab { background: none; border: none; color: #ff8888; cursor: pointer; font-size: 14px; padding: 0; }
+        .btn-add-tab { background: #2a2a2a; color: #00ffcc; border: 1px dashed #555; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-add-tab:hover { background: #333; border-color: #00ffcc; }
+
+        /* Karten */
+        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        h2 { color: #ff4444; margin-top: 0; font-size: 1.2rem; }
+        
+        input, select, button { padding: 8px 12px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        input, select { width: 100%; margin-bottom: 10px; }
+        button { background: var(--neon-red); border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #e60000; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* Timer Cards */
+        .timer-card { background: #252525; border: 1px solid #444; border-radius: 6px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--neon-green); }
+        .timer-display { font-size: 22px; font-family: monospace; font-weight: bold; color: #fff; }
+        .control-group button { padding: 4px 8px; font-size: 11px; background: #333; margin-right: 2px; border: 1px solid #555; }
+        .badge { background: #333; padding: 2px 6px; border-radius: 4px; font-size: 11px; color: var(--neon-green); font-weight: bold; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <a href="Dashboard.html" class="back-btn">&larr; Zurück zur Zentrale</a>
-    <div style="margin-bottom: 10px;">
-        <a href="timer_frieden.html" class="back-btn" style="background: var(--neon-red); border-color: var(--neon-red);">Zu Timer Frieden & Admin &rarr;</a>
+    <!-- OBERE BROWSER-REITER LEISTE MIT PLUS-BUTTON -->
+    <div class="browser-tabs" id="browserTabsContainer">
+        <!-- Wird dynamisch gefüllt -->
     </div>
-    
-    <header>
-        <h1>Persönlicher Timer-Hub</h1>
-        <div class="live-clock" id="liveClock">00:00:00</div>
-    </header>
 
-    <div class="card">
-        <h3>Persönlicher Schnell-Counter</h3>
-        <input type="text" id="quickLabel" placeholder="Bezeichnung (z.B. Rohstofflieferung / Bau)">
-        <div class="grid-2">
-            <input type="number" id="quickHours" placeholder="Stunden" min="0">
-            <input type="number" id="quickMinutes" placeholder="Minuten" min="0" max="59">
+    <!-- ANSICHT 1: NEUE MAP ERSTELLEN (WENN + GEKLICKT WIRD ODER KEINE MAP DA IST) -->
+    <div class="card hidden" id="createMapCard">
+        <h2>Neue Map hinzufügen</h2>
+        <label style="font-size:12px; color:#aaa;">Kartennummer / Name (z.B. 452189 oder Liga Runde 3)</label>
+        <input type="text" id="newMapNameInput" placeholder="z.B. 100er Europa Map">
+        
+        <label style="font-size:12px; color:#aaa;">Discord Webhook-URL für Alarm-Meldungen</label>
+        <input type="text" id="newMapDiscordInput" placeholder="https://discord.com/api/webhooks/...">
+        
+        <button onclick="saveNewMap()">Map erstellen & öffnen</button>
+    </div>
+
+    <!-- ANSICHT 2: AKTIVE MAP MIT DISCORD-INFOS & COUNTERN -->
+    <div id="activeMapContent">
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 12px 20px;">
+            <div>
+                <strong id="activeMapTitle" style="color:var(--neon-green); font-size: 1.1rem;">Keine Map ausgewählt</strong><br>
+                <span id="activeMapDiscordInfo" style="font-size: 12px; color: #888;">Discord: Keiner hinterlegt</span>
+            </div>
+            <div>
+                <a id="discordLinkBtn" href="#" target="_blank" class="hidden" style="background:#5865F2; color:white; padding:6px 12px; border-radius:4px; text-decoration:none; font-size:12px; font-weight:bold;">Zum Discord</a>
+                <button onclick="showCreateMapForm()" style="background:#333; padding:6px 12px; font-size:12px; margin-left:5px;">+ Neue Map</button>
+            </div>
         </div>
-        <button class="btn" onclick="addQuickTimer()">Schnell-Timer starten</button>
-    </div>
 
-    <div class="card">
-        <h3>Deine aktiven Schnell-Counter</h3>
-        <div id="quickTimersContainer">
-            <p style="color: var(--text-muted);">Keine aktiven Schnell-Counter vorhanden.</p>
+        <!-- NEUEN TIMER ERSTELLEN -->
+        <div class="card">
+            <h2>Neuen Taktik-Counter starten</h2>
+            <input type="text" id="timerLabel" placeholder="Beschreibung (z.B. Artillerie Front A / Luftwaffe Angriff)">
+            
+            <div class="grid-2">
+                <div>
+                    <label style="font-size:11px; color:#aaa;">Basis-Laufzeit / Minuten</label>
+                    <input type="number" id="timerMinutes" value="30" min="0">
+                </div>
+                <div>
+                    <label style="font-size:11px; color:#aaa;">Kampfrunden-Intervall (0 = aus, z.B. 15 Min)</label>
+                    <input type="number" id="timerInterval" value="0" min="0">
+                </div>
+            </div>
+
+            <label style="font-size:11px; color:#aaa;">Vorwarnzeiten vor Ablauf in Minuten (mit Komma getrennt)</label>
+            <input type="text" id="timerWarnings" value="10, 5, 1">
+
+            <button onclick="createNewTimer()">+ Counter starten</button>
+        </div>
+
+        <!-- TIMER LISTE -->
+        <div class="card">
+            <h2>Aktive Counter</h2>
+            <div id="timersContainer">
+                <p style="color:#777; text-align:center;">Keine Counter auf dieser Map aktiv.</p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let quickTimers = JSON.parse(localStorage.getItem('bulls_quick_timers')) || [];
-    setInterval(tick, 1000);
+    let maps = JSON.parse(localStorage.getItem('cow_private_maps')) || [];
+    let activeMapId = localStorage.getItem('cow_active_private_map') || null;
+    let allTimers = JSON.parse(localStorage.getItem('cow_private_timers')) || {};
 
-    function tick() {
-        const now = new Date();
-        document.getElementById('liveClock').innerText = now.toLocaleTimeString('de-DE');
-        renderQuickTimers();
+    // Initiale Auswahl prüfen
+    if (maps.length > 0 && (!activeMapId || !maps.some(m => m.id === activeMapId))) {
+        activeMapId = maps[0].id;
     }
 
-    function addQuickTimer() {
-        const name = document.getElementById('quickLabel').value;
-        const h = parseInt(document.getElementById('quickHours').value) || 0;
-        const m = parseInt(document.getElementById('quickMinutes').value) || 0;
-        const totalSec = (h * 3600) + (m * 60);
+    renderTabs();
 
-        if (!name || totalSec <= 0) {
-            alert("Bitte Name und gültige Zeit eingeben!");
-            return;
-        }
+    function renderTabs() {
+        const container = document.getElementById('browserTabsContainer');
+        let html = '';
 
-        quickTimers.push({
-            id: 'qt_' + Date.now(),
-            name: name,
-            targetTime: Date.now() + (totalSec * 1000)
+        maps.forEach(m => {
+            const isActive = m.id === activeMapId;
+            html += `
+                <div class="map-tab ${isActive ? 'active' : ''}" onclick="switchMap('${m.id}')">
+                    <span>🗺️ ${m.name}</span>
+                    <button class="close-tab" onclick="event.stopPropagation(); deleteMap('${m.id}')" title="Map löschen">×</button>
+                </div>
+            `;
         });
 
-        localStorage.setItem('bulls_quick_timers', JSON.stringify(quickTimers));
-        document.getElementById('quickLabel').value = "";
-        document.getElementById('quickHours').value = "";
-        document.getElementById('quickMinutes').value = "";
-        renderQuickTimers();
+        html += `<button class="btn-add-tab" onclick="showCreateMapForm()" title="Neue Map hinzufügen">+</button>`;
+        container.innerHTML = html;
+
+        if (maps.length === 0 || document.getElementById('createMapCard').classList.contains('active-form')) {
+            document.getElementById('createMapCard').classList.remove('hidden');
+            document.getElementById('activeMapContent').classList.add('hidden');
+        } else {
+            document.getElementById('createMapCard').classList.add('hidden');
+            document.getElementById('activeMapContent').classList.remove('hidden');
+            renderActiveMapDetails();
+        }
     }
 
-    function deleteQuickTimer(id) {
-        quickTimers = quickTimers.filter(t => t.id !== id);
-        localStorage.setItem('bulls_quick_timers', JSON.stringify(quickTimers));
-        renderQuickTimers();
+    function showCreateMapForm() {
+        document.getElementById('createMapCard').classList.remove('hidden');
+        document.getElementById('createMapCard').classList.add('active-form');
+        document.getElementById('activeMapContent').classList.add('hidden');
     }
 
-    function renderQuickTimers() {
-        const container = document.getElementById('quickTimersContainer');
-        if (quickTimers.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Schnell-Counter vorhanden.</p>`;
+    function saveNewMap() {
+        const name = document.getElementById('newMapNameInput').value.trim();
+        const discord = document.getElementById('newMapDiscordInput').value.trim();
+
+        if (!name) { alert("Bitte einen Kartennamen angeben!"); return; }
+
+        const newMap = { id: 'map_' + Date.now(), name, discord };
+        maps.push(newMap);
+        activeMapId = newMap.id;
+
+        localStorage.setItem('cow_private_maps', JSON.stringify(maps));
+        localStorage.setItem('cow_active_private_map', activeMapId);
+
+        document.getElementById('newMapNameInput').value = '';
+        document.getElementById('newMapDiscordInput').value = '';
+        document.getElementById('createMapCard').classList.remove('active-form');
+
+        renderTabs();
+        renderTimers();
+    }
+
+    function deleteMap(mapId) {
+        if (!confirm("Map und alle dazugehörigen Counter wirklich löschen?")) return;
+        maps = maps.filter(m => m.id !== mapId);
+        delete allTimers[mapId];
+
+        localStorage.setItem('cow_private_maps', JSON.stringify(maps));
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+
+        if (activeMapId === mapId) {
+            activeMapId = maps.length > 0 ? maps[0].id : null;
+        }
+        localStorage.setItem('cow_active_private_map', activeMapId || '');
+        renderTabs();
+        renderTimers();
+    }
+
+    function switchMap(mapId) {
+        activeMapId = mapId;
+        localStorage.setItem('cow_active_private_map', activeMapId);
+        document.getElementById('createMapCard').classList.remove('active-form');
+        renderTabs();
+        renderTimers();
+    }
+
+    function renderActiveMapDetails() {
+        const map = maps.find(m => m.id === activeMapId);
+        if (!map) return;
+
+        document.getElementById('activeMapTitle').innerText = "Aktive Map: " + map.name;
+        document.getElementById('activeMapDiscordInfo').innerText = map.discord ? "Discord Webhook aktiv" : "Kein Discord Webhook hinterlegt";
+        
+        const discordBtn = document.getElementById('discordLinkBtn');
+        if (map.discord && map.discord.startsWith('http')) {
+            discordBtn.href = map.discord;
+            discordBtn.classList.remove('hidden');
+        } else {
+            discordBtn.classList.add('hidden');
+        }
+        renderTimers();
+    }
+
+    // --- TIMER LOGIK ---
+    function createNewTimer() {
+        if (!activeMapId) { alert("Bitte erst eine Map anlegen und auswählen!"); return; }
+
+        const label = document.getElementById('timerLabel').value.trim() || "Unbenannter Counter";
+        const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
+        const intervalMin = parseInt(document.getElementById('timerInterval').value) || 0;
+        const warningsStr = document.getElementById('timerWarnings').value;
+
+        const warnings = warningsStr.split(',').map(w => parseInt(w.trim()) * 60).filter(w => !isNaN(w) && w > 0);
+        const totalSec = minutes * 60;
+
+        if (totalSec <= 0) { alert("Bitte eine gültige Minutenanzahl eingeben!"); return; }
+
+        if (!allTimers[activeMapId]) allTimers[activeMapId] = [];
+
+        allTimers[activeMapId].push({
+            id: 't_' + Date.now(),
+            label: label,
+            targetTime: Date.now() + (totalSec * 1000),
+            originalSeconds: totalSec,
+            intervalSeconds: intervalMin * 60,
+            warnings: warnings,
+            triggeredWarnings: [],
+            isRunning: true
+        });
+
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        document.getElementById('timerLabel').value = '';
+        renderTimers();
+    }
+
+    function adjustTimer(timerId, seconds) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            timer.targetTime += (seconds * 1000);
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
+
+    function togglePause(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            if (timer.isRunning) {
+                timer.pausedRemaining = Math.max(0, Math.round((timer.targetTime - Date.now()) / 1000));
+                timer.isRunning = false;
+            } else {
+                timer.targetTime = Date.now() + (timer.pausedRemaining * 1000);
+                timer.isRunning = true;
+            }
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
+
+    function deleteTimer(timerId) {
+        if (!activeMapId) return;
+        allTimers[activeMapId] = allTimers[activeMapId].filter(t => t.id !== timerId);
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        renderTimers();
+    }
+
+    // Schleife für Sekundentakt
+    setInterval(() => {
+        if (!activeMapId || !allTimers[activeMapId]) return;
+        const now = Date.now();
+        let needsSave = false;
+
+        allTimers[activeMapId].forEach(timer => {
+            const card = document.getElementById('card-' + timer.id);
+            if (!card) return;
+
+            const remaining = timer.isRunning ? Math.max(0, Math.round((timer.targetTime - now) / 1000)) : timer.pausedRemaining;
+            const display = card.querySelector('.timer-display');
+            if (display) display.innerText = formatTime(remaining);
+
+            // Vorwarnungen prüfen
+            timer.warnings.forEach(warnSec => {
+                if (remaining === warnSec && timer.isRunning && !timer.triggeredWarnings.includes(warnSec)) {
+                    timer.triggeredWarnings.push(warnSec);
+                    triggerAlert(timer, `⚠️ **Vorwarnung:** "${timer.label}" läuft in **${warnSec/60} Minuten** ab!`);
+                    needsSave = true;
+                }
+            });
+
+            // Ablauf prüfen
+            if (remaining === 0 && timer.isRunning) {
+                if (timer.intervalSeconds > 0) {
+                    timer.targetTime = now + (timer.intervalSeconds * 1000);
+                    timer.triggeredWarnings = []; // Reset für nächstes Intervall
+                } else {
+                    timer.isRunning = false;
+                }
+                triggerAlert(timer, `🚨 **ALARM:** "${timer.label}" ist abgelaufen!`);
+                needsSave = true;
+            }
+        });
+
+        if (needsSave) localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+    }, 1000);
+
+    function triggerAlert(timer, message) {
+        // Sprachausgabe im Browser
+        if ('speechSynthesis' in window) {
+            let msg = new SpeechSynthesisUtterance(timer.label + " ist abgelaufen oder warnt vor!");
+            msg.lang = 'de-DE';
+            window.speechSynthesis.speak(msg);
+        }
+        // Discord Webhook senden
+        const map = maps.find(m => m.id === activeMapId);
+        if (map && map.discord && map.discord.startsWith('http')) {
+            fetch(map.discord, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: message })
+            }).catch(e => console.log("Webhook Fehler"));
+        }
+    }
+
+    function renderTimers() {
+        const container = document.getElementById('timersContainer');
+        if (!activeMapId || !allTimers[activeMapId] || allTimers[activeMapId].length === 0) {
+            container.innerHTML = `<p style="color:#777; text-align:center;">Keine Counter auf dieser Map aktiv.</p>`;
             return;
         }
 
-        let html = "";
+        let html = '';
         const now = Date.now();
-        quickTimers.forEach(t => {
-            const diff = Math.floor((t.targetTime - now) / 1000);
-            const targetStr = new Date(t.targetTime).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-            
-            let timeStr = "";
-            if (diff <= 0) {
-                timeStr = "ABGELAUFEN!";
-            } else {
-                const h = Math.floor(diff / 3600);
-                const m = Math.floor((diff % 3600) / 60);
-                const s = diff % 60;
-                timeStr = String(h).padStart(2,'0') + ":" + String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
-            }
+        allTimers[activeMapId].forEach(t => {
+            const remaining = t.isRunning ? Math.max(0, Math.round((t.targetTime - now) / 1000)) : t.pausedRemaining;
+            const intervalInfo = t.intervalSeconds > 0 ? `(Intervall: ${t.intervalSeconds/60}m)` : '';
 
             html += `
-                <div class="timer-display-box">
+                <div class="timer-card" id="card-${t.id}">
                     <div>
-                        <strong>${t.name}</strong><br>
-                        <span class="target-time-label">Ziel: ca. ${targetStr} Uhr</span>
+                        <span class="badge">${t.label}</span> <span style="font-size:11px; color:#888;">${intervalInfo}</span><br>
+                        <div class="timer-display">${formatTime(remaining)}</div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <span class="countdown-font">${timeStr}</span>
-                        <button class="btn btn-delete" onclick="deleteQuickTimer('${t.id}')">Löschen</button>
+                    <div>
+                        <div class="control-group" style="margin-bottom:4px;">
+                            <button onclick="adjustTimer('${t.id}', -60)">-1m</button>
+                            <button onclick="adjustTimer('${t.id}', -10)">-10s</button>
+                            <button onclick="adjustTimer('${t.id}', 10)">+10s</button>
+                            <button onclick="adjustTimer('${t.id}', 60)">+1m</button>
+                        </div>
+                        <div class="control-group">
+                            <button onclick="togglePause('${t.id}')">${t.isRunning ? 'Pause' : 'Weiter'}</button>
+                            <button onclick="deleteTimer('${t.id}')" style="background:#b30000; color:#fff;">X</button>
+                        </div>
                     </div>
                 </div>
             `;
         });
         container.innerHTML = html;
     }
+
+    function formatTime(totalSec) {
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    renderTimers();
 </script>
+
 </body>
 </html>
