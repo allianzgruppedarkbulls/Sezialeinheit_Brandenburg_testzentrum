@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Bulls - Zentraler Timer & Map Hub</title>
+    <title>Dark Bulls - Taktik & Alarm-Timer (ELO & Maps)</title>
     <style>
         :root {
             --bg-color: #0b0b0b;
@@ -15,7 +15,12 @@
             --neon-green: #00ffcc;
             --neon-glow: 0 0 10px rgba(255, 0, 51, 0.5);
         }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; transition: background 0.3s; }
+        
+        /* Vollbild-Alarm-Modus */
+        body.full-alarm { background-color: #700; animation: screenFlash 0.5s infinite alternate; }
+        @keyframes screenFlash { from { background-color: #700; } to { background-color: #ff0000; } }
+
         .container { max-width: 1100px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
         h1 { color: var(--neon-red); text-shadow: var(--neon-glow); text-transform: uppercase; margin: 0; font-size: 1.5rem; }
@@ -27,7 +32,7 @@
         .tab-btn.active { background: var(--panel-bg); color: var(--neon-red); border-color: var(--border-color); border-bottom: 2px solid var(--panel-bg); margin-bottom: -2px; box-shadow: var(--neon-glow); }
         
         /* Untertabs für Maps */
-        .sub-tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; background: #111; padding: 8px; border-radius: 6px; border: 1px solid #333; }
+        .sub-tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: background: #111; padding: 8px; border-radius: 6px; border: 1px solid #333; }
         .sub-tab-btn { background: #222; color: var(--text-muted); border: 1px solid #444; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
         .sub-tab-btn.active { background: var(--neon-red); color: white; border-color: var(--neon-red); font-weight: bold; }
 
@@ -35,16 +40,23 @@
         .btn { background-color: var(--neon-red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
         .btn:hover { opacity: 0.9; transform: scale(1.01); }
         .btn-secondary { background: #333; }
-        .btn-delete { background: #444; padding: 6px 12px; font-size: 0.8rem; }
-        input { background: #1f1f1f; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 12px; }
-        .back-btn { background: #222; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 15px; font-weight: bold; border: 1px solid #444; }
-        .timer-display-box { background: #111; border-left: 5px solid var(--neon-green); padding: 15px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .countdown-font { font-family: monospace; font-size: 1.5rem; color: var(--neon-green); font-weight: bold; }
-        .target-time-label { font-size: 0.9rem; color: var(--text-muted); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .hidden { display: none !important; }
+        .btn-delete { background: #333; color: #ff8888; padding: 6px 12px; font-size: 0.8rem; }
+        
+        input, select { background: #1f1f1f; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 14px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .back-btn { background: #222; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 15px; font-weight: bold; border: 1px solid #444; }
+
+        .timer-card { background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--neon-green); }
+        .timer-card.warning { background: #4d3300; border-color: #ffaa00; }
+        .timer-card.finished { background: #4d1a1a; border-color: var(--neon-red); animation: pulseDanger 0.5s infinite alternate; }
+        @keyframes pulseDanger { from { border-color: #444; } to { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; } }
+
+        .countdown-font { font-family: monospace; font-size: 1.8rem; color: #fff; font-weight: bold; }
+        .badge { background: #333; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: var(--neon-green); }
+        .control-group button { padding: 5px 10px; font-size: 12px; background: #333; margin-right: 3px; cursor: pointer; border: 1px solid #555; color: #fff; border-radius: 3px; }
+        .control-group button:hover { background: #555; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -53,380 +65,366 @@
     <a href="Dashboard.html" class="back-btn">&larr; Zurück zur Zentrale</a>
     
     <header>
-        <h1>Allianz Timer-Zentrale</h1>
+        <h1>Allianz Timer- & Taktik-Zentrale</h1>
         <div class="live-clock" id="liveClock">00:00:00</div>
     </header>
 
-    <!-- HAUPT-TABS (OBEN) -->
+    <!-- HAUPT-TABS -->
     <div class="main-tabs">
-        <button class="tab-btn active" onclick="switchMainTab('privat', this)">1. Privat & Schnell</button>
-        <button class="tab-btn" onclick="switchMainTab('frieden', this)">2. Friedensphasen & Maps</button>
+        <button class="tab-btn active" onclick="switchMainTab('maps', this)">1. Maps & Discord</button>
+        <button class="tab-btn" onclick="switchMainTab('timers', this)">2. Taktik & Alarm-Counter</button>
         <button class="tab-btn" onclick="switchMainTab('admin', this)">3. Admin-Zentrale</button>
     </div>
 
-    <!-- TAB 1: PRIVAT & SCHNELL-COUNTER -->
-    <div id="tab-privat" class="tab-content active">
+    <!-- TAB 1: MAPS & DISCORD -->
+    <div id="tab-maps" class="tab-content active">
         <div class="card">
-            <h3>Persönlicher Schnell-Counter</h3>
-            <input type="text" id="quickLabel" placeholder="Bezeichnung (z.B. Rohstofflieferung / Bau)">
+            <h2>Aktive Team-Maps</h2>
+            <p style="color:var(--text-muted);">Wähle eine Map aus oder erstelle im Admin-Bereich eine neue.</p>
+            <div id="mapSelectionContainer">Lade Maps...</div>
+        </div>
+
+        <div class="card hidden" id="activeMapDetailsCard">
+            <h2 id="currentMapTitle" style="color: var(--neon-green);">Map-Details</h2>
+            <p id="currentMapWebhookInfo" style="color: var(--text-muted);"></p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <a id="discordLinkBtn" href="#" target="_blank" class="btn" style="text-decoration: none; background: #5865F2;">Zum Discord-Channel</a>
+                <button class="btn btn-secondary" onclick="switchMainTab('timers', document.querySelectorAll('.tab-btn')[1])">Zu den Countern dieser Map</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: COUNTER & TAKTIK -->
+    <div id="tab-timers" class="tab-content">
+        <!-- MAP UNTERTABS -->
+        <div class="sub-tabs" id="mapSubTabsContainer"></div>
+
+        <div class="card">
+            <h2>Neuen Taktik-Counter anlegen</h2>
+            <input type="text" id="timerLabel" placeholder="Bezeichnung (z.B. Artillerie Front A / Luftwaffe Angriff)">
+            
             <div class="grid-2">
-                <input type="number" id="quickHours" placeholder="Stunden" min="0">
-                <input type="number" id="quickMinutes" placeholder="Minuten" min="0" max="59">
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted);">Basis-Zeit / Laufzeit (Minuten)</label>
+                    <input type="number" id="timerMinutes" placeholder="Minuten" value="30" min="0">
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted);">Kampfrunden-Intervall (z.B. 15 Min für Luftwaffe, 0 = aus)</label>
+                    <input type="number" id="timerInterval" placeholder="Intervall in Min." value="0" min="0">
+                </div>
             </div>
-            <button class="btn" onclick="addQuickTimer()">Schnell-Timer starten</button>
+
+            <div style="background: #111; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #333;">
+                <label style="font-size:12px; color:var(--neon-green); font-weight:bold;">Vorwarnungen (Minuten vor Ablauf, mit Komma trennen)</label>
+                <input type="text" id="timerWarnings" value="10, 5, 1" placeholder="z.B. 15, 10, 5, 1">
+            </div>
+
+            <button class="btn" onclick="createNewTimer()">+ Counter starten</button>
         </div>
 
         <div class="card">
-            <h3>Deine aktiven Schnell-Counter</h3>
-            <div id="quickTimersContainer">
-                <p style="color: var(--text-muted);">Keine aktiven Schnell-Counter vorhanden.</p>
+            <h2>Aktive Counter für <span id="activeMapNameDisplay" style="color:var(--neon-red);">Keine Map gewählt</span></h2>
+            <div id="timersContainer">
+                <p style="color:var(--text-muted);">Bitte zuerst oben eine Map auswählen.</p>
             </div>
         </div>
     </div>
 
-    <!-- TAB 2: FRIEDENSPHASEN & TEAM-MAPS -->
-    <div id="tab-frieden" class="tab-content">
-        <!-- MAP AUSWAHL / PIN EINGABE -->
-        <div class="card" id="mapListCard">
-            <h2>Aktive Team-Maps & Friedensphasen</h2>
-            <p style="color:var(--text-muted);">Wähle eine Map aus und gib den Sicherheits-PIN ein, um dem Team-Bereich beizutreten.</p>
-            <div id="availableMapsContainer">Lade verfügbare Maps...</div>
-        </div>
-
-        <!-- LOGIN / PIN WIZARD -->
-        <div class="card hidden" id="mapSetupCard">
-            <h2 id="setupMapTitle">Map beitreten</h2>
-            <input type="password" id="joinPinInput" placeholder="Map PIN eingeben">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" onclick="verifyAndJoinMap()">Zugriff freischalten</button>
-                <button class="btn btn-secondary" onclick="closeMapSetup()">Abbrechen</button>
-            </div>
-        </div>
-
-        <!-- AKTIVES MAP DASHBOARD MIT UNTERTABS -->
-        <div class="card hidden" id="mapDashboardCard">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 id="activeMapHeader" style="margin:0; color:var(--neon-green);">Map Dashboard</h2>
-                <button class="btn btn-secondary" onclick="leaveActiveMap()">Map verlassen</button>
-            </div>
-
-            <!-- UNTERTABS FÜR DIE MAPS (WENN MEHRERE AKTIV SIND ODER ZWISCHEN ANSICHTEN) -->
-            <div class="sub-tabs" id="mapSubTabsContainer">
-                <!-- Wird dynamisch gefüllt -->
-            </div>
-
-            <div id="peacePhaseContainer" style="margin-bottom: 25px;">
-                <h3>Gemeinsamer Friedensphasen-Counter</h3>
-                <div class="timer-display-box" style="border-left-color: var(--neon-red);">
-                    <div>
-                        <strong style="font-size: 1.1rem;">Friedensphase aktiv</strong><br>
-                        <span class="target-time-label" id="peaceTargetClock">Zieluhrzeit: --:-- Uhr</span>
-                    </div>
-                    <div class="countdown-font" id="peaceCountdown" style="color: var(--neon-red);">--:--:--</div>
-                </div>
-            </div>
-
-            <div style="background: #111; padding: 15px; border-radius: 6px;">
-                <h3>Deine privaten Map-Counter (Nur für dich sichtbar)</h3>
-                <input type="text" id="privTimerName" placeholder="Bezeichnung (z.B. Truppenanlandung X)">
-                <div class="grid-2">
-                    <input type="number" id="privHours" placeholder="Stunden (h)" min="0">
-                    <input type="number" id="privMinutes" placeholder="Minuten (m)" min="0" max="59">
-                </div>
-                <button class="btn" onclick="addPrivateMapTimer()">Privaten Map-Timer starten</button>
-                
-                <div id="privateMapTimersList" style="margin-top: 15px;">
-                    <p style="color:var(--text-muted);">Keine privaten Timer auf dieser Map.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 3: ADMIN-ZENTRALE -->
+    <!-- TAB 3: ADMIN ZENTRALE -->
     <div id="tab-admin" class="tab-content">
         <div class="card">
-            <h2>[Admin] Neue Team-Map / Großcounter anlegen</h2>
-            <div class="grid-2">
-                <input type="text" id="admMapName" placeholder="Map Name / Nummer (z.B. Liga Runde 3)">
-                <input type="text" id="admPin" placeholder="Sicherheits-PIN für Spieler">
-            </div>
-            <div class="grid-2">
-                <input type="datetime-local" id="admPeaceEnd" title="Ende der Friedensphase">
-                <input type="text" id="admWebhook" placeholder="Globaler Discord Webhook (optional)">
-            </div>
-            <button class="btn" onclick="adminCreateMap()">Map im System registrieren</button>
+            <h2>Neue Map im System registrieren</h2>
+            <input type="text" id="admMapName" placeholder="Map Name / Nummer (z.B. Liga Runde 3)">
+            <input type="text" id="admDiscordLink" placeholder="Discord Link / Webhook URL für Alarme">
+            <input type="text" id="admPin" placeholder="Sicherheits-PIN für Spieler">
+            <button class="btn" onclick="adminCreateMap()">Map speichern</button>
         </div>
-
         <div class="card">
-            <h2>Alle aktiven Maps verwalten & löschen</h2>
-            <div id="adminMapsList">
-                <p style="color: var(--text-muted);">Lade Map-Übersicht...</p>
-            </div>
+            <h2>Registrierte Maps verwalten</h2>
+            <div id="adminMapList"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // Data Storage
-    let quickTimers = JSON.parse(localStorage.getItem('bulls_quick_timers')) || [];
-    let teamMaps = JSON.parse(localStorage.getItem('bulls_team_maps')) || [];
-    let privateMapTimers = JSON.parse(localStorage.getItem('bulls_private_map_timers')) || {};
-    
-    let activeMapId = localStorage.getItem('bulls_active_map_id') || null;
-    let selectedTargetMapId = null;
+    // Storage Initialization
+    let teamMaps = JSON.parse(localStorage.getItem('bulls_team_maps')) || [
+        { id: 'map_demo', name: 'Demo-Map Europa', discord: 'https://discord.com', pin: '1234' }
+    ];
+    let activeMapId = localStorage.getItem('bulls_active_map_id') || teamMaps[0]?.id || null;
+    let allTimers = JSON.parse(localStorage.getItem('bulls_taktik_timers')) || {}; // MapID -> Array von Timern
+    let voices = [];
+
+    // Browser Stimmen laden für Sprachausgabe
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => { voices = window.speechSynthesis.getVoices(); };
+        voices = window.speechSynthesis.getVoices();
+    }
 
     setInterval(tick, 1000);
 
     function tick() {
         const now = new Date();
         document.getElementById('liveClock').innerText = now.toLocaleTimeString('de-DE');
-        renderQuickTimers();
-        updateTeamCounters(now);
+        updateAllTimers(now.getTime());
     }
 
-    // Tab Navigation
     function switchMainTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
         document.getElementById('tab-' + tabId).classList.add('active');
         btnElement.classList.add('active');
+        if(tabId === 'timers') renderTimers();
     }
 
-    // Quick Timers Logic
-    function addQuickTimer() {
-        const name = document.getElementById('quickLabel').value;
-        const h = parseInt(document.getElementById('quickHours').value) || 0;
-        const m = parseInt(document.getElementById('quickMinutes').value) || 0;
-        const totalSec = (h * 3600) + (m * 60);
-
-        if (!name || totalSec <= 0) {
-            alert("Bitte Name und gültige Zeit eingeben!");
-            return;
-        }
-
-        quickTimers.push({
-            id: 'qt_' + Date.now(),
-            name: name,
-            targetTime: Date.now() + (totalSec * 1000)
-        });
-
-        localStorage.setItem('bulls_quick_timers', JSON.stringify(quickTimers));
-        document.getElementById('quickLabel').value = "";
-        document.getElementById('quickHours').value = "";
-        document.getElementById('quickMinutes').value = "";
-        renderQuickTimers();
-    }
-
-    function deleteQuickTimer(id) {
-        quickTimers = quickTimers.filter(t => t.id !== id);
-        localStorage.setItem('bulls_quick_timers', JSON.stringify(quickTimers));
-        renderQuickTimers();
-    }
-
-    function renderQuickTimers() {
-        const container = document.getElementById('quickTimersContainer');
-        if (quickTimers.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Schnell-Counter vorhanden.</p>`;
-            return;
-        }
-
-        let html = "";
-        const now = Date.now();
-        quickTimers.forEach(t => {
-            const diff = Math.floor((t.targetTime - now) / 1000);
-            const targetStr = new Date(t.targetTime).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-            
-            let timeStr = diff <= 0 ? "ABGELAUFEN!" : formatTime(diff);
-
-            html += `
-                <div class="timer-display-box">
-                    <div>
-                        <strong>${t.name}</strong><br>
-                        <span class="target-time-label">Ziel: ca. ${targetStr} Uhr</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <span class="countdown-font">${timeStr}</span>
-                        <button class="btn btn-delete" onclick="deleteQuickTimer('${t.id}')">Löschen</button>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    // Team Maps & Friedensphase Logic
-    function renderMapsList() {
-        const container = document.getElementById('availableMapsContainer');
+    // MAP MANAGEMENT
+    function renderMaps() {
+        const container = document.getElementById('mapSelectionContainer');
+        const subContainer = document.getElementById('mapSubTabsContainer');
+        const adminContainer = document.getElementById('adminMapList');
+        
         if (teamMaps.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Team-Maps vorhanden. Erstelle im Admin-Tab eine neue Map.</p>`;
+            container.innerHTML = `<p style="color:var(--text-muted);">Keine Maps vorhanden.</p>`;
+            subContainer.innerHTML = "";
             return;
         }
 
         let html = "";
+        let subHtml = "";
+        let adminHtml = "";
+
         teamMaps.forEach(m => {
+            const isSelected = m.id === activeMapId;
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#1f1f1f; padding:12px; margin-bottom:8px; border-radius:5px; border-left:4px solid var(--neon-red);">
-                    <div>
-                        <strong>${m.name}</strong>
-                    </div>
-                    <button class="btn" onclick="openMapSetup('${m.id}')">Beitreten</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1f1f1f; padding:12px; margin-bottom:8px; border-radius:5px; border-left:4px solid ${isSelected ? 'var(--neon-green)' : 'var(--border-color)'};">
+                    <div><strong>${m.name}</strong><br><span style="font-size:12px; color:var(--text-muted);">Discord: ${m.discord || 'Keiner'}</span></div>
+                    <button class="btn" onclick="selectMap('${m.id}')">${isSelected ? 'Aktiv' : 'Auswählen'}</button>
+                </div>
+            `;
+            subHtml += `<button class="sub-tab-btn ${isSelected ? 'active' : ''}" onclick="selectMap('${m.id}')">${m.name}</button>`;
+            adminHtml += `
+                <div style="background:#1f1f1f; padding:10px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:4px;">
+                    <span>${m.name}</span>
+                    <button class="btn btn-delete" onclick="deleteMap('${m.id}')">Löschen</button>
                 </div>
             `;
         });
+
         container.innerHTML = html;
-    }
+        subContainer.innerHTML = subHtml;
+        adminContainer.innerHTML = adminHtml;
 
-    function openMapSetup(mapId) {
-        selectedTargetMapId = mapId;
-        const map = teamMaps.find(m => m.id === mapId);
-        document.getElementById('setupMapTitle').innerText = "Beitreten zu: " + map.name;
-        document.getElementById('mapListCard').classList.add('hidden');
-        document.getElementById('mapSetupCard').classList.remove('hidden');
-    }
-
-    function closeMapSetup() {
-        selectedTargetMapId = null;
-        document.getElementById('mapSetupCard').classList.add('hidden');
-        document.getElementById('mapListCard').classList.remove('hidden');
-    }
-
-    function verifyAndJoinMap() {
-        const enteredPin = document.getElementById('joinPinInput').value;
-        const map = teamMaps.find(m => m.id === selectedTargetMapId);
-
-        if (!map || map.pin !== enteredPin) {
-            alert("Falscher PIN!");
-            return;
+        const activeMap = teamMaps.find(m => m.id === activeMapId);
+        if (activeMap) {
+            document.getElementById('activeMapNameDisplay').innerText = activeMap.name;
+            document.getElementById('currentMapTitle').innerText = "Aktive Map: " + activeMap.name;
+            document.getElementById('currentMapWebhookInfo').innerText = "Hinterlegter Discord-Link: " + (activeMap.discord || 'Keiner angegeben');
+            document.getElementById('discordLinkBtn').href = activeMap.discord || '#';
+            document.getElementById('activeMapDetailsCard').classList.remove('hidden');
         }
-
-        activeMapId = map.id;
-        localStorage.setItem('bulls_active_map_id', activeMapId);
-
-        document.getElementById('mapSetupCard').classList.add('hidden');
-        document.getElementById('mapListCard').classList.add('hidden');
-        activateMapDashboard(map);
-        document.getElementById('joinPinInput').value = "";
     }
 
-    function activateMapDashboard(map) {
-        document.getElementById('activeMapHeader').innerText = "Aktiv in: " + map.name;
-        document.getElementById('mapDashboardCard').classList.remove('hidden');
-        renderSubTabs();
-        renderPrivateMapTimers();
-    }
-
-    function leaveActiveMap() {
-        activeMapId = null;
-        localStorage.removeItem('bulls_active_map_id');
-        document.getElementById('mapDashboardCard').classList.add('hidden');
-        document.getElementById('mapListCard').classList.remove('hidden');
-        renderMapsList();
-    }
-
-    function renderSubTabs() {
-        const container = document.getElementById('mapSubTabsContainer');
-        if (teamMaps.length <= 1) {
-            container.style.display = 'none';
-            return;
-        }
-        container.style.display = 'flex';
-        let html = "";
-        teamMaps.forEach(m => {
-            const isActive = m.id === activeMapId ? 'active' : '';
-            html += `<button class="sub-tab-btn ${isActive}" onclick="switchActiveMap('${m.id}')">${m.name}</button>`;
-        });
-        container.innerHTML = html;
-    }
-
-    function switchActiveMap(mapId) {
+    function selectMap(mapId) {
         activeMapId = mapId;
         localStorage.setItem('bulls_active_map_id', activeMapId);
-        const map = teamMaps.find(m => m.id === mapId);
-        if (map) {
-            activateMapDashboard(map);
-        }
+        renderMaps();
+        renderTimers();
     }
 
-    function updateTeamCounters(now) {
-        if (!activeMapId) return;
-        const map = teamMaps.find(m => m.id === activeMapId);
-        if (!map) return;
+    function adminCreateMap() {
+        const name = document.getElementById('admMapName').value;
+        const discord = document.getElementById('admDiscordLink').value;
+        const pin = document.getElementById('admPin').value;
 
-        const diff = Math.floor((map.peaceEndTime - now.getTime()) / 1000);
-        const targetDate = new Date(map.peaceEndTime);
-        const targetTimeStr = targetDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        if (!name) { alert("Bitte Map-Namen angeben!"); return; }
+
+        teamMaps.push({ id: 'map_' + Date.now(), name, discord, pin });
+        localStorage.setItem('bulls_team_maps', JSON.stringify(teamMaps));
+        document.getElementById('admMapName').value = "";
+        document.getElementById('admDiscordLink').value = "";
+        document.getElementById('admPin').value = "";
+        renderMaps();
+        alert("Map erfolgreich gespeichert!");
+    }
+
+    function deleteMap(mapId) {
+        if (!confirm("Map wirklich löschen?")) return;
+        teamMaps = teamMaps.filter(m => m.id !== mapId);
+        localStorage.setItem('bulls_team_maps', JSON.stringify(teamMaps));
+        if (activeMapId === mapId) activeMapId = teamMaps[0]?.id || null;
+        renderMaps();
+        renderTimers();
+    }
+
+    // TIMER MANAGEMENT
+    function createNewTimer() {
+        if (!activeMapId) { alert("Bitte zuerst eine Map auswählen!"); return; }
         
-        document.getElementById('peaceTargetClock').innerText = "Ziel-Uhrzeit: " + targetTimeStr + " Uhr";
-        const countEl = document.getElementById('peaceCountdown');
+        const label = document.getElementById('timerLabel').value || "Unbenannter Taktik-Counter";
+        const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
+        const intervalMin = parseInt(document.getElementById('timerInterval').value) || 0;
+        const warningsStr = document.getElementById('timerWarnings').value;
+        
+        // Vorwarnzeiten in Sekunden umwandeln
+        let warnings = warningsStr.split(',').map(w => parseInt(w.trim()) * 60).filter(w => !isNaN(w) && w > 0);
 
-        if (diff <= 0) {
-            countEl.innerText = "FRIEDENSPHASE BEENDET!";
-        } else {
-            countEl.innerText = formatTime(diff);
+        const totalSec = minutes * 60;
+        if (totalSec <= 0) { alert("Bitte eine gültige Minutenanzahl eingeben!"); return; }
+
+        if (!allTimers[activeMapId]) allTimers[activeMapId] = [];
+
+        allTimers[activeMapId].push({
+            id: 't_' + Date.now(),
+            label: label,
+            targetTime: Date.now() + (totalSec * 1000),
+            originalSeconds: totalSec,
+            intervalSeconds: intervalMin * 60,
+            warnings: warnings,
+            triggeredWarnings: [],
+            isRunning: true
+        });
+
+        localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
+        document.getElementById('timerLabel').value = "";
+        renderTimers();
+    }
+
+    function adjustTimer(timerId, seconds) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            timer.targetTime += (seconds * 1000);
+            localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
+            renderTimers();
         }
     }
 
-    function addPrivateMapTimer() {
-        if (!activeMapId) return;
-        const name = document.getElementById('privTimerName').value;
-        const h = parseInt(document.getElementById('privHours').value) || 0;
-        const m = parseInt(document.getElementById('privMinutes').value) || 0;
-        const totalSec = (h * 3600) + (m * 60);
+    function toggleTimerPause(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            if (timer.isRunning) {
+                timer.pausedRemaining = Math.max(0, Math.round((timer.targetTime - Date.now()) / 1000));
+                timer.isRunning = false;
+            } else {
+                timer.targetTime = Date.now() + (timer.pausedRemaining * 1000);
+                timer.isRunning = true;
+            }
+            localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
 
-        if (!name || totalSec <= 0) {
-            alert("Bitte Bezeichnung und gültige Zeit angeben!");
+    function deleteTimer(timerId) {
+        if (!activeMapId) return;
+        allTimers[activeMapId] = allTimers[activeMapId].filter(t => t.id !== timerId);
+        localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
+        renderTimers();
+    }
+
+    function updateAllTimers(now) {
+        if (!activeMapId || !allTimers[activeMapId]) return;
+
+        let needsSave = false;
+        allTimers[activeMapId].forEach(timer => {
+            const card = document.getElementById('card-' + timer.id);
+            if (!card) return;
+
+            const remaining = timer.isRunning ? Math.max(0, Math.round((timer.targetTime - now) / 1000)) : timer.pausedRemaining;
+            const display = card.querySelector('.timer-display');
+            if (display) display.innerText = formatTime(remaining);
+
+            // Vorwarnungen prüfen
+            timer.warnings.forEach(warnSec => {
+                if (remaining === warnSec && timer.isRunning && !timer.triggeredWarnings.includes(warnSec)) {
+                    timer.triggeredWarnings.push(warnSec);
+                    triggerWarningAlert(timer, warnSec / 60);
+                    needsSave = true;
+                }
+            });
+
+            // Ablauf prüfen
+            if (remaining === 0 && timer.isRunning) {
+                if (timer.intervalSeconds > 0) {
+                    // Intervall-Modus (z.B. Luftwaffe Kampfrunde) -> Neustarten
+                    timer.targetTime = now + (timer.intervalSeconds * 1000);
+                    timer.triggeredWarnings = []; // Reset Vorwarnungen für nächste Runde
+                } else {
+                    timer.isRunning = false;
+                }
+                triggerFinishedAlert(timer);
+                needsSave = true;
+            }
+        });
+
+        if (needsSave) localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
+    }
+
+    function triggerWarningAlert(timer, minLeft) {
+        speakText(`Achtung! ${timer.label} läuft in ${minLeft} Minuten ab.`);
+        sendDiscordWebhook(`⚠️ **Vorwarnung:** Taktik-Counter **${timer.label}** läuft in **${minLeft} Minuten** ab!`);
+    }
+
+    function triggerFinishedAlert(timer) {
+        speakText(`Alarm! ${timer.label} ist abgelaufen!`);
+        sendDiscordWebhook(`🚨 **ALARM:** Taktik-Counter **${timer.label}** ist abgelaufen!`);
+    }
+
+    function sendDiscordWebhook(message) {
+        const activeMap = teamMaps.find(m => m.id === activeMapId);
+        if (!activeMap || !activeMap.discord || !activeMap.discord.startsWith('http')) return;
+
+        // Versucht den Webhook abzufeuern
+        fetch(activeMap.discord, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: message })
+        }).catch(err => console.log("Discord Webhook Fehler (CORS oder ungültige URL):", err));
+    }
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        let msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'de-DE';
+        window.speechSynthesis.speak(msg);
+    }
+
+    function renderTimers() {
+        const container = document.getElementById('timersContainer');
+        if (!activeMapId) {
+            container.innerHTML = `<p style="color:var(--text-muted);">Bitte zuerst eine Map auswählen.</p>`;
             return;
         }
 
-        if (!privateMapTimers[activeMapId]) privateMapTimers[activeMapId] = [];
-
-        privateMapTimers[activeMapId].push({
-            id: 'pt_' + Date.now(),
-            name: name,
-            targetTime: Date.now() + (totalSec * 1000)
-        });
-
-        localStorage.setItem('bulls_private_map_timers', JSON.stringify(privateMapTimers));
-        document.getElementById('privTimerName').value = "";
-        document.getElementById('privHours').value = "";
-        document.getElementById('privMinutes').value = "";
-        renderPrivateMapTimers();
-    }
-
-    function deletePrivateMapTimer(timerId) {
-        if (!activeMapId || !privateMapTimers[activeMapId]) return;
-        privateMapTimers[activeMapId] = privateMapTimers[activeMapId].filter(t => t.id !== timerId);
-        localStorage.setItem('bulls_private_map_timers', JSON.stringify(privateMapTimers));
-        renderPrivateMapTimers();
-    }
-
-    function renderPrivateMapTimers() {
-        if (!activeMapId) return;
-        const container = document.getElementById('privateMapTimersList');
-        const timers = privateMapTimers[activeMapId] || [];
-
+        const timers = allTimers[activeMapId] || [];
         if (timers.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine privaten Timer auf dieser Map.</p>`;
+            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Counter auf dieser Map vorhanden.</p>`;
             return;
         }
 
         let html = "";
         const now = Date.now();
         timers.forEach(t => {
-            const diff = Math.floor((t.targetTime - now) / 1000);
-            const targetStr = new Date(t.targetTime).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-            let timeStr = diff <= 0 ? "ABGELAUFEN!" : formatTime(diff);
+            const remaining = t.isRunning ? Math.max(0, Math.round((t.targetTime - now) / 1000)) : t.pausedRemaining;
+            const intervalText = t.intervalSeconds > 0 ? `(Intervall: ${t.intervalSeconds/60} Min)` : '';
 
             html += `
-                <div class="timer-display-box">
+                <div class="timer-card" id="card-${t.id}">
                     <div>
-                        <strong>${t.name}</strong><br>
-                        <span class="target-time-label">Ziel: ca. ${targetStr} Uhr</span>
+                        <span class="badge">${t.label}</span> ${intervalText}<br>
+                        <div class="timer-display">${formatTime(remaining)}</div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <span class="countdown-font">${timeStr}</span>
-                        <button class="btn btn-delete" onclick="deletePrivateMapTimer('${t.id}')">Löschen</button>
+                    <div>
+                        <div class="control-group" style="margin-bottom: 5px;">
+                            <button onclick="adjustTimer('${t.id}', -60)">-1m</button>
+                            <button onclick="adjustTimer('${t.id}', -10)">-10s</button>
+                            <button onclick="adjustTimer('${t.id}', 10)">+10s</button>
+                            <button onclick="adjustTimer('${t.id}', 60)">+1m</button>
+                        </div>
+                        <div class="control-group">
+                            <button onclick="toggleTimerPause('${t.id}')">${t.isRunning ? 'Pause' : 'Weiter'}</button>
+                            <button onclick="deleteTimer('${t.id}')" style="background:#b30000;">Löschen</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -434,88 +432,19 @@
         container.innerHTML = html;
     }
 
-    // Admin Panel Logic
-    function adminCreateMap() {
-        const name = document.getElementById('admMapName').value;
-        const pin = document.getElementById('admPin').value;
-        const peaceEndStr = document.getElementById('admPeaceEnd').value;
-        const webhook = document.getElementById('admWebhook').value;
-
-        if (!name || !pin || !peaceEndStr) {
-            alert("Bitte Map-Name, PIN und Friedensende ausfüllen!");
-            return;
+    function formatTime(totalSec) {
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        if (h > 0) {
+            return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
         }
-
-        const newMap = {
-            id: 'map_' + Date.now(),
-            name: name,
-            pin: pin,
-            peaceEndTime: new Date(peaceEndStr).getTime(),
-            webhook: webhook
-        };
-
-        teamMaps.push(newMap);
-        localStorage.setItem('bulls_team_maps', JSON.stringify(teamMaps));
-
-        document.getElementById('admMapName').value = "";
-        document.getElementById('admPin').value = "";
-        document.getElementById('admPeaceEnd').value = "";
-        document.getElementById('admWebhook').value = "";
-
-        renderAdminMaps();
-        renderMapsList();
-        alert("Map erfolgreich erstellt!");
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
 
-    function deleteTeamMap(mapId) {
-        if (!confirm("Soll diese Map wirklich gelöscht werden?")) return;
-        teamMaps = teamMaps.filter(m => m.id !== mapId);
-        localStorage.setItem('bulls_team_maps', JSON.stringify(teamMaps));
-        if (activeMapId === mapId) leaveActiveMap();
-        renderAdminMaps();
-        renderMapsList();
-    }
-
-    function renderAdminMaps() {
-        const container = document.getElementById('adminMapsList');
-        if (teamMaps.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Maps im System vorhanden.</p>`;
-            return;
-        }
-
-        let html = "";
-        teamMaps.forEach(m => {
-            const dateStr = new Date(m.peaceEndTime).toLocaleString('de-DE');
-            html += `
-                <div class="timer-display-box" style="border-left-color: var(--neon-red);">
-                    <div>
-                        <strong>${m.name}</strong> (PIN: <code style="color:var(--neon-green);">${m.pin}</code>)<br>
-                        <span style="font-size:0.85rem; color:var(--text-muted);">Frieden bis: ${dateStr}</span>
-                    </div>
-                    <button class="btn btn-delete" onclick="deleteTeamMap('${m.id}')">Map löschen</button>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    function formatTime(diffSec) {
-        const h = Math.floor(diffSec / 3600);
-        const m = Math.floor((diffSec % 3600) / 60);
-        const s = diffSec % 60;
-        return String(h).padStart(2,'0') + ":" + String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
-    }
-
-    // Initial load
-    renderMapsList();
-    renderAdminMaps();
-    if (activeMapId) {
-        const activeMap = teamMaps.find(m => m.id === activeMapId);
-        if (activeMap) {
-            document.getElementById('mapListCard').classList.add('hidden');
-            activateMapDashboard(activeMap);
-        }
-    }
+    // Init
+    renderMaps();
+    renderTimers();
 </script>
 </body>
 </html>
