@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Bulls - Timer Privat & Schnell-Counter</title>
+    <style>
+        :root {
+            --bg-color: #0b0b0b;
+            --panel-bg: #141414;
+            --border-color: #ff1a1a;
+            --text-main: #f0f0f0;
+            --text-muted: #aaaaaa;
+            --neon-red: #ff0033;
+            --neon-green: #00ffcc;
+            --neon-glow: 0 0 10px rgba(255, 0, 51, 0.5);
+        }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--neon-red); text-shadow: var(--neon-glow); text-transform: uppercase; margin: 0; font-size: 1.5rem; }
+        .live-clock { font-family: monospace; font-size: 1.3rem; color: var(--neon-green); background: #111; padding: 5px 12px; border-radius: 4px; border: 1px solid #333; }
+        .card { background-color: var(--panel-bg); border: 1px solid var(--border-color); box-shadow: var(--neon-glow); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .btn { background-color: var(--neon-red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; transform: scale(1.01); }
+        .btn-delete { background: #444; padding: 6px 12px; font-size: 0.8rem; }
+        input { background: #1f1f1f; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 12px; }
+        .back-btn { background: #222; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 15px; font-weight: bold; border: 1px solid #444; }
+        .timer-display-box { background: #111; border-left: 5px solid var(--neon-green); padding: 15px; border-radius: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .countdown-font { font-family: monospace; font-size: 1.5rem; color: var(--neon-green); font-weight: bold; }
+        .target-time-label { font-size: 0.9rem; color: var(--text-muted); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="Dashboard.html" class="back-btn">&larr; Zurück zur Zentrale</a>
+    <div style="margin-bottom: 10px;">
+        <a href="timer_frieden.html" class="back-btn" style="background: var(--neon-red); border-color: var(--neon-red);">Zu Timer Frieden & Admin &rarr;</a>
+    </div>
+    
+    <header>
+        <h1>Persönlicher Timer-Hub</h1>
+        <div class="live-clock" id="liveClock">00:00:00</div>
+    </header>
+
+    <div class="card">
+        <h3>Persönlicher Schnell-Counter</h3>
+        <input type="text" id="quickLabel" placeholder="Bezeichnung (z.B. Rohstofflieferung / Bau)">
+        <div class="grid-2">
+            <input type="number" id="quickHours" placeholder="Stunden" min="0">
+            <input type="number" id="quickMinutes" placeholder="Minuten" min="0" max="59">
+        </div>
+        <button class="btn" onclick="addQuickTimer()">Schnell-Timer starten</button>
+    </div>
+
+    <div class="card">
+        <h3>Deine aktiven Schnell-Counter</h3>
+        <div id="quickTimersContainer">
+            <p style="color: var(--text-muted);">Keine aktiven Schnell-Counter vorhanden.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let quickTimers = JSON.parse(localStorage.getItem('bulls_quick_timers')) || [];
+    setInterval(tick, 1000);
+
+    function tick() {
+        const now = new Date();
+        document.getElementById('liveClock').innerText = now.toLocaleTimeString('de-DE');
+        renderQuickTimers();
+    }
+
+    function addQuickTimer() {
+        const name = document.getElementById('quickLabel').value;
+        const h = parseInt(document.getElementById('quickHours').value) || 0;
+        const m = parseInt(document.getElementById('quickMinutes').value) || 0;
+        const totalSec = (h * 3600) + (m * 60);
+
+        if (!name || totalSec <= 0) {
+            alert("Bitte Name und gültige Zeit eingeben!");
+            return;
+        }
+
+        quickTimers.push({
+            id: 'qt_' + Date.now(),
+            name: name,
+            targetTime: Date.now() + (totalSec * 1000)
+        });
+
+        localStorage.setItem('bulls_quick_timers', JSON.stringify(quickTimers));
+        document.getElementById('quickLabel').value = "";
+        document.getElementById('quickHours').value = "";
+        document.getElementById('quickMinutes').value = "";
+        renderQuickTimers();
+    }
+
+    function deleteQuickTimer(id) {
+        quickTimers = quickTimers.filter(t => t.id !== id);
+        localStorage.setItem('bulls_quick_timers', JSON.stringify(quickTimers));
+        renderQuickTimers();
+    }
+
+    function renderQuickTimers() {
+        const container = document.getElementById('quickTimersContainer');
+        if (quickTimers.length === 0) {
+            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Schnell-Counter vorhanden.</p>`;
+            return;
+        }
+
+        let html = "";
+        const now = Date.now();
+        quickTimers.forEach(t => {
+            const diff = Math.floor((t.targetTime - now) / 1000);
+            const targetStr = new Date(t.targetTime).toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+            
+            let timeStr = "";
+            if (diff <= 0) {
+                timeStr = "ABGELAUFEN!";
+            } else {
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60);
+                const s = diff % 60;
+                timeStr = String(h).padStart(2,'0') + ":" + String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
+            }
+
+            html += `
+                <div class="timer-display-box">
+                    <div>
+                        <strong>${t.name}</strong><br>
+                        <span class="target-time-label">Ziel: ca. ${targetStr} Uhr</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <span class="countdown-font">${timeStr}</span>
+                        <button class="btn btn-delete" onclick="deleteQuickTimer('${t.id}')">Löschen</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+</script>
+</body>
+</html>
