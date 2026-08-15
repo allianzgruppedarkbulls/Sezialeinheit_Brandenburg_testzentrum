@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>DARK BULLS - TIMER KONFIGURATION</title>
+    <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 550px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 30px rgba(255, 49, 49, 0.2); }
+        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 30px; font-size: 28px; text-align: center; }
+        
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; color: #aaa; text-transform: uppercase; font-size: 14px; }
+        input { width: 100%; padding: 12px; background: #151515; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: 'Almendra'; box-sizing: border-box; }
+        
+        .save-btn { width: 100%; background: #39d353; color: black; border: none; padding: 18px; font-size: 18px; font-weight: bold; font-family: 'Almendra'; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
+        .save-btn:hover { background: #2fb145; transform: scale(1.02); }
+        .btn-back { display: block; margin-top: 30px; text-align: center; color: #666; text-decoration: none; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Timer Einstellungen</h1>
+    
+    <div class="form-group">
+        <label>Event Titel</label>
+        <input type="text" id="timerTitle" placeholder="z.B. Nächster Feldzug">
+    </div>
+    
+    <div class="form-group">
+        <label>Zielzeitpunkt (Datum & Uhrzeit)</label>
+        <input type="datetime-local" id="timerDate">
+    </div>
+
+    <button class="save-btn" onclick="saveTimer()">Einstellungen Versiegeln 💾</button>
+    <a href="Ad_SystemZentrale.html" class="btn-back">Zurück zur Zentrale</a>
+</div>
+
+<script>
+    const API = window.BULLS_CONFIG.SCRIPT_URL;
+
+    // Lädt beim Start die aktuellen Daten
+    async function loadCurrentTimer() {
+        try {
+            const res = await fetch(API + "?action=getTimerSettings");
+            const data = await res.json();
+            if(data) {
+                document.getElementById('timerTitle').value = data.title || "";
+                document.getElementById('timerDate').value = data.targetDate || "";
+            }
+        } catch(e) { console.log("Keine Timer-Daten gefunden."); }
+    }
+
+    async function saveTimer() {
+        const payload = {
+            action: "saveTimerSettings",
+            title: document.getElementById('timerTitle').value,
+            targetDate: document.getElementById('timerDate').value
+        };
+
+        try {
+            await fetch(API, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            alert("Timer-Daten wurden erfolgreich im HQ gespeichert!");
+        } catch(e) {
+            alert("Fehler beim Speichern!");
+        }
+    }
+
+    loadCurrentTimer();
+</script>
+
+</body>
+</html>
