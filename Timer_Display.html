@@ -1,109 +1,41 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>DARK BULLS - TIMER</title>
-    <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <base target="_top">
     <style>
-        body { background: #050505; color: #fff; font-family: 'Almendra', serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .timer-box { text-align: center; border: 1px solid #ff3131; padding: 30px; border-radius: 15px; background: #0f0f0f; width: 400px; }
-        h2 { color: #ff3131; text-transform: uppercase; margin-top: 0; letter-spacing: 2px; }
-        #countdown { font-size: 48px; font-weight: bold; margin: 20px 0; text-shadow: 0 0 10px #ff3131; }
+        body { font-family: Arial, sans-serif; text-align: center; background: #1a1a1a; color: #fff; }
+        #countdown { font-size: 3em; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-
-<div class="timer-box">
-    <h2 id="timerTitle">Lade Daten...</h2>
+    <h2 id="event-title">Lade Event...</h2>
     <div id="countdown">00:00:00</div>
-</div>
 
-<script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
+    <script>
+        const API = "HIER_DEINE_SCRIPT_URL"; // Bitte hier deine Web-App URL einfügen
 
-    async function updateTimer() {
-        try {
+        async function loadTimer() {
             const res = await fetch(API + "?action=getTimerSettings");
             const data = await res.json();
+            document.getElementById('event-title').innerText = data.title;
             
-            document.getElementById('timerTitle').innerText = data.title;
-            const targetDate = new Date(data.targetDate).getTime();
-            
-            const interval = setInterval(() => {
+            setInterval(() => {
+                const target = new Date(data.targetDate).getTime();
                 const now = new Date().getTime();
-                const distance = targetDate - now;
+                const diff = target - now;
 
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1Genau richtig gedacht. Wenn wir die `Ad_Timer.html` (Verwaltung) haben, brauchen wir zwingend noch die **Anzeige-Seite**, also das, was die Mitglieder tatsächlich sehen, wenn sie auf dem Dashboard auf den Timer-Button klicken.
-
-Lass uns diese zweite Datei jetzt noch fertig machen, damit das Set komplett ist.
-
-### `Timer_Display.html` (Die Anzeige für alle)
-
-Diese Seite ist puristisch und fokussiert sich nur darauf, den Countdown schön darzustellen. Sie ruft beim Laden die Daten aus dem Sheet ab.
-
-```html
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>DARK BULLS - LIVE TIMER</title>
-    <script src="config.js"></script>
-    <link href="[https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap)" rel="stylesheet">
-    <style>
-        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .timer-box { text-align: center; border: 2px solid #ff3131; padding: 50px; border-radius: 20px; background: #0f0f0f; box-shadow: 0 0 40px rgba(255, 49, 49, 0.3); }
-        h1 { color: #ff3131; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; }
-        #countdown { font-size: 60px; font-weight: bold; color: #fff; margin: 20px 0; }
-        .label { color: #888; font-size: 20px; }
-    </style>
-</head>
-<body>
-
-<div class="timer-box">
-    <h1 id="timerTitle">LADE DATEN...</h1>
-    <div id="countdown">00:00:00</div>
-    <div class="label">Bis zum Einsatz</div>
-</div>
-
-<script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
-    let targetTime = null;
-
-    async function fetchTimerData() {
-        try {
-            const res = await fetch(API + "?action=getTimerSettings");
-            const data = await res.json();
-            document.getElementById('timerTitle').innerText = data.title;
-            targetTime = new Date(data.targetDate).getTime();
-            updateTimer();
-        } catch(e) { document.getElementById('timerTitle').innerText = "TIMER OFFLINE"; }
-    }
-
-    function updateTimer() {
-        if (!targetTime) return;
-        const now = new Date().getTime();
-        const diff = targetTime - now;
-
-        if (diff <= 0) {
-            document.getElementById('countdown').innerText = "EINSATZ LÄUFT!";
-            return;
+                if (diff > 0) {
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    document.getElementById('countdown').innerText = `${d}d ${h}h ${m}m ${s}s`;
+                } else {
+                    document.getElementById('countdown').innerText = "ABGELAUFEN";
+                }
+            }, 1000);
         }
-
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        document.getElementById('countdown').innerText = 
-            `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        
-        setTimeout(updateTimer, 1000);
-    }
-
-    fetchTimerData();
-</script>
+        loadTimer();
+    </script>
 </body>
 </html>
