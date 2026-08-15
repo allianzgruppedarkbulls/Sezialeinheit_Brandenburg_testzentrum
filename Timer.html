@@ -1,77 +1,242 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <base target="_top">
-    <meta charset="utf-8">
-    <title>Dark Bulls - Live Timer</title>
-    <!-- config.js muss als Basis immer zuerst geladen werden -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Bulls - Live Timer & Maps</title>
     <script src="config.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
-        .timer-card { background: #2c3e50; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #e74c3c; }
-        .timer-card h3 { margin: 0 0 5px 0; color: #ecf0f1; }
-        .meta { font-size: 0.9em; color: #bdc3c7; }
-        .countdown { font-size: 1.4em; font-weight: bold; margin-top: 8px; color: #f1c40f; }
+        :root {
+            --bg-color: #0b0b0b;
+            --panel-bg: #141414;
+            --border-color: #ff1a1a;
+            --text-main: #f0f0f0;
+            --text-muted: #aaaaaa;
+            --neon-red: #ff0033;
+            --neon-glow: 0 0 10px rgba(255, 0, 51, 0.6), 0 0 20px rgba(255, 0, 51, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--neon-red);
+            text-shadow: var(--neon-glow);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--neon-glow);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background-color: var(--neon-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        input, select {
+            background: #1f1f1f;
+            border: 1px solid #444;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .back-btn {
+            background: #333;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: #444;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <h2>Aktive Einsätze & Timer</h2>
-    <div id="timer-container">Lade Timer-Daten...</div>
 
-    <script>
-        async function loadTimers() {
-            try {
-                const res = await fetch(API_URL + "?action=getPrivateTimers");
-                const timers = await res.json();
-                const container = document.getElementById('timer-container');
-                
-                if (!timers || timers.length === 0 || timers.error) {
-                    container.innerHTML = "<p>Keine aktiven Timer gefunden.</p>";
+<div class="container">
+    <a href="Dashboard.html" class="back-btn">&larr; Zurück zur Zentrale</a>
+    <h1>Aktive Einsätze & Timer</h1>
+
+    <!-- MAP AUSWAHL & PIN EINGABE -->
+    <div class="card" id="mapSelectionCard">
+        <h2>Map wählen / beitreten</h2>
+        <div id="mapListContainer">Lade Maps...</div>
+        
+        <div id="pinBox" class="hidden" style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
+            <h3 id="selectedMapTitle" style="color: #fff; font-size: 1.1rem;">Map beitreten</h3>
+            <input type="password" id="enteredPin" placeholder="Map PIN eingeben">
+            <input type="text" id="userWebhook" placeholder="Discord Webhook URL (optional für Benachrichtigungen)">
+            <button class="btn" onclick="joinSelectedMap()">Mit PIN beitreten</button>
+        </div>
+    </div>
+
+    <!-- TIMER BEREICH (Wird nach erfolgreichem Beitritt sichtbar) -->
+    <div class="card hidden" id="timerDashboardCard">
+        <h2 id="activeMapTitle">Map Steuerung</h2>
+        <p style="color: var(--text-muted); text-align: center;">Hier kannst du deine privaten Timer für diese Map verwalten.</p>
+        
+        <div style="background: #111; padding: 15px; border-radius: 6px; margin-top: 15px;">
+            <h3>Neuen Timer erstellen</h3>
+            <input type="text" id="timerName" placeholder="Timer Name (z.B. Angriff auf Provinz X)">
+            <input type="number" id="targetSeconds" placeholder="Zielzeit in Sekunden (z.B. 3600 für 1h)">
+            <button class="btn" onclick="saveTimer()">Timer speichern</button>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3>Deine aktiven Timer</h3>
+            <div id="timerList">Keine Timer vorhanden.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const currentUser = localStorage.getItem('bulls_user') || 'Gast';
+    let currentMapId = null;
+    let mapsData = [];
+
+    window.onload = function() {
+        loadMaps();
+    };
+
+    async function loadMaps() {
+        try {
+            const res = await fetch(window.BULLS_CONFIG.SCRIPT_URL + "?action=getMaps");
+            const data = await res.json();
+            
+            if (data.ok && data.maps) {
+                mapsData = data.maps;
+                let html = "";
+                if (mapsData.length === 0) {
+                    document.getElementById('mapListContainer').innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Keine Maps verfügbar.</p>";
                     return;
                 }
-
-                container.innerHTML = "";
-
-                timers.forEach(t => {
-                    if (t.active !== "Aktiv") return;
-                    
-                    const card = document.createElement('div');
-                    card.className = "timer-card";
-                    card.innerHTML = `
-                        <h3>${t.timerName}</h3>
-                        <div class="meta">Map: ${t.mapId} | User: ${t.userId}</div>
-                        <div class="countdown" data-target="${t.targetSeconds}">Berechne Zeit...</div>
-                    `;
-                    container.appendChild(card);
+                mapsData.forEach(m => {
+                    html += `<div style="display: flex; justify-content: space-between; align-items: center; background: #1f1f1f; padding: 10px; margin-bottom: 8px; border-radius: 5px;">
+                        <span><strong>${m.mapName}</strong> (Speed: ${m.speed}x) - Admin: ${m.adminUser}</span>
+                        <button class="btn" onclick="selectMap('${m.mapId}')">Auswählen</button>
+                    </div>`;
                 });
-
-                startCountdowns();
-            } catch (err) {
-                document.getElementById('timer-container').innerHTML = "<p>Fehler beim Laden der Timer.</p>";
+                document.getElementById('mapListContainer').innerHTML = html;
+            } else {
+                document.getElementById('mapListContainer').innerHTML = "<p style='color:red;'>Fehler beim Laden der Maps.</p>";
             }
+        } catch (e) {
+            document.getElementById('mapListContainer').innerHTML = "<p style='color:red;'>Verbindungsfehler zum Server.</p>";
+        }
+    }
+
+    function selectMap(mapId) {
+        currentMapId = mapId;
+        const map = mapsData.find(m => m.mapId === mapId);
+        if (map) {
+            document.getElementById('selectedMapTitleinnerText').innerText = "Beitreten zu: " + map.mapName;
+            document.getElementById('pinBox').classList.remove('hidden');
+        }
+    }
+
+    async function joinSelectedMap() {
+        const pin = document.getElementById('enteredPin').value;
+        const webhook = document.getElementById('userWebhook').value;
+
+        try {
+            const res = await fetch(window.BULLS_CONFIG.SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "joinMap",
+                    mapId: currentMapId,
+                    user: currentUser,
+                    enteredPin: pin,
+                    userWebhook: webhook
+                })
+            });
+            const result = await res.json();
+
+            if (result.ok) {
+                alert("Erfolgreich beigetreten!");
+                document.getElementById('mapSelectionCard').classList.add('hidden');
+                document.getElementById('timerDashboardCard').classList.remove('hidden');
+            } else {
+                alert("Fehler: " + (result.error || "Unbekannter Fehler"));
+            }
+        } catch (e) {
+            alert("Netzwerkfehler beim Beitritt.");
+        }
+    }
+
+    async function saveTimer() {
+        const name = document.getElementById('timerName').value;
+        const seconds = document.getElementById('targetSeconds').value;
+
+        if (!name || !seconds) {
+            alert("Bitte alle Felder ausfüllen!");
+            return;
         }
 
-        function startCountdowns() {
-            setInterval(() => {
-                document.querySelectorAll('.countdown').forEach(el => {
-                    const target = parseInt(el.getAttribute('data-target'), 10);
-                    const now = Math.floor(Date.now() / 1000);
-                    const diff = target - now;
-
-                    if (diff > 0) {
-                        const d = Math.floor(diff / (3600 * 24));
-                        const h = Math.floor((diff % (3600 * 24)) / 3600);
-                        const m = Math.floor((diff % 3600) / 60);
-                        const s = diff % 60;
-                        el.innerText = `${d}T ${h}h ${m}m ${s}s`;
-                    } else {
-                        el.innerText = "ZEIT ABGELAUFEN";
-                    }
-                });
-            }, 1000);
+        try {
+            const res = await fetch(window.BULLS_CONFIG.SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "savePrivateTimer",
+                    mapId: currentMapId,
+                    user: currentUser,
+                    timerName: name,
+                    targetSeconds: parseInt(seconds)
+                })
+            });
+            const result = await res.json();
+            if (result.ok) {
+                alert("Timer gespeichert!");
+                document.getElementById('timerName').value = "";
+                document.getElementById('targetSeconds').value = "";
+            } else {
+                alert("Fehler beim Speichern des Timers.");
+            }
+        } catch (e) {
+            alert("Verbindungsfehler.");
         }
+    }
+</script>
 
-        loadTimers();
-    </script>
 </body>
 </html>
