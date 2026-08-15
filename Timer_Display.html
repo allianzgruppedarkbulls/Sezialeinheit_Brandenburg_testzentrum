@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>DARK BULLS - TIMER</title>
+    <script src="config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #050505; color: #fff; font-family: 'Almendra', serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .timer-box { text-align: center; border: 1px solid #ff3131; padding: 30px; border-radius: 15px; background: #0f0f0f; width: 400px; }
+        h2 { color: #ff3131; text-transform: uppercase; margin-top: 0; letter-spacing: 2px; }
+        #countdown { font-size: 48px; font-weight: bold; margin: 20px 0; text-shadow: 0 0 10px #ff3131; }
+    </style>
+</head>
+<body>
+
+<div class="timer-box">
+    <h2 id="timerTitle">Lade Daten...</h2>
+    <div id="countdown">00:00:00</div>
+</div>
+
+<script>
+    const API = window.BULLS_CONFIG.SCRIPT_URL;
+
+    async function updateTimer() {
+        try {
+            const res = await fetch(API + "?action=getTimerSettings");
+            const data = await res.json();
+            
+            document.getElementById('timerTitle').innerText = data.title;
+            const targetDate = new Date(data.targetDate).getTime();
+            
+            const interval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = targetDate - now;
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1Genau richtig gedacht. Wenn wir die `Ad_Timer.html` (Verwaltung) haben, brauchen wir zwingend noch die **Anzeige-Seite**, also das, was die Mitglieder tatsächlich sehen, wenn sie auf dem Dashboard auf den Timer-Button klicken.
+
+Lass uns diese zweite Datei jetzt noch fertig machen, damit das Set komplett ist.
+
+### `Timer_Display.html` (Die Anzeige für alle)
+
+Diese Seite ist puristisch und fokussiert sich nur darauf, den Countdown schön darzustellen. Sie ruft beim Laden die Daten aus dem Sheet ab.
+
+```html
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>DARK BULLS - LIVE TIMER</title>
+    <script src="config.js"></script>
+    <link href="[https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap)" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .timer-box { text-align: center; border: 2px solid #ff3131; padding: 50px; border-radius: 20px; background: #0f0f0f; box-shadow: 0 0 40px rgba(255, 49, 49, 0.3); }
+        h1 { color: #ff3131; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; }
+        #countdown { font-size: 60px; font-weight: bold; color: #fff; margin: 20px 0; }
+        .label { color: #888; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="timer-box">
+    <h1 id="timerTitle">LADE DATEN...</h1>
+    <div id="countdown">00:00:00</div>
+    <div class="label">Bis zum Einsatz</div>
+</div>
+
+<script>
+    const API = window.BULLS_CONFIG.SCRIPT_URL;
+    let targetTime = null;
+
+    async function fetchTimerData() {
+        try {
+            const res = await fetch(API + "?action=getTimerSettings");
+            const data = await res.json();
+            document.getElementById('timerTitle').innerText = data.title;
+            targetTime = new Date(data.targetDate).getTime();
+            updateTimer();
+        } catch(e) { document.getElementById('timerTitle').innerText = "TIMER OFFLINE"; }
+    }
+
+    function updateTimer() {
+        if (!targetTime) return;
+        const now = new Date().getTime();
+        const diff = targetTime - now;
+
+        if (diff <= 0) {
+            document.getElementById('countdown').innerText = "EINSATZ LÄUFT!";
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('countdown').innerText = 
+            `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        
+        setTimeout(updateTimer, 1000);
+    }
+
+    fetchTimerData();
+</script>
+</body>
+</html>
