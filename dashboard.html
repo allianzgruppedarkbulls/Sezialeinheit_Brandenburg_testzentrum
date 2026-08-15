@@ -103,6 +103,7 @@
             <h2>Elo Bereich</h2>
             <div class="btn-stack">
                 <button class="card-btn" id="btn-elo-rechner" onclick="window.location.href='Elo_weiche.html'">ELO-Rechner</button>
+                <button class="card-btn" id="btn-maps" onclick="window.location.href='Timer_Dashboard.html'">Stoppuhren & Maps</button>
             </div>
         </div>
         
@@ -160,51 +161,52 @@
         }
 
         async function applyDashboardPermissions() {
-            const userRole = localStorage.getItem('bulls_role') || 'Mitglied';
-            const userExtra = localStorage.getItem('bulls_extra') || ''; 
-            const userPrivileges = [userRole, ...userExtra.split(',').map(s => s.trim())].filter(Boolean);
-            
-            try {
-                const res = await fetch(window.BULLS_CONFIG.SCRIPT_URL + "?action=getDashboardMatrix");
-                const matrix = await res.json();
+    const userRole = localStorage.getItem('bulls_role') || 'Mitglied';
+    const userExtra = localStorage.getItem('bulls_extra') || ''; 
+    const userPrivileges = [userRole, ...userExtra.split(',').map(s => s.trim())].filter(Boolean);
+    
+    try {
+        const res = await fetch(window.BULLS_CONFIG.SCRIPT_URL + "?action=getDashboardMatrix");
+        const matrix = await res.json();
 
-                matrix.forEach(item => {
-                    let targetId = item.id;
-                    const element = document.getElementById(targetId);
-                    if (element) {
-                        if (item.status === "Deaktiviert") {
-                            element.className = "card-btn hidden"; 
-                            return;
-                        }
+        matrix.forEach(item => {
+            let targetId = item.id;
+            const element = document.getElementById(targetId);
+            if (element) {
+                if (item.status === "Deaktiviert") {
+                    element.className = "card-btn hidden"; 
+                    return;
+                }
 
-                        const hasAccess = userPrivileges.includes("Admin") || item.allowed.some(role => userPrivileges.includes(role));
+                const hasAccess = userPrivileges.includes("Admin") || item.allowed.some(role => userPrivileges.includes(role));
 
-                        if (hasAccess) {
-                            element.style.display = "block";
-                            element.classList.remove('hidden');
-                        } else {
-                            element.className = "card-btn hidden";
-                        }
-                    }
-                });
-
-                checkCardVisibility('box-perso');
-                checkCardVisibility('box-blacklist');
-                checkCardVisibility('box-pflege');
-                checkCardVisibility('box-admin');
-                checkCardVisibility('box-elo');
-                
-                document.getElementById('box-allichat').classList.add('visible-flex');
-
-            } catch (e) {
-                console.error("Fehler im Dashboard-Autopiloten:", e);
-                document.querySelectorAll('.card, .card-btn, .admin-btn').forEach(el => {
-                    el.style.display = "block";
-                    el.classList.remove('hidden');
-                });
-                document.getElementById('box-allichat').classList.add('visible-flex');
+                if (hasAccess) {
+                    element.style.display = "block";
+                    element.classList.remove('hidden');
+                } else {
+                    element.className = "card-btn hidden";
+                }
             }
-        }
+        });
+
+        checkCardVisibility('box-perso');
+        checkCardVisibility('box-blacklist');
+        checkCardVisibility('box-pflege');
+        checkCardVisibility('box-admin');
+        checkCardVisibility('box-elo');
+        checkCardVisibility('box-timer');
+        
+        document.getElementById('box-allichat').classList.add('visible-flex');
+
+    } catch (e) {
+        console.error("Fehler im Dashboard-Autopiloten:", e);
+        document.querySelectorAll('.card, .card-btn, .admin-btn').forEach(el => {
+            el.style.display = "block";
+            el.classList.remove('hidden');
+        });
+        document.getElementById('box-allichat').classList.add('visible-flex');
+    }
+}
 
         function checkCardVisibility(cardId) {
             const card = document.getElementById(cardId);
