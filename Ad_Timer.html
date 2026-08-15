@@ -1,78 +1,70 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>DARK BULLS - TIMER KONFIGURATION</title>
+    <base target="_top">
+    <meta charset="utf-8">
+    <title>Dark Bulls - Timer Verwaltung</title>
+    <!-- config.js muss als Basis immer zuerst geladen werden -->
     <script src="config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #050505; color: #ffffff; font-family: 'Almendra', serif; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-        .container { width: 550px; background-color: #0f0f0f; border: 2px solid #333; border-radius: 15px; padding: 40px; box-shadow: 0 0 30px rgba(255, 49, 49, 0.2); }
-        h1 { color: #ff3131; text-transform: uppercase; margin-bottom: 30px; font-size: 28px; text-align: center; }
-        
-        .form-group { margin-bottom: 25px; }
-        label { display: block; margin-bottom: 8px; color: #aaa; text-transform: uppercase; font-size: 14px; }
-        input { width: 100%; padding: 12px; background: #151515; border: 1px solid #333; border-radius: 6px; color: #fff; font-family: 'Almendra'; box-sizing: border-box; }
-        
-        .save-btn { width: 100%; background: #39d353; color: black; border: none; padding: 18px; font-size: 18px; font-weight: bold; font-family: 'Almendra'; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .save-btn:hover { background: #2fb145; transform: scale(1.02); }
-        .btn-back { display: block; margin-top: 30px; text-align: center; color: #666; text-decoration: none; font-size: 16px; }
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #aaa; }
+        input, select { width: 100%; padding: 8px; background: #2c3e50; border: 1px solid #444; color: #fff; border-radius: 4px; }
+        button { background: #e74c3c; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #c0392b; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Timer Einstellungen</h1>
+    <h2>Timer & Map Verwaltung</h2>
     
     <div class="form-group">
-        <label>Event Titel</label>
-        <input type="text" id="timerTitle" placeholder="z.B. Nächster Feldzug">
+        <label for="mapId">Map ID:</label>
+        <input type="text" id="mapId" placeholder="z.B. Map_101">
     </div>
     
     <div class="form-group">
-        <label>Zielzeitpunkt (Datum & Uhrzeit)</label>
-        <input type="datetime-local" id="timerDate">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" placeholder="z.B. User_123">
     </div>
 
-    <button class="save-btn" onclick="saveTimer()">Einstellungen Versiegeln 💾</button>
-    <a href="Ad_SystemZentrale.html" class="btn-back">Zurück zur Zentrale</a>
-</div>
+    <div class="form-group">
+        <label for="timerName">Timer Name / Event:</label>
+        <input type="text" id="timerName" placeholder="z.B. Angriff auf Sektor 4">
+    </div>
 
-<script>
-    const API = window.BULLS_CONFIG.SCRIPT_URL;
+    <div class="form-group">
+        <label for="targetSeconds">Zielzeit (Sekunden / Timestamp):</label>
+        <input type="text" id="targetSeconds" placeholder="Zielzeitpunkt">
+    </div>
 
-    // Lädt beim Start die aktuellen Daten
-    async function loadCurrentTimer() {
-        try {
-            const res = await fetch(API + "?action=getTimerSettings");
-            const data = await res.json();
-            if(data) {
-                document.getElementById('timerTitle').value = data.title || "";
-                document.getElementById('timerDate').value = data.targetDate || "";
+    <button onclick="savePrivateTimer()">Private Timer speichern</button>
+
+    <script>
+        async function savePrivateTimer() {
+            const payload = {
+                action: "savePrivateTimer",
+                mapId: document.getElementById('mapId').value,
+                userId: document.getElementById('userId').value,
+                timerName: document.getElementById('timerName').value,
+                targetSeconds: document.getElementById('targetSeconds').value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert("Timer erfolgreich gespeichert!");
+                } else {
+                    alert("Fehler: " + result.error);
+                }
+            } catch (err) {
+                alert("Verbindungsfehler: " + err);
             }
-        } catch(e) { console.log("Keine Timer-Daten gefunden."); }
-    }
-
-    async function saveTimer() {
-        const payload = {
-            action: "saveTimerSettings",
-            title: document.getElementById('timerTitle').value,
-            targetDate: document.getElementById('timerDate').value
-        };
-
-        try {
-            await fetch(API, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-            alert("Timer-Daten wurden erfolgreich im HQ gespeichert!");
-        } catch(e) {
-            alert("Fehler beim Speichern!");
         }
-    }
-
-    loadCurrentTimer();
-</script>
-
+    </script>
 </body>
 </html>
