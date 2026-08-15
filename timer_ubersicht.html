@@ -3,448 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Bulls - Taktik & Alarm-Timer (ELO & Maps)</title>
+    <title>Call of War - Allianz Übersicht & Liga-Timer (Dark Bulls)</title>
     <style>
         :root {
-            --bg-color: #0b0b0b;
-            --panel-bg: #141414;
-            --border-color: #ff1a1a;
-            --text-main: #f0f0f0;
-            --text-muted: #aaaaaa;
-            --neon-red: #ff0033;
-            --neon-green: #00ffcc;
-            --neon-glow: 0 0 10px rgba(255, 0, 51, 0.5);
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --border-color: #444;
+            --neon-blue: #3b82f6;
+            --neon-red: #ff4444;
+            --text-main: #e0e0e0;
         }
-        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; transition: background 0.3s; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
         
-        /* Vollbild-Alarm-Modus */
-        body.full-alarm { background-color: #700; animation: screenFlash 0.5s infinite alternate; }
-        @keyframes screenFlash { from { background-color: #700; } to { background-color: #ff0000; } }
+        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h1 { color: #fff; text-align: center; margin-bottom: 30px; font-size: 1.8rem; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { color: #fff; font-size: 1.3rem; margin-top: 0; margin-bottom: 20px; }
+        h3 { color: #aaa; font-size: 1.1rem; border-bottom: 1px solid #333; padding-bottom: 5px; margin-top: 20px; }
 
-        .container { max-width: 1100px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { color: var(--neon-red); text-shadow: var(--neon-glow); text-transform: uppercase; margin: 0; font-size: 1.5rem; }
-        .live-clock { font-family: monospace; font-size: 1.3rem; color: var(--neon-green); background: #111; padding: 5px 12px; border-radius: 4px; border: 1px solid #333; }
+        label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; margin-top: 15px; }
+        input[type="text"], select, input[type="number"] { 
+            width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid #555; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 14px;
+        }
         
-        /* Haupt-Tabs oben */
-        .main-tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: #1f1f1f; color: var(--text-muted); border: 1px solid #444; padding: 10px 20px; border-radius: 5px 5px 0 0; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .tab-btn.active { background: var(--panel-bg); color: var(--neon-red); border-color: var(--border-color); border-bottom: 2px solid var(--panel-bg); margin-bottom: -2px; box-shadow: var(--neon-glow); }
+        .time-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .time-inputs label { margin-top: 0; color: #888; font-size: 11px; }
+
+        .btn-primary { 
+            width: 100%; background: var(--neon-blue); color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 25px; transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #2563eb; }
         
-        /* Untertabs für Maps */
-        .sub-tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: background: #111; padding: 8px; border-radius: 6px; border: 1px solid #333; }
-        .sub-tab-btn { background: #222; color: var(--text-muted); border: 1px solid #444; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
-        .sub-tab-btn.active { background: var(--neon-red); color: white; border-color: var(--neon-red); font-weight: bold; }
+        .btn-danger { background: var(--neon-red); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 15px; }
 
-        .card { background-color: var(--panel-bg); border: 1px solid var(--border-color); box-shadow: var(--neon-glow); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .btn { background-color: var(--neon-red); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
-        .btn:hover { opacity: 0.9; transform: scale(1.01); }
-        .btn-secondary { background: #333; }
-        .btn-delete { background: #333; color: #ff8888; padding: 6px 12px; font-size: 0.8rem; }
-        
-        input, select { background: #1f1f1f; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 14px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .back-btn { background: #222; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 5px; display: inline-block; margin-bottom: 15px; font-weight: bold; border: 1px solid #444; }
+        /* Dashboard View */
+        .dashboard-view { display: none; }
+        .dashboard-view.active { display: block; }
+        .setup-view { display: block; }
+        .setup-view.hidden { display: none; }
 
-        .timer-card { background: #1f1f1f; border: 1px solid #444; border-radius: 6px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--neon-green); }
-        .timer-card.warning { background: #4d3300; border-color: #ffaa00; }
-        .timer-card.finished { background: #4d1a1a; border-color: var(--neon-red); animation: pulseDanger 0.5s infinite alternate; }
-        @keyframes pulseDanger { from { border-color: #444; } to { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; } }
+        .countdown-box { background: #252525; border-left: 5px solid var(--neon-blue); padding: 20px; margin-bottom: 15px; border-radius: 4px; text-align: center; }
+        .countdown-box.red { border-left-color: var(--neon-red); }
+        .countdown-title { font-size: 14px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .countdown-timer { font-size: 32px; font-family: monospace; font-weight: bold; color: #fff; letter-spacing: 2px; }
+        .status-text { font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .status-safe { color: #4ade80; }
+        .status-war { color: var(--neon-red); }
 
-        .countdown-font { font-family: monospace; font-size: 1.8rem; color: #fff; font-weight: bold; }
-        .badge { background: #333; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: var(--neon-green); }
-        .control-group button { padding: 5px 10px; font-size: 12px; background: #333; margin-right: 3px; cursor: pointer; border: 1px solid #555; color: #fff; border-radius: 3px; }
-        .control-group button:hover { background: #555; }
-        .hidden { display: none !important; }
+        .nav-links { display: flex; gap: 10px; justify-content: center; margin-top: 30px; }
+        .nav-links a { background: #333; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; transition: background 0.2s; }
+        .nav-links a:hover { background: #444; }
+
     </style>
 </head>
 <body>
 
 <div class="container">
-    <a href="Dashboard.html" class="back-btn">&larr; Zurück zur Zentrale</a>
-    
-    <header>
-        <h1>Allianz Timer- & Taktik-Zentrale</h1>
-        <div class="live-clock" id="liveClock">00:00:00</div>
-    </header>
+    <h1>Allianz Dashboard - Übersicht</h1>
 
-    <!-- HAUPT-TABS -->
-    <div class="main-tabs">
-        <button class="tab-btn active" onclick="switchMainTab('maps', this)">1. Maps & Discord</button>
-        <button class="tab-btn" onclick="switchMainTab('timers', this)">2. Taktik & Alarm-Counter</button>
-        <button class="tab-btn" onclick="switchMainTab('admin', this)">3. Admin-Zentrale</button>
-    </div>
+    <!-- ANSICHT 1: KARTENEINRICHTUNG (Aus deinem Screenshot) -->
+    <div class="card setup-view" id="setupView">
+        <h2>Karteneinrichtung</h2>
+        
+        <label>Kartennummer / Name:</label>
+        <input type="text" id="mapName" placeholder="z.B. 452189">
 
-    <!-- TAB 1: MAPS & DISCORD -->
-    <div id="tab-maps" class="tab-content active">
-        <div class="card">
-            <h2>Aktive Team-Maps</h2>
-            <p style="color:var(--text-muted);">Wähle eine Map aus oder erstelle im Admin-Bereich eine neue.</p>
-            <div id="mapSelectionContainer">Lade Maps...</div>
+        <label>Spiel-Art:</label>
+        <select id="gameType">
+            <option value="peace">Mit Friedensphase</option>
+            <option value="normal">Standard (ohne Friedensphase)</option>
+        </select>
+
+        <label>Spiel-Geschwindigkeit:</label>
+        <select id="gameSpeed">
+            <option value="1">X1 (Normal)</option>
+            <option value="2">X2 (Doppelt)</option>
+            <option value="4">X4 (Vierfach)</option>
+        </select>
+
+        <h3>1. KI-Friedensphase (Restzeit bis Ende)</h3>
+        <div class="time-inputs">
+            <div><label>Tage</label><input type="number" id="aiDays" value="0" min="0"></div>
+            <div><label>Stunden</label><input type="number" id="aiHours" value="12" min="0"></div>
+            <div><label>Minuten</label><input type="number" id="aiMins" value="0" min="0"></div>
+            <div><label>Sekunden</label><input type="number" id="aiSecs" value="0" min="0"></div>
         </div>
 
-        <div class="card hidden" id="activeMapDetailsCard">
-            <h2 id="currentMapTitle" style="color: var(--neon-green);">Map-Details</h2>
-            <p id="currentMapWebhookInfo" style="color: var(--text-muted);"></p>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <a id="discordLinkBtn" href="#" target="_blank" class="btn" style="text-decoration: none; background: #5865F2;">Zum Discord-Channel</a>
-                <button class="btn btn-secondary" onclick="switchMainTab('timers', document.querySelectorAll('.tab-btn')[1])">Zu den Countern dieser Map</button>
-            </div>
+        <h3>2. Spieler-Friedensphase (Versatz zur KI)</h3>
+        <p style="font-size:12px; color:#888; margin-top:0;">Wie viel Zeit nach der KI endet die Spieler-Friedensphase?</p>
+        <div class="time-inputs">
+            <div><label>Tage</label><input type="number" id="plDays" value="1" min="0"></div>
+            <div><label>Stunden</label><input type="number" id="plHours" value="0" min="0"></div>
+            <div><label>Minuten</label><input type="number" id="plMins" value="0" min="0"></div>
+            <div><label>Sekunden</label><input type="number" id="plSecs" value="0" min="0"></div>
         </div>
+
+        <button class="btn-primary" onclick="startDashboard()">Dashboard starten</button>
     </div>
 
-    <!-- TAB 2: COUNTER & TAKTIK -->
-    <div id="tab-timers" class="tab-content">
-        <!-- MAP UNTERTABS -->
-        <div class="sub-tabs" id="mapSubTabsContainer"></div>
-
+    <!-- ANSICHT 2: AKTIVES DASHBOARD (Countdown & Status) -->
+    <div class="dashboard-view" id="dashboardView">
         <div class="card">
-            <h2>Neuen Taktik-Counter anlegen</h2>
-            <input type="text" id="timerLabel" placeholder="Bezeichnung (z.B. Artillerie Front A / Luftwaffe Angriff)">
+            <h2 id="displayMapName" style="text-align: center; color: var(--neon-blue);">Map 452189</h2>
             
-            <div class="grid-2">
-                <div>
-                    <label style="font-size:12px; color:var(--text-muted);">Basis-Zeit / Laufzeit (Minuten)</label>
-                    <input type="number" id="timerMinutes" placeholder="Minuten" value="30" min="0">
-                </div>
-                <div>
-                    <label style="font-size:12px; color:var(--text-muted);">Kampfrunden-Intervall (z.B. 15 Min für Luftwaffe, 0 = aus)</label>
-                    <input type="number" id="timerInterval" placeholder="Intervall in Min." value="0" min="0">
-                </div>
+            <div class="countdown-box">
+                <div class="countdown-title">KI-Friedensphase endet in:</div>
+                <div class="countdown-timer" id="aiTimerDisplay">00:00:00:00</div>
+                <div class="status-text" id="aiStatus"></div>
             </div>
 
-            <div style="background: #111; padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #333;">
-                <label style="font-size:12px; color:var(--neon-green); font-weight:bold;">Vorwarnungen (Minuten vor Ablauf, mit Komma trennen)</label>
-                <input type="text" id="timerWarnings" value="10, 5, 1" placeholder="z.B. 15, 10, 5, 1">
+            <div class="countdown-box red">
+                <div class="countdown-title">Spieler-Friedensphase endet in:</div>
+                <div class="countdown-timer" id="plTimerDisplay">00:00:00:00</div>
+                <div class="status-text" id="plStatus"></div>
             </div>
 
-            <button class="btn" onclick="createNewTimer()">+ Counter starten</button>
-        </div>
-
-        <div class="card">
-            <h2>Aktive Counter für <span id="activeMapNameDisplay" style="color:var(--neon-red);">Keine Map gewählt</span></h2>
-            <div id="timersContainer">
-                <p style="color:var(--text-muted);">Bitte zuerst oben eine Map auswählen.</p>
+            <div style="text-align: center;">
+                <button class="btn-danger" onclick="resetDashboard()">Dashboard beenden / Neu einrichten</button>
             </div>
         </div>
     </div>
 
-    <!-- TAB 3: ADMIN ZENTRALE -->
-    <div id="tab-admin" class="tab-content">
-        <div class="card">
-            <h2>Neue Map im System registrieren</h2>
-            <input type="text" id="admMapName" placeholder="Map Name / Nummer (z.B. Liga Runde 3)">
-            <input type="text" id="admDiscordLink" placeholder="Discord Link / Webhook URL für Alarme">
-            <input type="text" id="admPin" placeholder="Sicherheits-PIN für Spieler">
-            <button class="btn" onclick="adminCreateMap()">Map speichern</button>
-        </div>
-        <div class="card">
-            <h2>Registrierte Maps verwalten</h2>
-            <div id="adminMapList"></div>
-        </div>
+    <!-- ZENTRALE NAVIGATION (Links zu anderen Tools) -->
+    <div class="nav-links">
+        <a href="privat.html">⚔️ Zum Privaten Taktik-Timer</a>
+        <a href="#">📋 Blacklist Viewer</a>
+        <!-- Hier kannst du später weitere Links zu deinen anderen HTMLs einfügen -->
     </div>
+
 </div>
 
 <script>
-    // Storage Initialization
-    let teamMaps = JSON.parse(localStorage.getItem('bulls_team_maps')) || [
-        { id: 'map_demo', name: 'Demo-Map Europa', discord: 'https://discord.com', pin: '1234' }
-    ];
-    let activeMapId = localStorage.getItem('bulls_active_map_id') || teamMaps[0]?.id || null;
-    let allTimers = JSON.parse(localStorage.getItem('bulls_taktik_timers')) || {}; // MapID -> Array von Timern
-    let voices = [];
+    let globalTimerInterval;
+    let aiEndTime = 0;
+    let plEndTime = 0;
+    let speedMultiplier = 1;
 
-    // Browser Stimmen laden für Sprachausgabe
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.onvoiceschanged = () => { voices = window.speechSynthesis.getVoices(); };
-        voices = window.speechSynthesis.getVoices();
-    }
-
-    setInterval(tick, 1000);
-
-    function tick() {
-        const now = new Date();
-        document.getElementById('liveClock').innerText = now.toLocaleTimeString('de-DE');
-        updateAllTimers(now.getTime());
-    }
-
-    function switchMainTab(tabId, btnElement) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-' + tabId).classList.add('active');
-        btnElement.classList.add('active');
-        if(tabId === 'timers') renderTimers();
-    }
-
-    // MAP MANAGEMENT
-    function renderMaps() {
-        const container = document.getElementById('mapSelectionContainer');
-        const subContainer = document.getElementById('mapSubTabsContainer');
-        const adminContainer = document.getElementById('adminMapList');
-        
-        if (teamMaps.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine Maps vorhanden.</p>`;
-            subContainer.innerHTML = "";
-            return;
-        }
-
-        let html = "";
-        let subHtml = "";
-        let adminHtml = "";
-
-        teamMaps.forEach(m => {
-            const isSelected = m.id === activeMapId;
-            html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:#1f1f1f; padding:12px; margin-bottom:8px; border-radius:5px; border-left:4px solid ${isSelected ? 'var(--neon-green)' : 'var(--border-color)'};">
-                    <div><strong>${m.name}</strong><br><span style="font-size:12px; color:var(--text-muted);">Discord: ${m.discord || 'Keiner'}</span></div>
-                    <button class="btn" onclick="selectMap('${m.id}')">${isSelected ? 'Aktiv' : 'Auswählen'}</button>
-                </div>
-            `;
-            subHtml += `<button class="sub-tab-btn ${isSelected ? 'active' : ''}" onclick="selectMap('${m.id}')">${m.name}</button>`;
-            adminHtml += `
-                <div style="background:#1f1f1f; padding:10px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:4px;">
-                    <span>${m.name}</span>
-                    <button class="btn btn-delete" onclick="deleteMap('${m.id}')">Löschen</button>
-                </div>
-            `;
-        });
-
-        container.innerHTML = html;
-        subContainer.innerHTML = subHtml;
-        adminContainer.innerHTML = adminHtml;
-
-        const activeMap = teamMaps.find(m => m.id === activeMapId);
-        if (activeMap) {
-            document.getElementById('activeMapNameDisplay').innerText = activeMap.name;
-            document.getElementById('currentMapTitle').innerText = "Aktive Map: " + activeMap.name;
-            document.getElementById('currentMapWebhookInfo').innerText = "Hinterlegter Discord-Link: " + (activeMap.discord || 'Keiner angegeben');
-            document.getElementById('discordLinkBtn').href = activeMap.discord || '#';
-            document.getElementById('activeMapDetailsCard').classList.remove('hidden');
-        }
-    }
-
-    function selectMap(mapId) {
-        activeMapId = mapId;
-        localStorage.setItem('bulls_active_map_id', activeMapId);
-        renderMaps();
-        renderTimers();
-    }
-
-    function adminCreateMap() {
-        const name = document.getElementById('admMapName').value;
-        const discord = document.getElementById('admDiscordLink').value;
-        const pin = document.getElementById('admPin').value;
-
-        if (!name) { alert("Bitte Map-Namen angeben!"); return; }
-
-        teamMaps.push({ id: 'map_' + Date.now(), name, discord, pin });
-        localStorage.setItem('bulls_team_maps', JSON.stringify(teamMaps));
-        document.getElementById('admMapName').value = "";
-        document.getElementById('admDiscordLink').value = "";
-        document.getElementById('admPin').value = "";
-        renderMaps();
-        alert("Map erfolgreich gespeichert!");
-    }
-
-    function deleteMap(mapId) {
-        if (!confirm("Map wirklich löschen?")) return;
-        teamMaps = teamMaps.filter(m => m.id !== mapId);
-        localStorage.setItem('bulls_team_maps', JSON.stringify(teamMaps));
-        if (activeMapId === mapId) activeMapId = teamMaps[0]?.id || null;
-        renderMaps();
-        renderTimers();
-    }
-
-    // TIMER MANAGEMENT
-    function createNewTimer() {
-        if (!activeMapId) { alert("Bitte zuerst eine Map auswählen!"); return; }
-        
-        const label = document.getElementById('timerLabel').value || "Unbenannter Taktik-Counter";
-        const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
-        const intervalMin = parseInt(document.getElementById('timerInterval').value) || 0;
-        const warningsStr = document.getElementById('timerWarnings').value;
-        
-        // Vorwarnzeiten in Sekunden umwandeln
-        let warnings = warningsStr.split(',').map(w => parseInt(w.trim()) * 60).filter(w => !isNaN(w) && w > 0);
-
-        const totalSec = minutes * 60;
-        if (totalSec <= 0) { alert("Bitte eine gültige Minutenanzahl eingeben!"); return; }
-
-        if (!allTimers[activeMapId]) allTimers[activeMapId] = [];
-
-        allTimers[activeMapId].push({
-            id: 't_' + Date.now(),
-            label: label,
-            targetTime: Date.now() + (totalSec * 1000),
-            originalSeconds: totalSec,
-            intervalSeconds: intervalMin * 60,
-            warnings: warnings,
-            triggeredWarnings: [],
-            isRunning: true
-        });
-
-        localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
-        document.getElementById('timerLabel').value = "";
-        renderTimers();
-    }
-
-    function adjustTimer(timerId, seconds) {
-        const timers = allTimers[activeMapId] || [];
-        const timer = timers.find(t => t.id === timerId);
-        if (timer) {
-            timer.targetTime += (seconds * 1000);
-            localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
-            renderTimers();
-        }
-    }
-
-    function toggleTimerPause(timerId) {
-        const timers = allTimers[activeMapId] || [];
-        const timer = timers.find(t => t.id === timerId);
-        if (timer) {
-            if (timer.isRunning) {
-                timer.pausedRemaining = Math.max(0, Math.round((timer.targetTime - Date.now()) / 1000));
-                timer.isRunning = false;
+    // Prüfen ob bereits eine Map läuft
+    window.onload = function() {
+        const savedData = localStorage.getItem('cow_global_dashboard');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            if (data.aiEndTime > Date.now() || data.plEndTime > Date.now()) {
+                aiEndTime = data.aiEndTime;
+                plEndTime = data.plEndTime;
+                speedMultiplier = data.speedMultiplier;
+                document.getElementById('displayMapName').innerText = "Liga-Map: " + data.mapName;
+                showDashboard();
             } else {
-                timer.targetTime = Date.now() + (timer.pausedRemaining * 1000);
-                timer.isRunning = true;
+                localStorage.removeItem('cow_global_dashboard');
             }
-            localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
-            renderTimers();
         }
-    }
+    };
 
-    function deleteTimer(timerId) {
-        if (!activeMapId) return;
-        allTimers[activeMapId] = allTimers[activeMapId].filter(t => t.id !== timerId);
-        localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
-        renderTimers();
-    }
+    function startDashboard() {
+        const mapName = document.getElementById('mapName').value || "Unbenannte Map";
+        speedMultiplier = parseInt(document.getElementById('gameSpeed').value) || 1;
 
-    function updateAllTimers(now) {
-        if (!activeMapId || !allTimers[activeMapId]) return;
+        // KI Zeit berechnen
+        const aiD = parseInt(document.getElementById('aiDays').value) || 0;
+        const aiH = parseInt(document.getElementById('aiHours').value) || 0;
+        const aiM = parseInt(document.getElementById('aiMins').value) || 0;
+        const aiS = parseInt(document.getElementById('aiSecs').value) || 0;
+        
+        let aiTotalSeconds = (aiD * 86400) + (aiH * 3600) + (aiM * 60) + aiS;
+        
+        // Spieler Zeit berechnen (Versatz)
+        const plD = parseInt(document.getElementById('plDays').value) || 0;
+        const plH = parseInt(document.getElementById('plHours').value) || 0;
+        const plM = parseInt(document.getElementById('plMins').value) || 0;
+        const plS = parseInt(document.getElementById('plSecs').value) || 0;
+        
+        let plTotalSeconds = (plD * 86400) + (plH * 3600) + (plM * 60) + plS;
 
-        let needsSave = false;
-        allTimers[activeMapId].forEach(timer => {
-            const card = document.getElementById('card-' + timer.id);
-            if (!card) return;
+        // Echtzeit-Anpassung durch Spielgeschwindigkeit (bei X4 vergeht die Zeit 4x so schnell)
+        aiTotalSeconds = aiTotalSeconds / speedMultiplier;
+        plTotalSeconds = plTotalSeconds / speedMultiplier;
 
-            const remaining = timer.isRunning ? Math.max(0, Math.round((timer.targetTime - now) / 1000)) : timer.pausedRemaining;
-            const display = card.querySelector('.timer-display');
-            if (display) display.innerText = formatTime(remaining);
-
-            // Vorwarnungen prüfen
-            timer.warnings.forEach(warnSec => {
-                if (remaining === warnSec && timer.isRunning && !timer.triggeredWarnings.includes(warnSec)) {
-                    timer.triggeredWarnings.push(warnSec);
-                    triggerWarningAlert(timer, warnSec / 60);
-                    needsSave = true;
-                }
-            });
-
-            // Ablauf prüfen
-            if (remaining === 0 && timer.isRunning) {
-                if (timer.intervalSeconds > 0) {
-                    // Intervall-Modus (z.B. Luftwaffe Kampfrunde) -> Neustarten
-                    timer.targetTime = now + (timer.intervalSeconds * 1000);
-                    timer.triggeredWarnings = []; // Reset Vorwarnungen für nächste Runde
-                } else {
-                    timer.isRunning = false;
-                }
-                triggerFinishedAlert(timer);
-                needsSave = true;
-            }
-        });
-
-        if (needsSave) localStorage.setItem('bulls_taktik_timers', JSON.stringify(allTimers));
-    }
-
-    function triggerWarningAlert(timer, minLeft) {
-        speakText(`Achtung! ${timer.label} läuft in ${minLeft} Minuten ab.`);
-        sendDiscordWebhook(`⚠️ **Vorwarnung:** Taktik-Counter **${timer.label}** läuft in **${minLeft} Minuten** ab!`);
-    }
-
-    function triggerFinishedAlert(timer) {
-        speakText(`Alarm! ${timer.label} ist abgelaufen!`);
-        sendDiscordWebhook(`🚨 **ALARM:** Taktik-Counter **${timer.label}** ist abgelaufen!`);
-    }
-
-    function sendDiscordWebhook(message) {
-        const activeMap = teamMaps.find(m => m.id === activeMapId);
-        if (!activeMap || !activeMap.discord || !activeMap.discord.startsWith('http')) return;
-
-        // Versucht den Webhook abzufeuern
-        fetch(activeMap.discord, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: message })
-        }).catch(err => console.log("Discord Webhook Fehler (CORS oder ungültige URL):", err));
-    }
-
-    function speakText(text) {
-        if (!('speechSynthesis' in window)) return;
-        let msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'de-DE';
-        window.speechSynthesis.speak(msg);
-    }
-
-    function renderTimers() {
-        const container = document.getElementById('timersContainer');
-        if (!activeMapId) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Bitte zuerst eine Map auswählen.</p>`;
-            return;
-        }
-
-        const timers = allTimers[activeMapId] || [];
-        if (timers.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted);">Keine aktiven Counter auf dieser Map vorhanden.</p>`;
-            return;
-        }
-
-        let html = "";
         const now = Date.now();
-        timers.forEach(t => {
-            const remaining = t.isRunning ? Math.max(0, Math.round((t.targetTime - now) / 1000)) : t.pausedRemaining;
-            const intervalText = t.intervalSeconds > 0 ? `(Intervall: ${t.intervalSeconds/60} Min)` : '';
+        aiEndTime = now + (aiTotalSeconds * 1000);
+        plEndTime = aiEndTime + (plTotalSeconds * 1000); // Versatz wird ZUR KI-Zeit addiert
 
-            html += `
-                <div class="timer-card" id="card-${t.id}">
-                    <div>
-                        <span class="badge">${t.label}</span> ${intervalText}<br>
-                        <div class="timer-display">${formatTime(remaining)}</div>
-                    </div>
-                    <div>
-                        <div class="control-group" style="margin-bottom: 5px;">
-                            <button onclick="adjustTimer('${t.id}', -60)">-1m</button>
-                            <button onclick="adjustTimer('${t.id}', -10)">-10s</button>
-                            <button onclick="adjustTimer('${t.id}', 10)">+10s</button>
-                            <button onclick="adjustTimer('${t.id}', 60)">+1m</button>
-                        </div>
-                        <div class="control-group">
-                            <button onclick="toggleTimerPause('${t.id}')">${t.isRunning ? 'Pause' : 'Weiter'}</button>
-                            <button onclick="deleteTimer('${t.id}')" style="background:#b30000;">Löschen</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
+        localStorage.setItem('cow_global_dashboard', JSON.stringify({
+            mapName: mapName,
+            aiEndTime: aiEndTime,
+            plEndTime: plEndTime,
+            speedMultiplier: speedMultiplier
+        }));
+
+        document.getElementById('displayMapName').innerText = "Liga-Map: " + mapName;
+        showDashboard();
     }
 
-    function formatTime(totalSec) {
-        const h = Math.floor(totalSec / 3600);
-        const m = Math.floor((totalSec % 3600) / 60);
-        const s = totalSec % 60;
-        if (h > 0) {
-            return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    function showDashboard() {
+        document.getElementById('setupView').classList.add('hidden');
+        document.getElementById('dashboardView').classList.add('active');
+        
+        updateTimers(); // Sofortiger Aufruf
+        globalTimerInterval = setInterval(updateTimers, 1000);
+    }
+
+    function resetDashboard() {
+        if(!confirm("Möchtest du das aktuelle Liga-Dashboard wirklich beenden?")) return;
+        clearInterval(globalTimerInterval);
+        localStorage.removeItem('cow_global_dashboard');
+        document.getElementById('setupView').classList.remove('hidden');
+        document.getElementById('dashboardView').classList.remove('active');
+    }
+
+    function updateTimers() {
+        const now = Date.now();
+
+        // KI Update
+        const aiRemaining = Math.max(0, Math.floor((aiEndTime - now) / 1000));
+        document.getElementById('aiTimerDisplay').innerText = formatCountdown(aiRemaining);
+        
+        const aiStatus = document.getElementById('aiStatus');
+        if (aiRemaining > 0) {
+            aiStatus.innerText = "Frieden: KI darf nicht angegriffen werden!";
+            aiStatus.className = "status-text status-safe";
+        } else {
+            aiStatus.innerText = "FEUER FREI: KI darf attackiert werden!";
+            aiStatus.className = "status-text status-war";
         }
-        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+        // Spieler Update
+        const plRemaining = Math.max(0, Math.floor((plEndTime - now) / 1000));
+        document.getElementById('plTimerDisplay').innerText = formatCountdown(plRemaining);
+
+        const plStatus = document.getElementById('plStatus');
+        if (plRemaining > 0) {
+            plStatus.innerText = "Frieden: Spieler dürfen nicht angegriffen werden!";
+            plStatus.className = "status-text status-safe";
+        } else {
+            plStatus.innerText = "FEUER FREI: Echte Spieler dürfen attackiert werden!";
+            plStatus.className = "status-text status-war";
+        }
     }
 
-    // Init
-    renderMaps();
-    renderTimers();
+    function formatCountdown(seconds) {
+        const d = Math.floor(seconds / 86400);
+        const h = Math.floor((seconds % 86400) / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${String(d).padStart(2, '0')}T : ${String(h).padStart(2, '0')}Std : ${String(m).padStart(2, '0')}Min : ${String(s).padStart(2, '0')}Sek`;
+    }
 </script>
+
 </body>
 </html>
