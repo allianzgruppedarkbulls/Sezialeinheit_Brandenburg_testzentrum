@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Dark Bulls - Timer Übersicht</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 50px auto; background: #1e1e1e; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h1 { color: #ffcc00; text-align: center; }
+        p { text-align: center; color: #aaa; }
+        .menu { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        a.btn { display: block; text-align: center; background: #2a2a2a; color: #fff; padding: 14px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.3s; }
+        a.btn:hover { background: #444; }
+        a.admin-btn { background: #b30000; }
+        a.admin-btn:hover { background: #e60000; }
+        .info-box { margin-top: 25px; background: #252525; padding: 15px; border-radius: 5px; font-size: 0.9em; color: #bbb; border-left: 3px solid #ffcc00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dark Bulls Dashboard</h1>
+        <p>Zentrale Steuerungs- und Navigationsübersicht</p>
+        
+        <div class="menu">
+            <!-- Verlinkung zum Admin- & Rundenbereich -->
+            <a href="time_admin.html" class="btn admin-btn">Runden & Admin-Bereich (Rundenchat)</a>
+            
+            <!-- Verlinkung zum privaten Bereich -->
+            <a href="time_private.html" class="btn">Privater Bereich</a>
+            
+            <!-- Verlinkung zu den persönlichen Einstellungen -->
+            <a href="time_settings.html" class="btn">Persönliche Einstellungen</a>
+        </div>
+
+        <div class="info-box">
+            <strong>Hinweis:</strong> Alle Module laufen sauber getrennt über die jeweiligen <code>time_</code> Dateien, um gegenseitige Irritationen beim Laden zu vermeiden.
+        </div>
+    </div>
+</body>
+</html>
