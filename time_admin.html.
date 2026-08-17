@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Bulls - Runden- & Admin-Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #ff3333;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #238636;
+            --accent-hover: #2ea043;
+            --danger: #da3633;
+            --danger-hover: #f85149;
+            --info: #1f6feb;
+            --success: #238636;
+            --offline: #484f58;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 0, 0, 0.4);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        h1, h2, h3 {
+            margin: 0 0 10px 0;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 2px solid #ff1a1a;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(255, 0, 0, 0.2);
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.danger {
+            background-color: var(--danger);
+        }
+
+        button.danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        button.secondary {
+            background-color: #21262d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        button.secondary:hover {
+            background-color: var(--offline);
+        }
+
+        input, select {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--info);
+            outline: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .counters-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .counters-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .counter-box {
+            background: var(--bg-color);
+            border: 1px solid rgba(255, 51, 51, 0.5);
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .counter-box.disabled-box {
+            background: #111418;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .counter-box-header {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .full-banner {
+            background: linear-gradient(135deg, #21262d, #161b22);
+            border: 2px solid #ff1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 0 18px rgba(255, 0, 0, 0.4);
+        }
+
+        .banner-time {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #58a6ff;
+            margin: 10px 0;
+        }
+
+        .stepper-box {
+            background: rgba(22, 27, 34, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .stepper-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .stepper-grid button {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 0;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border: 2px solid #ff1a1a;
+            width: 550px;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+        }
+
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 15px;
+        }
+
+        .online-dot {
+            height: 10px; width: 10px;
+            background-color: var(--offline);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .online-dot.active {
+            background-color: var(--success);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            gap: 5px;
+        }
+        .tab-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--card-bg);
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        .alarm-preview-mini {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .alarm-badge-mini {
+            background: rgba(255, 0, 0, 0.15);
+            border: 1px solid rgba(255, 51, 51, 0.6);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.1s;
+        }
+
+        .alarm-badge-mini.inactive {
+            opacity: 0.45;
+            border-color: var(--offline);
+        }
+
+        /* Kleiner Status-Button direkt im Badge (Grün = Aktiv mit Haken, Rot = Deaktiv) */
+        .alarm-status-toggle {
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .alarm-status-toggle.active {
+            background: var(--success);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚔️ Dark Bulls - Rundenverwaltung</h1>
+        <div>
+            <button id="nav-home-btn" onclick="switchView('home')" class="secondary">Spielübersicht</button>
+            <button id="nav-admin-btn" onclick="switchView('admin')" style="background-color: var(--info);">Admin-Bereich</button>
+        </div>
+    </header>
+
+    <!-- SPIELÜBERSICHT -->
+    <div id="view-home" class="view">
+        <div class="card">
+            <h2>Aktive Spielrunden</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Wähle eine Runde aus und gib den PIN ein, um beizutreten.</p>
+            <div id="public-game-list"></div>
+        </div>
+    </div>
+
+    <!-- ADMIN BEREICH -->
+    <div id="view-admin" class="view hidden">
+        <div class="card" id="admin-form-card">
+            <h2 id="admin-form-title" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">🛠️ Admin: Neue Runde erstellen</h2>
+            <div class="grid-2">
+                <div>
+                    <label><strong>Rundenname</strong></label>
+                    <input type="text" id="admin-game-name" placeholder="z.B. Liga Runde 4">
+
+                    <label><strong>Zugangs-PIN</strong></label>
+                    <input type="text" id="admin-game-pin" placeholder="z.B. 1234">
+
+                    <label><strong>Discord Webhook / Link</strong></label>
+                    <input type="text" id="admin-game-discord" placeholder="https://discord.com/api/webhooks/...">
+
+                    <label><strong>KI-Friedenszeit (Tage nach Start)</strong></label>
+                    <select id="admin-ki-days">
+                        <option value="0">0 Tage (Keine KI-Phase)</option>
+                        <script>
+                            for(let i=1; i<=40; i++) {
+                                document.write(`<option value="${i}">${i} Tag(e)</option>`);
+                            }
+                        </script>
+                    </select>
+
+                    <label><strong>PvP-Friedenszeit (Tage nach KI-Ende)</strong></label>
+                    <select id="admin-pvp-days">
+                        <script>
+                            for(let i=0; i<=40; i++) {
+                                document.write(`<option value="${i}">${i} Tag(e)</option>`);
+                            }
+                        </script>
+                    </select>
+                </div>
+                <div>
+                    <label><strong>Geplanter Spielanfang (Sekundengenau)</strong></label>
+                    <input type="datetime-local" id="admin-game-start" step="1">
+
+                    <div class="stepper-box">
+                        <small style="color: var(--text-muted); font-weight: 600;">Schnellkorrektur Startzeit:</small>
+                        <div class="stepper-grid">
+                            <button onclick="adjustStart(-86400)">-1T</button>
+                            <button onclick="adjustStart(-3600)">-1 Std</button>
+                            <button onclick="adjustStart(-600)">-10 Min</button>
+                            <button onclick="adjustStart(-60)">-1 Min</button>
+                            <button onclick="adjustStart(-10)">-10 Sek</button>
+                            <button onclick="adjustStart(86400)">+1T</button>
+                            <button onclick="adjustStart(3600)">+1 Std</button>
+                            <button onclick="adjustStart(600)">+10 Min</button>
+                            <button onclick="adjustStart(60)">+1 Min</button>
+                            <button onclick="adjustStart(10)">+10 Sek</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <h3 style="font-size: 1.1rem; color: #f0883e; margin-bottom: 5px;">📌 Support-Vorschlag: 5 Vorwarnzeiten (1. Friedensphase / KI-Frieden)</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Lege hier fest, wie viele Minuten vorher gewarnt werden soll und welche Alarmstufe greift.</p>
+                <div id="admin-counters-phase1"></div>
+
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(31, 111, 235, 0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div>
+                        <strong style="font-size: 0.95rem;">2. Friedensphase (PvP-Frieden) Vorwarnzeiten</strong><br>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Übernehme die Einstellungen aus Phase 1 unkompliziert per Klick.</span>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; font-weight: bold;">
+                        <input type="checkbox" id="admin-copy-phase2" onchange="togglePhase2Copy(this.checked)" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                        Gleiche Vorwarnzeiten wie 1. Friedensphase übernehmen
+                    </label>
+                </div>
+
+                <div id="admin-counters-phase2-container" style="margin-top: 15px;">
+                    <div id="admin-counters-phase2"></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 15px; display: flex; gap: 10px;">
+                <button id="admin-submit-btn" onclick="saveGameAction()">Runde erstellen</button>
+                <button id="admin-cancel-btn" class="secondary hidden" onclick="resetAdminForm()">Abbrechen</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">🗑️ Bestehende Runden verwalten</h2>
+            <div id="admin-game-list"></div>
+        </div>
+    </div>
+
+    <!-- IN-GAME ANSICHT (SPIELER) -->
+    <div id="view-game" class="view hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="switchView('home')" class="secondary">⬅ Zurück zur Übersicht</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="active-game-title" style="font-weight: bold; font-size: 1.2rem; margin-right: 10px;">Runden-Titel</span>
+                <button onclick="toggleEmergencyModal(true)" class="danger">🚨 Notalarm</button>
+                <button onclick="toggleChatModal(true)" style="background: var(--info);">💬 Gruppenchat ✉️</button>
+            </div>
+        </div>
+
+        <!-- 1. KI-FRIEDEN -->
+        <div class="full-banner">
+            <h3>🕊️ KI Friedenszeit</h3>
+            <div class="banner-time" id="ki-clock-display">--:--:--</div>
+            <p id="ki-target-label" style="color: var(--text-muted);">Endzeit: --</p>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;" id="ki-next- Ablauf">Nächster Ablauf: --:--:--</div>
+            <div id="ki-alarms-preview" class="alarm-preview-mini"></div>
+        </div>
+
+        <!-- 2. PVP-FRIEDEN -->
+        <div class="full-banner">
+            <h3>🕊️ PvP (Player vs Player) Friedenszeit</h3>
+            <div class="banner-time" id="pvp-clock-display">--:--:--</div>
+            <p id="pvp-target-label" style="color: var(--text-muted);">Endzeit: --</p>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;" id="pvp-next-Ablauf">Nächster Ablauf: --:--:--</div>
+            <div id="pvp-alarms-preview" class="alarm-preview-mini"></div>
+        </div>
+
+        <!-- 3. SEPARATER BEREICH: PRIVATALARME & PERSÖNLICHE SACHEN -->
+        <div class="card" style="border-color: var(--info); box-shadow: 0 0 20px rgba(31, 111, 235, 0.4), inset 0 0 10px rgba(31, 111, 235, 0.1);">
+            <div class="tabs" id="player-tabs"></div>
+            <div id="tab-content-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ALARM BEARBEITEN MODAL -->
+<div id="edit-alarm-modal" class="modal hidden">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <h3 style="color: #ff8888; margin:0;">ALARM BEARBEITEN</h3>
+            <button class="danger" style="padding: 4px 10px;" onclick="toggleEditAlarmModal(false)">X</button>
+        </div>
+        
+        <label><strong>ALARM-TYP</strong></label>
+        <select id="edit-alarm-type-select">
+            <script>
+                ["Voralarm 1", "Voralarm 2", "Info Voralarm", "Hauptalarm", "Stillstand"].forEach(opt => {
+                    document.write(`<option value="${opt}">${opt}</option>`);
+                });
+            </script>
+        </select>
+
+        <div class="grid-2" style="margin-bottom: 15px;">
+            <div>
+                <label><strong>MINUTEN</strong></label>
+                <input type="number" id="edit-alarm-mins" min="0" style="margin:0;">
+            </div>
+            <div>
+                <label><strong>SEKUNDEN</strong></label>
+                <input type="number" id="edit-alarm-secs" min="0" max="59" style="margin:0;">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="saveEditedAlarm()" style="flex: 1; background-color: #00f2aa; color: #000; font-weight: bold; padding: 12px;">Speichern</button>
+            <button class="secondary" onclick="toggleEditAlarmModal(false)" style="flex: 1; padding: 12px;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div id="chat-modal" class="modal hidden">
+    <div class="modal-content" style="width: 700px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>💬 Runden Gruppenchat</h3>
+            <button class="danger" style="padding: 4px 10px;" onclick="toggleChatModal(false)">X</button>
+        </div>
+        
+        <div class="chat-layout">
+            <div>
+                <div id="chat-messages" style="height: 280px; background: var(--bg-color); border: 1px solid var(--border-color); padding: 10px; overflow-y: auto; margin-bottom: 10px; border-radius: 6px; font-size: 0.9rem;">
+                    <div><b>System:</b> Chat geöffnet. Discord-Verbindung aktiv.</div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="chat-input" placeholder="Nachricht..." style="flex: 1; margin: 0;">
+                    <button onclick="sendChatMessage()" style="margin: 0;">Senden</button>
+                </div>
+            </div>
+            <div>
+                <h4 style="margin-top: 0;">Online-Mitglieder</h4>
+                <div id="online-users-list" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; height: 280px; font-size: 0.9rem; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTALARM MODAL -->
+<div id="emergency-modal" class="modal hidden">
+    <div class="modal-content" style="width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="color: var(--danger);">🚨 Gezielte Notalarmierung</h3>
+            <button class="danger" style="padding: 4px 10px;" onclick="toggleEmergencyModal(false)">X</button>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: bold; cursor: pointer; background: rgba(218, 54, 51, 0.1); padding: 10px; border-radius: 6px; border: 1px solid var(--danger);">
+                <input type="checkbox" id="emergency-all-checkbox" onchange="toggleAllEmergencyPlayers(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                Alle Spieler alarmieren
+            </label>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Oder gezielt Spieler auswählen:</label>
+            <div id="emergency-checkboxes-container" style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="emergency-text" placeholder="Notfall-Hinweis..." style="margin: 0;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="danger" onclick="sendEmergencyAlert()" style="flex: 1; margin: 0;">Notalarm senden</button>
+            <button class="secondary" onclick="toggleEmergencyModal(false)" style="flex: 1; margin: 0;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let games = JSON.parse(localStorage.getItem('db_games')) || [];
+    let activeGame = null;
+    let editingGameId = null;
+    let currentTab = 'me';
+    let currentUser = "Spieler_" + Math.floor(Math.random() * 1000);
+    
+    let playerRoundConfig = JSON.parse(localStorage.getItem('db_player_config')) || {};
+
+    let localData = {
+        colleagues: {
+            "Generalsekretär": [],
+            "PanzerGeneral": []
+        }
+    };
+
+    let editingAlarmTarget = null;
+    const alarmOptionsList = ["Voralarm 1", "Voralarm 2", "Info Voralarm", "Hauptalarm", "Stillstand"];
+
+    function renderAdminCounterInputs(phase, defaults = [], disabled = false) {
+        const container = document.getElementById(`admin-counters-${phase}`);
+        let html = '<div class="counters-row">';
+        for(let i=0; i<5; i++) {
+            let def = defaults[i] || { name: `Alarm ${i+1}`, minutes: "10", seconds: "0", alarmType: "Voralarm 1", active: true };
+            let totalSec = (parseInt(def.minutes)||0)*60 + (parseInt(def.seconds)||0);
+            let minsVal = Math.floor(totalSec / 60);
+            let secsVal = totalSec % 60;
+            html += `
+                <div class="counter-box ${disabled ? 'disabled-box' : ''}">
+                    <div class="counter-box-header">${def.name}</div>
+                    <div style="margin-bottom: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                        <div>
+                            <small style="color: var(--text-muted); display: block; font-size: 0.7rem;">Min</small>
+                            <input type="number" id="admin-${phase}-mins-${i}" value="${minsVal}" style="margin: 0; text-align: center; padding: 6px;" ${disabled ? 'disabled' : ''}>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-muted); display: block; font-size: 0.7rem;">Sek</small>
+                            <input type="number" id="admin-${phase}-secs-${i}" value="${secsVal}" style="margin: 0; text-align: center; padding: 6px;" ${disabled ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">Alarmstufe</small>
+                        <select id="admin-${phase}-type-${i}" style="margin: 0; padding: 6px; font-size: 0.8rem;" ${disabled ? 'disabled' : ''}>
+                            ${alarmOptionsList.map(opt => `<option value="${opt}" ${def.alarmType === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    renderAdminCounterInputs('phase1');
+    renderAdminCounterInputs('phase2');
+
+    function togglePhase2Copy(checked) {
+        const container = document.getElementById('admin-counters-phase2-container');
+        if(checked) {
+            container.style.opacity = '0.5';
+            let p1Vals = [];
+            for(let i=0; i<5; i++) {
+                p1Vals.push({
+                    name: `Alarm ${i+1}`,
+                    minutes: document.getElementById(`admin-phase1-mins-${i}`).value,
+                    seconds: document.getElementById(`admin-phase1-secs-${i}`).value,
+                    alarmType: document.getElementById(`admin-phase1-type-${i}`).value,
+                    active: true
+                });
+            }
+            renderAdminCounterInputs('phase2', p1Vals, true);
+        } else {
+            container.style.opacity = '1';
+            renderAdminCounterInputs('phase2');
+        }
+    }
+
+    function saveGames() {
+        localStorage.setItem('db_games', JSON.stringify(games));
+    }
+
+    function switchView(viewName) {
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        if(viewName === 'home') {
+            document.getElementById('view-home').classList.remove('hidden');
+            renderPublicGames();
+        } else if(viewName === 'admin') {
+            document.getElementById('view-admin').classList.remove('hidden');
+            renderAdminGames();
+        } else if(viewName === 'game') {
+            document.getElementById('view-game').classList.remove('hidden');
+            renderTabs();
+            renderOnlineUsers();
+            renderEmergencyCheckboxes();
+        }
+    }
+
+    function renderPublicGames() {
+        const container = document.getElementById('public-game-list');
+        if(games.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">Keine aktiven Runden verfügbar.</p>';
+            return;
+        }
+        container.innerHTML = games.map(g => `
+            <div style="background: var(--bg-color); padding: 15px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="font-size: 1.1rem;">${g.name}</strong><br>
+                    <small style="color: var(--text-muted);">Start: ${new Date(g.start).toLocaleString()} | Support-Vorschläge geladen</small>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="password" id="pin-${g.id}" placeholder="PIN" style="width: 90px; margin: 0;">
+                    <button onclick="joinGame(${g.id})" style="margin: 0;">Beitreten</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function joinGame(id) {
+        const pinInput = document.getElementById(`pin-${id}`).value;
+        const game = games.find(g => g.id === id);
+        if(game && game.pin === pinInput) {
+            activeGame = game;
+            document.getElementById('active-game-title').innerText = game.name;
+            
+            if(!playerRoundConfig[activeGame.id]) {
+                playerRoundConfig[activeGame.id] = {
+                    phase1: JSON.parse(JSON.stringify(activeGame.phase1)),
+                    phase2: JSON.parse(JSON.stringify(activeGame.phase2)),
+                    alarms: []
+                };
+            }
+
+            switchView('game');
+            startGlobalClockTicker();
+        } else {
+            alert('Falscher PIN!');
+        }
+    }
+
+    function adjustStart(seconds) {
+        const input = document.getElementById('admin-game-start');
+        let val = input.value ? new Date(input.value).getTime() : new Date().getTime();
+        val += seconds * 1000;
+        input.value = new Date(val).toISOString().slice(0, 19);
+    }
+
+    function saveGameAction() {
+        const name = document.getElementById('admin-game-name').value;
+        const pin = document.getElementById('admin-game-pin').value;
+        const discord = document.getElementById('admin-game-discord').value;
+        const start = document.getElementById('admin-game-start').value;
+        const kiDays = parseInt(document.getElementById('admin-ki-days').value);
+        const pvpDays = parseInt(document.getElementById('admin-pvp-days').value);
+        const copyPhase2 = document.getElementById('admin-copy-phase2').checked;
+
+        let phase1 = [];
+        let phase2 = [];
+
+        for(let i=0; i<5; i++) {
+            phase1.push({
+                name: `Alarm ${i+1}`,
+                minutes: document.getElementById(`admin-phase1-mins-${i}`).value || "0",
+                seconds: document.getElementById(`admin-phase1-secs-${i}`).value || "0",
+                alarmType: document.getElementById(`admin-phase1-type-${i}`).value,
+                active: true
+            });
+
+            if(copyPhase2) {
+                phase2.push({
+                    name: `Alarm ${i+1}`,
+                    minutes: document.getElementById(`admin-phase1-mins-${i}`).value || "0",
+                    seconds: document.getElementById(`admin-phase1-secs-${i}`).value || "0",
+                    alarmType: document.getElementById(`admin-phase1-type-${i}`).value,
+                    active: true
+                });
+            } else {
+                phase2.push({
+                    name: `Alarm ${i+1}`,
+                    minutes: document.getElementById(`admin-phase2-mins-${i}`).value || "0",
+                    seconds: document.getElementById(`admin-phase2-secs-${i}`).value || "0",
+                    alarmType: document.getElementById(`admin-phase2-type-${i}`).value,
+                    active: true
+                });
+            }
+        }
+
+        if(!name || !pin || !start) {
+            alert('Bitte Rundenname, PIN und Startzeit angeben!');
+            return;
+        }
+
+        if(editingGameId) {
+            const game = games.find(g => g.id === editingGameId);
+            if(game) {
+                game.name = name;
+                game.pin = pin;
+                game.discord = discord;
+                game.start = start;
+                game.kiDays = kiDays;
+                game.pvpDays = pvpDays;
+                game.copyPhase2 = copyPhase2;
+                game.phase1 = phase1;
+                game.phase2 = phase2;
+            }
+            alert('Runde erfolgreich aktualisiert!');
+            resetAdminForm();
+        } else {
+            games.push({ id: Date.now(), name, pin, discord, start, kiDays, pvpDays, copyPhase2, phase1, phase2 });
+            alert('Runde erfolgreich erstellt!');
+            resetAdminForm();
+        }
+        saveGames();
+        renderAdminGames();
+    }
+
+    function editGame(id) {
+        const game = games.find(g => g.id === id);
+        if(!game) return;
+
+        editingGameId = id;
+        document.getElementById('admin-form-title').innerText = `🛠️ Admin: Runde bearbeiten (${game.name})`;
+        document.getElementById('admin-submit-btn').innerText = 'Änderungen speichern';
+        document.getElementById('admin-cancel-btn').classList.remove('hidden');
+
+        document.getElementById('admin-game-name').value = game.name;
+        document.getElementById('admin-game-pin').value = game.pin;
+        document.getElementById('admin-game-discord').value = game.discord || '';
+        document.getElementById('admin-game-start').value = game.start;
+        document.getElementById('admin-ki-days').value = game.kiDays;
+        document.getElementById('admin-pvp-days').value = game.pvpDays;
+
+        renderAdminCounterInputs('phase1', game.phase1);
+        document.getElementById('admin-copy-phase2').checked = game.copyPhase2;
+        togglePhase2Copy(game.copyPhase2);
+        if(!game.copyPhase2) {
+            renderAdminCounterInputs('phase2', game.phase2);
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetAdminForm() {
+        editingGameId = null;
+        document.getElementById('admin-form-title').innerText = '🛠️ Admin: Neue Runde erstellen';
+        document.getElementById('admin-submit-btn').innerText = 'Runde erstellen';
+        document.getElementById('admin-cancel-btn').classList.add('hidden');
+        document.getElementById('admin-game-name').value = '';
+        document.getElementById('admin-game-pin').value = '';
+        document.getElementById('admin-game-discord').value = '';
+        document.getElementById('admin-game-start').value = '';
+        document.getElementById('admin-copy-phase2').checked = false;
+        document.getElementById('admin-counters-phase2-container').style.opacity = '1';
+        renderAdminCounterInputs('phase1');
+        renderAdminCounterInputs('phase2');
+    }
+
+    function renderAdminGames() {
+        const container = document.getElementById('admin-game-list');
+        if(games.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">Keine Runden vorhanden.</p>';
+            return;
+        }
+        container.innerHTML = games.map(g => `
+            <div style="background: var(--bg-color); padding: 15px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="font-size: 1.1rem;">${g.name}</strong> 
+                    <span style="color: var(--text-muted); margin-left: 10px;">(PIN: ${g.pin})</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="secondary" onclick="editGame(${g.id})" style="margin: 0; padding: 6px 12px;">⚙️ Einstellungen</button>
+                    <button class="danger" onclick="deleteGame(${g.id})" style="margin: 0; padding: 6px 12px;">Löschen</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function deleteGame(id) {
+        games = games.filter(g => g.id !== id);
+        saveGames();
+        renderAdminGames();
+    }
+
+    function startGlobalClockTicker() {
+        setInterval(() => {
+            if(!activeGame) return;
+            
+            const startTime = new Date(activeGame.start).getTime();
+            const kiTarget = startTime + (activeGame.kiDays * 24 * 60 * 60 * 1000);
+            const pvpTarget = kiTarget + (activeGame.pvpDays * 24 * 60 * 60 * 1000);
+
+            updateClockDisplay('ki', activeGame.kiDays === 0 ? startTime : kiTarget, activeGame.kiDays === 0);
+            updateClockDisplay('pvp', pvpTarget, false);
+            
+            calculateAlarmPreviews('phase1', activeGame.kiDays === 0 ? startTime : kiTarget, 'ki');
+            calculateAlarmPreviews('phase2', pvpTarget, 'pvp');
+        }, 1000);
+    }
+
+    function updateClockDisplay(type, targetTime, isNone) {
+        const display = document.getElementById(`${type}-clock-display`);
+        const label = document.getElementById(`${type}-target-label`);
+
+        if(isNone && type === 'ki') {
+            display.innerText = "KEINE KI-PHASE";
+            label.innerText = "Sofortiger PvP-Schutz aktiv";
+            return;
+        }
+
+        const now = new Date().getTime();
+        const diff = targetTime - now;
+        label.innerText = `Endzeit: ${new Date(targetTime).toLocaleString()}`;
+
+        if(diff <= 0) {
+            display.innerText = "BEENDET";
+            return;
+        }
+
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        display.innerText = `${days > 0 ? days + 'T ' : ''}${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+    }
+
+    function calculateAlarmPreviews(phaseKey, targetTime, bannerType) {
+        const previewContainer = document.getElementById(`${bannerType}-alarms-preview`);
+        const nextAblaufContainer = document.getElementById(`${bannerType}-next-Ablauf`);
+        let cfg = playerRoundConfig[activeGame.id];
+        let phaseConfigs = cfg[phaseKey];
+
+        const now = new Date().getTime();
+        let closestDiff = Infinity;
+        let closestText = "--:--:--";
+
+        previewContainer.innerHTML = phaseConfigs.map((c, idx) => {
+            const isActive = c.active !== false; // Standardmäßig aktiv
+
+            if (isActive) {
+                const mins = parseInt(c.minutes) || 0;
+                const secs = parseInt(c.seconds) || 0;
+                const totalOffsetMs = (mins * 60 + secs) * 1000;
+                const alarmTriggerTime = targetTime - totalOffsetMs;
+                
+                const diffToAlarm = alarmTriggerTime - now;
+                if(diffToAlarm > 0 && diffToAlarm < closestDiff) {
+                    closestDiff = diffToAlarm;
+                    let h = Math.floor((diffToAlarm % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    let m = Math.floor((diffToAlarm % (1000 * 60 * 60)) / (1000 * 60));
+                    let s = Math.floor((diffToAlarm % (1000 * 60)) / 1000);
+                    closestText = `${h > 0 ? h + ':' : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                }
+            }
+
+            let timeDisplay = `${parseInt(c.minutes) || 0}m ${parseInt(c.seconds) || 0}s`;
+            return `
+                <div class="alarm-badge-mini ${isActive ? '' : 'inactive'}">
+                    <button class="alarm-status-toggle ${isActive ? 'active' : ''}" onclick="toggleAlarmActive('${phaseKey}', ${idx}, event)" title="${isActive ? 'Aktiv (Klick zum Deaktivieren)' : 'Deaktiviert (Klick zum Aktivieren)'}">
+                        ${isActive ? '✓' : '✕'}
+                    </button>
+                    <span onclick="openEditAlarmModal('${phaseKey}', ${idx})" style="cursor: pointer;">⏰ <b>${timeDisplay}</b> (${c.alarmType})</span>
+                </div>
+            `;
+        }).join('');
+
+        if(nextAblaufContainer) {
+            nextAblaufContainer.innerText = `Nächster Ablauf: ${closestText}`;
+        }
+    }
+
+    function toggleAlarmActive(phase, index, event) {
+        event.stopPropagation(); // Verhindert, dass das Modal aufgeht
+        let cfg = playerRoundConfig[activeGame.id];
+        let current = cfg[phase][index].active !== false;
+        cfg[phase][index].active = !current;
+
+        localStorage.setItem('db_player_config', JSON.stringify(playerRoundConfig));
+        renderTabContent();
+    }
+
+    function openEditAlarmModal(phase, index) {
+        editingAlarmTarget = { phase, index };
+        let cfg = playerRoundConfig[activeGame.id];
+        let alarm = cfg[phase][index];
+
+        document.getElementById('edit-alarm-type-select').value = alarm.alarmType || "Voralarm 1";
+        document.getElementById('edit-alarm-mins').value = alarm.minutes || 0;
+        document.getElementById('edit-alarm-secs').value = alarm.seconds || 0;
+
+        document.getElementById('edit-alarm-modal').classList.remove('hidden');
+    }
+
+    function toggleEditAlarmModal(show) {
+        const modal = document.getElementById('edit-alarm-modal');
+        if(show) modal.classList.remove('hidden');
+        else modal.classList.add('hidden');
+    }
+
+    function saveEditedAlarm() {
+        if(!editingAlarmTarget) return;
+        const { phase, index } = editingAlarmTarget;
+        let cfg = playerRoundConfig[activeGame.id];
+
+        cfg[phase][index].alarmType = document.getElementById('edit-alarm-type-select').value;
+        cfg[phase][index].minutes = document.getElementById('edit-alarm-mins').value || "0";
+        cfg[phase][index].seconds = document.getElementById('edit-alarm-secs').value || "0";
+
+        localStorage.setItem('db_player_config', JSON.stringify(playerRoundConfig));
+        toggleEditAlarmModal(false);
+        renderTabContent();
+    }
+
+    function addPrivateAlarm() {
+        const name = document.getElementById(`priv-alarm-name`).value;
+        const time = document.getElementById(`priv-alarm-time`).value;
+        if(!name || !time) return;
+
+        let cfg = playerRoundConfig[activeGame.id];
+        cfg.alarms.push({ name, time });
+        localStorage.setItem('db_player_config', JSON.stringify(playerRoundConfig));
+        renderPrivateAlarmsList();
+        document.getElementById(`priv-alarm-name`).value = '';
+        document.getElementById(`priv-alarm-time`).value = '';
+    }
+
+    function renderPrivateAlarmsList() {
+        const container = document.getElementById(`priv-alarms-list`);
+        let cfg = playerRoundConfig[activeGame.id];
+        if(!cfg.alarms || cfg.alarms.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); font-style: italic;">Keine Privatalarme hinterlegt.</p>';
+            return;
+        }
+        container.innerHTML = cfg.alarms.map((a, i) => `
+            <div style="background: var(--bg-color); padding: 8px 12px; margin-top: 5px; border-radius: 4px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <span>🔔 <b>${a.name}</b> (${new Date(a.time).toLocaleString()})</span>
+                <button class="danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="removePrivateAlarm(${i})">X</button>
+            </div>
+        `).join('');
+    }
+
+    function removePrivateAlarm(index) {
+        let cfg = playerRoundConfig[activeGame.id];
+        cfg.alarms.splice(index, 1);
+        localStorage.setItem('db_player_config', JSON.stringify(playerRoundConfig));
+        renderPrivateAlarmsList();
+    }
+
+    function renderTabs() {
+        const tabsContainer = document.getElementById('player-tabs');
+        let html = `<button class="tab-btn ${currentTab === 'me' ? 'active' : ''}" onclick="switchTab('me')">Ich (${currentUser})</button>`;
+        
+        for(let col in localData.colleagues) {
+            html += `<button class="tab-btn ${currentTab === col ? 'active' : ''}" onclick="switchTab('${col}')">${col}</button>`;
+        }
+        tabsContainer.innerHTML = html;
+        renderTabContent();
+    }
+
+    function switchTab(tabName) {
+        currentTab = tabName;
+        renderTabs();
+    }
+
+    function renderTabContent() {
+        const container = document.getElementById('tab-content-container');
+        if(currentTab === 'me') {
+            let cfg = playerRoundConfig[activeGame.id];
+            container.innerHTML = `
+                <h3 style="margin-bottom: 5px; color: #f0883e;">⏰ 1. Friedensphase (KI-Frieden) – Vorwarnzeiten bearbeiten</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Passe hier direkt deine Alarm-Vorwarnzeiten für die KI-Phase an.</p>
+                
+                <div class="counters-row">
+                    ${cfg.phase1.map((c, i) => `
+                        <div class="counter-box ${c.active === false ? 'disabled-box' : ''}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <span class="counter-box-header" style="margin:0;">${c.name}</span>
+                                <button class="alarm-status-toggle ${c.active !== false ? 'active' : ''}" onclick="toggleAlarmActive('phase1', ${i}, event)" style="width: 18px; height: 18px; font-size: 0.65rem;">
+                                    ${c.active !== false ? '✓' : '✕'}
+                                </button>
+                            </div>
+                            <div style="margin-bottom: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                                <div>
+                                    <small style="color: var(--text-muted); display: block; font-size: 0.7rem;">Min</small>
+                                    <input type="number" value="${c.minutes}" onchange="updatePlayerConfig('phase1', ${i}, 'minutes', this.value)" style="margin: 0; text-align: center; padding: 6px;">
+                                </div>
+                                <div>
+                                    <small style="color: var(--text-muted); display: block; font-size: 0.7rem;">Sek</small>
+                                    <input type="number" value="${c.seconds || 0}" onchange="updatePlayerConfig('phase1', ${i}, 'seconds', this.value)" style="margin: 0; text-align: center; padding: 6px;">
+                                </div>
+                            </div>
+                            <div>
+                                <small style="color: var(--text-muted); display: block; margin-bottom: 2px; font-size: 0.75rem;">Alarmstufe</small>
+                                <select onchange="updatePlayerConfig('phase1', ${i}, 'alarmType', this.value)" style="margin: 0; padding: 6px; font-size: 0.8rem;">
+                                    ${alarmOptionsList.map(opt => `<option value="${opt}" ${c.alarmType === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 5px; color: #f0883e;">⏰ 2. Friedensphase (PvP-Frieden) – Vorwarnzeiten bearbeiten</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Passe hier direkt deine Alarm-Vorwarnzeiten für die PvP-Phase an.</p>
+                
+                <div class="counters-row">
+                    ${cfg.phase2.map((c, i) => `
+                        <div class="counter-box ${c.active === false ? 'disabled-box' : ''}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <span class="counter-box-header" style="margin:0;">${c.name}</span>
+                                <button class="alarm-status-toggle ${c.active !== false ? 'active' : ''}" onclick="toggleAlarmActive('phase2', ${i}, event)" style="width: 18px; height: 18px; font-size: 0.65rem;">
+                                    ${c.active !== false ? '✓' : '✕'}
+                                </button>
+                            </div>
+                            <div style="margin-bottom: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                                <div>
+                                    <small style="color: var(--text-muted); display: block; font-size: 0.7rem;">Min</small>
+                                    <input type="number" value="${c.minutes}" onchange="updatePlayerConfig('phase2', ${i}, 'minutes', this.value)" style="margin: 0; text-align: center; padding: 6px;">
+                                </div>
+                                <div>
+                                    <small style="color: var(--text-muted); display: block; font-size: 0.7rem;">Sek</small>
+                                    <input type="number" value="${c.seconds || 0}" onchange="updatePlayerConfig('phase2', ${i}, 'seconds', this.value)" style="margin: 0; text-align: center; padding: 6px;">
+                                </div>
+                            </div>
+                            <div>
+                                <small style="color: var(--text-muted); display: block; margin-bottom: 2px; font-size: 0.75rem;">Alarmstufe</small>
+                                <select onchange="updatePlayerConfig('phase2', ${i}, 'alarmType', this.value)" style="margin: 0; padding: 6px; font-size: 0.8rem;">
+                                    ${alarmOptionsList.map(opt => `<option value="${opt}" ${c.alarmType === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="margin-top: 35px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3 style="margin-bottom: 10px; color: #58a6ff;">🔔 Deine Privatalarme & Persönliche Sachen</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Hier ist dein separater Bereich für private Notizen und Alarme (getrennt von den Spielphasen).</p>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="priv-alarm-name" placeholder="Alarm-Notiz" style="flex: 2; margin: 0;">
+                        <input type="datetime-local" id="priv-alarm-time" step="1" style="flex: 2; margin: 0;">
+                        <button onclick="addPrivateAlarm()" style="flex: 1; margin: 0;">Hinzufügen</button>
+                    </div>
+                    <div id="priv-alarms-list"></div>
+                </div>
+            `;
+            renderPrivateAlarmsList();
+        } else {
+            container.innerHTML = `
+                <h3 style="margin-bottom: 10px;">${currentTab} - Aktive Counter</h3>
+                <p style="color: var(--text-muted); font-style: italic;">Keine geteilten Counter aktiv.</p>
+            `;
+        }
+    }
+
+    function updatePlayerConfig(phase, index, field, val) {
+        let cfg = playerRoundConfig[activeGame.id];
+        cfg[phase][index][field] = val;
+        localStorage.setItem('db_player_config', JSON.stringify(playerRoundConfig));
+    }
+
+    function toggleChatModal(show) {
+        const modal = document.getElementById('chat-modal');
+        if(show) modal.classList.remove('hidden');
+        else modal.classList.add('hidden');
+    }
+
+    function toggleEmergencyModal(show) {
+        const modal = document.getElementById('emergency-modal');
+        if(show) modal.classList.remove('hidden');
+        else modal.classList.add('hidden');
+    }
+
+    const onlineUsersList = [
+        { name: "Generalsekretär", online: true },
+        { name: "PanzerGeneral", online: false }
+    ];
+
+    function renderOnlineUsers() {
+        const list = document.getElementById('online-users-list');
+        const users = [{ name: currentUser, online: true }, ...onlineUsersList];
+
+        list.innerHTML = users.map(u => `
+            <div style="margin-bottom: 8px; display: flex; align-items: center;">
+                <span class="online-dot ${u.online ? 'active' : ''}"></span>
+                <span>${u.name}</span>
+            </div>
+        `).join('');
+    }
+
+    function renderEmergencyCheckboxes() {
+        const container = document.getElementById('emergency-checkboxes-container');
+        container.innerHTML = onlineUsersList.filter(u => u.name !== currentUser).map(u => `
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                <input type="checkbox" class="emergency-player-cb" value="${u.name}" style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+                ${u.name}
+            </label>
+        `).join('');
+    }
+
+    function toggleAllEmergencyPlayers(isChecked) {
+        const checkboxes = document.querySelectorAll('.emergency-player-cb');
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            cb.disabled = isChecked;
+        });
+        const container = document.getElementById('emergency-checkboxes-container');
+        container.style.opacity = isChecked ? '0.4' : '1';
+    }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        if(!input.value) return;
+        const chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML += `<div style="margin-bottom: 4px;"><b>${currentUser}:</b> ${input.value}</div>`;
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendEmergencyAlert() {
+        const isAll = document.getElementById('emergency-all-checkbox').checked;
+        const text = document.getElementById('emergency-text').value;
+        if(!text) {
+            alert('Bitte Notfall-Hinweis eingeben!');
+            return;
+        }
+
+        let targets = [];
+        if(isAll) {
+            targets = ["Alle Spieler"];
+        } else {
+            document.querySelectorAll('.emergency-player-cb:checked').forEach(cb => {
+                targets.push(cb.value);
+            });
+            if(targets.length === 0 && !isAll) {
+                alert('Bitte wähle mindestens einen Spieler oder "Alle Spieler" aus!');
+                return;
+            }
+        }
+
+        const chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML += `<div style="background: rgba(218,54,51,0.2); padding: 8px; border-left: 3px solid var(--danger); margin: 6px 0; border-radius: 4px;">🚨 <b>NOTALARM an [${targets.join(', ')}]:</b> ${text}</div>`;
+        
+        toggleEmergencyModal(false);
+        document.getElementById('emergency-text').value = '';
+        document.getElementById('emergency-all-checkbox').checked = false;
+        toggleAllEmergencyPlayers(false);
+    }
+
+    renderPublicGames();
+</script>
+
+</body>
+</html>
