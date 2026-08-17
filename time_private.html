@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call of War - Private Taktik & Alarm-Timer (Dark Bulls)</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --panel-bg: rgba(8, 8, 12, 0.85);
+            --border-red: #ef4444;
+            --border-glow: rgba(239, 68, 68, 0.35);
+            --neon-glow: rgba(239, 68, 68, 0.4);
+            --neon-red: #ff4444;
+            --neon-green: #00ffcc;
+            --neon-blue: #3b82f6;
+            --neon-yellow: #facc15;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+
+        body { 
+            background-color: var(--bg-color); 
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(239, 68, 68, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, var(--neon-glow) 0%, transparent 70%);
+            color: var(--text-main); 
+            font-family: system-ui, -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh;
+            transition: background 0.3s; 
+        }
+        body.screen-flash { animation: screen-alarm-flash 0.5s infinite alternate; }
+
+        @keyframes screen-alarm-flash {
+            0% { background-color: #5c1d1d; }
+            100% { background-color: var(--bg-color); }
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
+        
+        .btn-back { background: #18181b; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 13px; border: 1px solid #3f3f46; transition: all 0.2s; white-space: nowrap; }
+        .btn-back:hover { background: #27272a; border-color: var(--border-red); }
+        
+        .dropdown-toggle-btn { background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 7px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 320px; min-width: 320px; max-width: 320px; justify-content: space-between; box-sizing: border-box; }
+        .dropdown-toggle-btn span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+
+        .header-tabs-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #27272a; padding-bottom: 10px; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .browser-tabs { display: flex; align-items: center; gap: 5px; overflow-x: auto; flex: 1; }
+        
+        .map-tab { background: rgba(20, 20, 20, 0.9); color: var(--text-muted); border: 1px solid #3f3f46; padding: 9px 16px; border-radius: 8px 8px 0 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; white-space: nowrap; transition: all 0.2s; }
+        .map-tab:hover { color: #fff; background: rgba(30, 30, 35, 0.9); }
+        .map-tab.active { background: var(--panel-bg); color: #fff; border-color: var(--border-red); border-bottom: 2px solid rgba(8,8,12,0.95); margin-bottom: -12px; padding-bottom: 13px; box-shadow: 0 -4px 20px rgba(239, 68, 68, 0.25); }
+        .map-tab .close-tab { background: none; border: none; color: #f87171; cursor: pointer; font-size: 14px; padding: 0; }
+        .btn-add-tab { background: rgba(20, 20, 20, 0.9); color: var(--neon-green); border: 1px dashed #3f3f46; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; transition: all 0.2s; }
+        .btn-add-tab:hover { background: rgba(0, 255, 204, 0.1); border-color: var(--neon-green); }
+
+        .live-clock { font-family: monospace; font-size: 24px; color: var(--neon-green); font-weight: bold; background: rgba(10, 10, 15, 0.95); padding: 6px 16px; border-radius: 8px; border: 2px solid rgba(0, 255, 204, 0.4); letter-spacing: 2px; box-shadow: 0 0 15px rgba(0, 255, 204, 0.15); white-space: nowrap; }
+
+        .card { 
+            background: var(--panel-bg); 
+            border: 1px solid var(--border-red); 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-bottom: 24px; 
+            box-shadow: 0 0 25px var(--border-glow); 
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #27272a;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+        .card-header-flex h2 {
+            margin: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        input, select, button { padding: 10px 14px; background: #09090b; border: 1px solid #3f3f46; color: #fff; border-radius: 6px; font-size: 14px; box-sizing: border-box; transition: all 0.2s; }
+        input, select { width: 100%; margin-bottom: 14px; }
+        input:focus, select:focus { outline: none; border-color: var(--border-red); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+        button { background: var(--neon-red); border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #dc2626; box-shadow: 0 0 10px rgba(220, 38, 38, 0.5); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+
+        .custom-dropdown-wrapper { position: relative; display: inline-block; vertical-align: middle; text-align: left; }
+        .dropdown-panel { position: absolute; right: 0; top: 100%; margin-top: 6px; background: #121216; border: 1px solid var(--border-red); border-radius: 8px; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.85); z-index: 500; display: none; padding: 12px; }
+        .dropdown-panel.show { display: block; }
+        .dropdown-filters { display: flex; gap: 6px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #27272a; flex-wrap: wrap; }
+        .filter-chip { background: #27272a; border: 1px solid #3f3f46; color: #aaa; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+        .filter-chip input { margin: 0; width: auto; }
+        .filter-chip.active { background: #1e3a8a; border-color: #3b82f6; color: #fff; }
+        .voice-list-container { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+        .voice-item { padding: 7px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; color: #d4d4d8; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+        .voice-item:hover { background: #27272a; color: #fff; border-color: #3f3f46; }
+        .voice-item.selected { background: rgba(0, 255, 204, 0.1); border-color: rgba(0, 255, 204, 0.4); color: var(--neon-green); font-weight: bold; }
+        .dropdown-volume-section { border-top: 1px solid #27272a; padding-top: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #aaa; }
+
+        .dynamic-info-box { font-size: 12px; color: var(--neon-green); background: rgba(0, 255, 204, 0.05); border: 1px dashed rgba(0, 255, 204, 0.35); padding: 10px 14px; border-radius: 6px; margin-top: -6px; margin-bottom: 14px; }
+
+        .mode-switch-banner {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+        .mode-switch-banner span { font-size: 13px; font-weight: bold; color: #93c5fd; display: flex; align-items: center; gap: 8px; }
+        .btn-mode-toggle {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-mode-toggle:hover { background: #2563eb; transform: translateY(-1px); }
+
+        .warning-config-section { background: rgba(12, 12, 18, 0.9); padding: 14px; border-radius: 8px; border: 1px solid #27272a; margin-bottom: 14px; }
+        .warning-config-section h3 { font-size: 12px; color: var(--neon-yellow); margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #27272a; padding-bottom: 5px; }
+        
+        .warning-config-box { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .warning-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #ccc; gap: 6px; background: rgba(20,20,25,0.6); padding: 8px; border-radius: 6px; border: 1px solid #27272a; }
+        .warning-item input[type="checkbox"] { width: auto; margin: 0; accent-color: #22c55e; }
+        .warning-subinputs { display: flex; gap: 4px; width: 100%; }
+        .warning-subinputs input { width: 50%; margin: 0; padding: 5px; text-align: center; font-size: 12px; }
+
+        .timer-card { 
+            background: rgba(12, 12, 16, 0.95); 
+            border: 1px solid #3f3f46; 
+            border-radius: 10px; 
+            padding: 20px; 
+            margin-bottom: 16px; 
+            border-left: 6px solid var(--neon-green); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+        .timer-card.warning-active { border-left-color: var(--neon-yellow); background: rgba(45, 38, 19, 0.85); animation: card-blink 0.8s infinite alternate; }
+        .timer-card.expired { border-left-color: var(--neon-red); background: rgba(53, 20, 20, 0.9); animation: card-blink 0.4s infinite alternate; }
+
+        .timer-card.collapsed .clocks-grid,
+        .timer-card.collapsed .timer-meta-info,
+        .timer-card.collapsed .warnings-bar,
+        .timer-card.collapsed .control-panel-bottom {
+            display: none !important;
+        }
+        .timer-card.collapsed {
+            padding: 12px 20px;
+            margin-bottom: 10px;
+        }
+        .timer-card.collapsed .timer-header-row {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .card.collapsed .card-body-content {
+            display: none !important;
+        }
+        .card.collapsed {
+            padding: 14px 24px;
+            margin-bottom: 16px;
+        }
+
+        @keyframes card-blink {
+            0% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .timer-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #27272a; padding-bottom: 10px; }
+        
+        .clocks-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; background: rgba(0,0,0,0.6); padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+        .clock-box label { font-size: 11px; color: var(--neon-green); margin-bottom: 4px; font-weight: bold; }
+        .timer-display { font-size: 22px; font-family: monospace; font-weight: bold; color: #fff; letter-spacing: 1px; }
+        .timer-display.interval-clock { color: #60a5fa; }
+        .timer-display.upgrade-clock { color: var(--neon-yellow); }
+
+        .timer-meta-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .expiry-time { color: #cbd5e1; font-weight: 500; }
+        .next-alarm-info { color: var(--neon-yellow); font-weight: bold; }
+        
+        .warnings-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .warn-badge { background: #18181b; border: 1px solid #3f3f46; padding: 4px 8px; border-radius: 6px; font-size: 11px; color: #d4d4d8; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+        .warn-badge.triggered { background: #533; border-color: #933; color: #faa; text-decoration: line-through; }
+        .warn-badge:hover { border-color: var(--neon-green); color: #fff; }
+
+        .badge { background: #27272a; padding: 4px 10px; border-radius: 6px; font-size: 11px; color: var(--neon-green); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-luftwaffe { color: #60a5fa; background: rgba(30, 58, 138, 0.6); border: 1px solid #3b82f6; }
+        .badge-standard { color: var(--neon-yellow); background: rgba(113, 63, 18, 0.6); border: 1px solid #eab308; }
+
+        .control-panel-bottom { background: rgba(5, 5, 8, 0.8); border: 1px solid #27272a; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .control-panel-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+        .control-buttons-group { display: flex; gap: 5px; flex-wrap: wrap; }
+        .control-buttons-group button { padding: 6px 12px; font-size: 12px; background: #18181b; border: 1px solid #3f3f46; font-weight: 600; border-radius: 6px; }
+        .control-buttons-group button:hover { background: #27272a; border-color: #71717a; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal-overlay.hidden { display: none; }
+        .modal-content { background: var(--panel-bg); border: 2px solid var(--border-red); box-shadow: 0 0 30px var(--neon-glow); width: 480px; padding: 30px; border-radius: 12px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav">
+        <a href="uebersicht.html" class="btn-back">⬅️ Zurück zur Allianz-Übersicht</a>
+        
+        <div style="font-size:12px; color:#aaa; display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:600; letter-spacing:0.5px;">STIMME:</span>
+            <div class="custom-dropdown-wrapper" id="customVoiceDropdown">
+                <button type="button" class="dropdown-toggle-btn" onclick="toggleVoiceDropdown()">
+                    <span id="selectedVoiceLabel">Standard (Auto)</span>
+                    <span>▼</span>
+                </button>
+                <div class="dropdown-panel" id="voiceDropdownPanel">
+                    <div class="dropdown-filters">
+                        <label class="filter-chip active" onclick="toggleLangFilter('de', event)"><input type="checkbox" id="chk_de" checked onchange="filterVoices()"> DE</label>
+                        <label class="filter-chip active" onclick="toggleLangFilter('en', event)"><input type="checkbox" id="chk_en" checked onchange="filterVoices()"> EN</label>
+                        <label class="filter-chip" onclick="toggleLangFilter('other', event)"><input type="checkbox" id="chk_other" onchange="filterVoices()"> Andere</label>
+                    </div>
+                    <div class="voice-list-container" id="voiceListItems"></div>
+                    <div class="dropdown-volume-section">
+                        <span>Lautstärke:</span>
+                        <input type="range" id="masterVolume" min="0" max="1" step="0.1" value="0.8" style="width:170px; vertical-align:middle; accent-color:var(--neon-red);">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-tabs-row">
+        <div class="browser-tabs" id="browserTabsContainer"></div>
+        <div class="live-clock" id="liveClock">00:00:00</div>
+    </div>
+
+    <div id="activeMapContent">
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding: 14px 22px; flex-wrap:wrap; gap:12px;">
+            <div>
+                <strong id="activeMapTitle" style="color:var(--neon-green); font-size: 1.2rem; letter-spacing:0.5px;">Keine Map ausgewählt</strong><br>
+                <span id="activeMapSubInfo" style="font-size: 12px; color: #888;">Geschwindigkeit: X1 | Discord: Inaktiv</span>
+            </div>
+            <div>
+                <a id="discordLinkBtn" href="#" target="_blank" class="hidden" style="background:#5865F2; color:white; padding:7px 14px; border-radius:6px; text-decoration:none; font-size:12px; font-weight:bold; box-shadow:0 0 10px rgba(88,101,242,0.4);">Discord öffnen</a>
+            </div>
+        </div>
+
+        <div class="card" id="createCard">
+            <div class="card-header-flex" onclick="toggleCreateCard()">
+                <h2>Hochleistungs-Taktik-Counter erstellen</h2>
+                <button type="button" id="createCardToggleBtn" style="background:#18181b; border:1px solid #3f3f46; padding:5px 10px; font-size:12px;">▲ Einklappen</button>
+            </div>
+            
+            <div class="card-body-content">
+                <div class="grid-2">
+                    <div>
+                        <label>Beschreibung / Truppen-Name</label>
+                        <input type="text" id="timerLabel" placeholder="z.B. Luftwaffe Angriff Welle 1">
+                    </div>
+                    <div>
+                        <label>Einheiten-Typ</label>
+                        <select id="timerType" onchange="updateDefaultDuration()">
+                            <option value="luftwaffe">Luftwaffe</option>
+                            <option value="standard">Standard / Bodentruppen</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="dynamicKampfrundeInfo" class="dynamic-info-box">
+                    Errechnete Kampfrunde für diese Map: <strong>15 Minuten</strong> (bei X1)
+                </div>
+
+                <div class="mode-switch-banner">
+                    <span id="currentModeLabel">⏱️ Eingabe-Modus: Anreisedauer (Minuten & Sekunden)</span>
+                    <button type="button" class="btn-mode-toggle" onclick="toggleInputMode()">🔄 Auf exakte Zieluhrzeit wechseln</button>
+                </div>
+
+                <div class="grid-2" style="margin-bottom:14px;">
+                    <div id="durationInputContainer">
+                        <label>Anreisedauer (Minuten & Sekunden)</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="number" id="timerMin" value="30" min="0" placeholder="Min">
+                            <input type="number" id="timerSec" value="0" min="0" max="59" placeholder="Sek">
+                        </div>
+                    </div>
+                    <div id="clockInputContainer" class="hidden">
+                        <label>Exakte Ankunfts-Uhrzeit (Spiel)</label>
+                        <input type="time" id="timerTargetClock" step="1">
+                    </div>
+                    <div>
+                        <label>Kampfrunden-Modus</label>
+                        <select id="intervalActive">
+                            <option value="yes">Mit Kampfrunden-Intervall (Endlos-Schleife)</option>
+                            <option value="no">Nur einfache Anreise (Kein Intervall)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="warning-config-section">
+                    <h3>⏰ Vorwarnzeiten (Anreise / Hauptalarm)</h3>
+                    <div class="warning-config-box grid-5">
+                        <div class="warning-item">
+                            <span>1. Alarm</span>
+                            <input type="checkbox" id="wEn0" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="wMin0" value="0" min="0" placeholder="Min">
+                                <input type="number" id="wSec0" value="10" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="wType0" style="padding:3px; font-size:10px;">
+                                <option value="Voralarm 1" selected>Voralarm 1</option>
+                                <option value="Voralarm 2">Voralarm 2</option>
+                                <option value="Info Voralarm">Info Voralarm</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>2. Alarm</span>
+                            <input type="checkbox" id="wEn1" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="wMin1" value="0" min="0" placeholder="Min">
+                                <input type="number" id="wSec1" value="5" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="wType1" style="padding:3px; font-size:10px;">
+                                <option value="Voralarm 1">Voralarm 1</option>
+                                <option value="Voralarm 2" selected>Voralarm 2</option>
+                                <option value="Info Voralarm">Info Voralarm</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>3. Alarm</span>
+                            <input type="checkbox" id="wEn2" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="wMin2" value="0" min="0" placeholder="Min">
+                                <input type="number" id="wSec2" value="2" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="wType2" style="padding:3px; font-size:10px;">
+                                <option value="Voralarm 1">Voralarm 1</option>
+                                <option value="Voralarm 2">Voralarm 2</option>
+                                <option value="Info Voralarm" selected>Info Voralarm</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>4. Alarm</span>
+                            <input type="checkbox" id="wEn3" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="wMin3" value="0" min="0" placeholder="Min">
+                                <input type="number" id="wSec3" value="1" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="wType3" style="padding:3px; font-size:10px;">
+                                <option value="Voralarm 1">Voralarm 1</option>
+                                <option value="Voralarm 2">Voralarm 2</option>
+                                <option value="Info Voralarm" selected>Info Voralarm</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>5. Alarm</span>
+                            <input type="checkbox" id="wEn4">
+                            <div class="warning-subinputs">
+                                <input type="number" id="wMin4" value="1" min="0" placeholder="Min">
+                                <input type="number" id="wSec4" value="0" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="wType4" style="padding:3px; font-size:10px;">
+                                <option value="Voralarm 1" selected>Voralarm 1</option>
+                                <option value="Voralarm 2">Voralarm 2</option>
+                                <option value="Info Voralarm">Info Voralarm</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-config-section">
+                    <h3>⚔️ Vorwarnzeiten (Kampfrunden-Intervall)</h3>
+                    <div class="warning-config-box grid-5">
+                        <div class="warning-item">
+                            <span>1. Intervall-Alarm</span>
+                            <input type="checkbox" id="iwEn0" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="iwMin0" value="0" min="0" placeholder="Min">
+                                <input type="number" id="iwSec0" value="10" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="iwType0" style="padding:3px; font-size:10px;">
+                                <option value="Intervall Voralarm" selected>Intervall Voralarm</option>
+                                <option value="Runden-Info">Runden-Info</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>2. Intervall-Alarm</span>
+                            <input type="checkbox" id="iwEn1" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="iwMin1" value="0" min="0" placeholder="Min">
+                                <input type="number" id="iwSec1" value="5" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="iwType1" style="padding:3px; font-size:10px;">
+                                <option value="Intervall Voralarm" selected>Intervall Voralarm</option>
+                                <option value="Runden-Info">Runden-Info</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>3. Intervall-Alarm</span>
+                            <input type="checkbox" id="iwEn2" checked>
+                            <div class="warning-subinputs">
+                                <input type="number" id="iwMin2" value="0" min="0" placeholder="Min">
+                                <input type="number" id="iwSec2" value="2" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="iwType2" style="padding:3px; font-size:10px;">
+                                <option value="Intervall Voralarm" selected>Intervall Voralarm</option>
+                                <option value="Runden-Info">Runden-Info</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>4. Intervall-Alarm</span>
+                            <input type="checkbox" id="iwEn3">
+                            <div class="warning-subinputs">
+                                <input type="number" id="iwMin3" value="0" min="0" placeholder="Min">
+                                <input type="number" id="iwSec3" value="1" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="iwType3" style="padding:3px; font-size:10px;">
+                                <option value="Intervall Voralarm" selected>Intervall Voralarm</option>
+                                <option value="Runden-Info">Runden-Info</option>
+                            </select>
+                        </div>
+                        <div class="warning-item">
+                            <span>5. Intervall-Alarm</span>
+                            <input type="checkbox" id="iwEn4">
+                            <div class="warning-subinputs">
+                                <input type="number" id="iwMin4" value="0" min="0" placeholder="Min">
+                                <input type="number" id="iwSec4" value="30" min="0" max="59" placeholder="Sek">
+                            </div>
+                            <select id="iwType4" style="padding:3px; font-size:10px;">
+                                <option value="Intervall Voralarm" selected>Intervall Voralarm</option>
+                                <option value="Runden-Info">Runden-Info</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="createNewTimer()" style="width:100%; padding:14px; background:var(--neon-blue); font-size:15px; letter-spacing:0.5px;">+ Taktik-Counter starten</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Aktive Counter & Alarme</h2>
+            <div id="timersContainer">
+                <p style="color:#777; text-align:center;">Keine Counter auf dieser Map aktiv.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="mapModal">
+    <div class="modal-content">
+        <h2>Neue Map einrichten</h2>
+        <label>Kartennummer / Name</label>
+        <input type="text" id="modalMapName" placeholder="z.B. 452189">
+        <label>Spiel-Geschwindigkeit</label>
+        <select id="modalMapSpeed">
+            <option value="1">X1 (Normal)</option>
+            <option value="2">X2</option>
+            <option value="4">X4</option>
+            <option value="6">X6</option>
+            <option value="8">X8</option>
+            <option value="10">X10</option>
+            <option value="24">X24</option>
+        </select>
+        <label>Discord Webhook-URL</label>
+        <input type="text" id="modalDiscord" placeholder="https://discord.com/api/webhooks/...">
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="saveNewMap()" style="flex:1; background:var(--neon-green); color:#000; padding:12px;">Map erstellen</button>
+            <button onclick="closeMapModal()" style="flex:1; background:#27272a; color:#fff; padding:12px;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="alarmEditModal">
+    <div class="modal-content">
+        <h2>Alarm bearbeiten</h2>
+        <input type="hidden" id="editTimerId">
+        <input type="hidden" id="editWarningCategory">
+        <input type="hidden" id="editWarningIndex">
+        
+        <label>Alarm-Typ</label>
+        <select id="editAlarmType">
+            <option value="Voralarm 1">Voralarm 1</option>
+            <option value="Voralarm 2">Voralarm 2</option>
+            <option value="Info Voralarm">Info Voralarm</option>
+            <option value="Intervall Voralarm">Intervall Voralarm</option>
+            <option value="Runden-Info">Runden-Info</option>
+        </select>
+
+        <div class="grid-2">
+            <div>
+                <label>Minuten</label>
+                <input type="number" id="editWarnMin" min="0" value="0">
+            </div>
+            <div>
+                <label>Sekunden</label>
+                <input type="number" id="editWarnSec" min="0" max="59" value="10">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="saveEditedWarning()" style="flex:1; background:var(--neon-green); color:#000; padding:12px;">Speichern</button>
+            <button onclick="closeAlarmEditModal()" style="flex:1; background:#27272a; color:#fff; padding:12px;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal zum Umbenennen des Counters -->
+<div class="modal-overlay hidden" id="renameModal">
+    <div class="modal-content">
+        <h2>Counter umbenennen</h2>
+        <input type="hidden" id="renameTimerId">
+        <label>Neuer Name / Truppen-Beschreibung</label>
+        <input type="text" id="renameInput" placeholder="z.B. Geteiltes Panzerwagenregiment">
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="saveRenamedTimer()" style="flex:1; background:var(--neon-green); color:#000; padding:12px;">Speichern</button>
+            <button onclick="closeRenameModal()" style="flex:1; background:#27272a; color:#fff; padding:12px;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="timeEditModal">
+    <div class="modal-content">
+        <h2 id="timeEditModalTitle">Anreisezeit ändern</h2>
+        <input type="hidden" id="timeEditTimerId">
+        <input type="hidden" id="timeEditTargetType">
+
+        <div class="mode-switch-banner" style="margin-bottom:14px;">
+            <span id="timeEditModeLabel">⏱️ Eingabe-Modus: Anreisedauer (Min & Sek)</span>
+            <button type="button" class="btn-mode-toggle" onclick="toggleTimeEditMode()">🔄 Auf exakte Zieluhrzeit wechseln</button>
+        </div>
+
+        <div id="timeEditDurationContainer">
+            <div class="grid-2">
+                <div>
+                    <label>Minuten</label>
+                    <input type="number" id="timeEditMin" min="0" value="30">
+                </div>
+                <div>
+                    <label>Sekunden</label>
+                    <input type="number" id="timeEditSec" min="0" max="59" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div id="timeEditClockContainer" class="hidden">
+            <label>Exakte Ziel-Uhrzeit (Spiel)</label>
+            <input type="time" id="timeEditTargetClock" step="1">
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button onclick="saveEditedTime()" style="flex:1; background:var(--neon-green); color:#000; padding:12px;">Zeit übernehmen</button>
+            <button onclick="closeTimeEditModal()" style="flex:1; background:#27272a; color:#fff; padding:12px;">Abbrechen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let maps = JSON.parse(localStorage.getItem('cow_private_maps')) || [];
+    let activeMapId = localStorage.getItem('cow_active_private_map') || null;
+    let allTimers = JSON.parse(localStorage.getItem('cow_private_timers')) || {};
+    let collapsedTimers = JSON.parse(localStorage.getItem('cow_collapsed_timers')) || {};
+    let isCreateCardCollapsed = false;
+    let isClockInputMode = false;
+    let isTimeEditClockMode = false;
+    let availableVoices = [];
+    let selectedVoiceName = localStorage.getItem('cow_selected_voice') || "";
+
+    function toggleCreateCard() {
+        isCreateCardCollapsed = !isCreateCardCollapsed;
+        const card = document.getElementById('createCard');
+        const btn = document.getElementById('createCardToggleBtn');
+        if (isCreateCardCollapsed) {
+            card.classList.add('collapsed');
+            btn.innerText = "▼ Ausklappen";
+        } else {
+            card.classList.remove('collapsed');
+            btn.innerText = "▲ Einklappen";
+        }
+    }
+
+    function toggleTimerCollapse(timerId) {
+        collapsedTimers[timerId] = !collapsedTimers[timerId];
+        localStorage.setItem('cow_collapsed_timers', JSON.stringify(collapsedTimers));
+        renderTimers();
+    }
+
+    function openRenameModal(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer) return;
+        document.getElementById('renameTimerId').value = timerId;
+        document.getElementById('renameInput').value = timer.label;
+        document.getElementById('renameModal').classList.remove('hidden');
+    }
+
+    function closeRenameModal() {
+        document.getElementById('renameModal').classList.add('hidden');
+    }
+
+    function saveRenamedTimer() {
+        const timerId = document.getElementById('renameTimerId').value;
+        const newLabel = document.getElementById('renameInput').value.trim();
+        if (!newLabel) { alert("Bitte Namen eingeben!"); return; }
+
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            timer.label = newLabel;
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            closeRenameModal();
+            renderTimers();
+        }
+    }
+
+    function loadVoices() {
+        if (!('speechSynthesis' in window)) return;
+        availableVoices = window.speechSynthesis.getVoices();
+        
+        ['de', 'en', 'other'].forEach(f => {
+            const chk = document.getElementById('chk_' + f);
+            if (chk) {
+                const chip = chk.closest('.filter-chip');
+                if (chip) chip.classList.toggle('active', chk.checked);
+            }
+        });
+        renderVoiceList();
+    }
+
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        setTimeout(loadVoices, 150);
+    }
+
+    function toggleVoiceDropdown() {
+        document.getElementById('voiceDropdownPanel').classList.toggle('show');
+    }
+
+    window.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('customVoiceDropdown');
+        if (dropdown && !dropdown.contains(e.target)) {
+            document.getElementById('voiceDropdownPanel').classList.remove('show');
+        }
+    });
+
+    function toggleLangFilter(filterKey, event) {
+        if (event && event.target.tagName !== 'INPUT') {
+            const chk = document.getElementById('chk_' + filterKey);
+            if (chk) chk.checked = !chk.checked;
+        }
+        ['de', 'en', 'other'].forEach(f => {
+            const c = document.getElementById('chk_' + f);
+            if (c) c.closest('.filter-chip').classList.toggle('active', c.checked);
+        });
+        filterVoices();
+        if (event) event.stopPropagation();
+    }
+
+    function filterVoices() { renderVoiceList(); }
+
+    function renderVoiceList() {
+        const container = document.getElementById('voiceListItems');
+        if (!container) return;
+
+        const showDe = document.getElementById('chk_de').checked;
+        const showEn = document.getElementById('chk_en').checked;
+        const showOther = document.getElementById('chk_other').checked;
+
+        let html = `<div class="voice-item ${selectedVoiceName === '' ? 'selected' : ''}" onclick="selectVoice('', 'Standard (Auto)')">
+            <span>Standard-Stimme (Auto)</span>
+            <span>✓</span>
+        </div>`;
+
+        let activeLabel = "Standard (Auto)";
+
+        availableVoices.forEach(voice => {
+            let langLower = voice.lang.toLowerCase();
+            let isDe = langLower.startsWith('de');
+            let isEn = langLower.startsWith('en');
+            let isOther = !isDe && !isEn;
+
+            let matches = (isDe && showDe) || (isEn && showEn) || (isOther && showOther);
+            if (!matches) return;
+
+            let isSelected = (voice.name === selectedVoiceName);
+            if (isSelected) activeLabel = `${voice.name} (${voice.lang})`;
+
+            let safeName = voice.name.replace(/'/g, "\\'");
+            html += `
+                <div class="voice-item ${isSelected ? 'selected' : ''}" onclick="selectVoice('${safeName}', '${voice.name} (${voice.lang})')">
+                    <span>${voice.name} <span style="color:#777; font-size:10px;">[${voice.lang}]</span></span>
+                    ${isSelected ? '<span>✓</span>' : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        document.getElementById('selectedVoiceLabel').innerText = activeLabel;
+    }
+
+    function selectVoice(voiceName, displayName) {
+        selectedVoiceName = voiceName;
+        localStorage.setItem('cow_selected_voice', selectedVoiceName);
+        document.getElementById('selectedVoiceLabel').innerText = displayName;
+        document.getElementById('voiceDropdownPanel').classList.remove('show');
+        renderVoiceList();
+        speakText("Stimme bestätigt.");
+    }
+
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function getMasterVolume() {
+        const slider = document.getElementById('masterVolume');
+        return slider ? parseFloat(slider.value) : 0.8;
+    }
+
+    function playDingDong() {
+        try {
+            const ctx = getAudioContext();
+            let now = ctx.currentTime;
+            let vol = getMasterVolume();
+
+            let osc1 = ctx.createOscillator();
+            let gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(800, now);
+            gain1.gain.setValueAtTime(0.5 * vol, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.6);
+
+            let osc2 = ctx.createOscillator();
+            let gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(600, now + 0.3);
+            gain2.gain.setValueAtTime(0.6 * vol, now + 0.3);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.3);
+            osc2.stop(now + 1.2);
+        } catch(e) {}
+    }
+
+    function playAirRaidSirene() {
+        try {
+            const ctx = getAudioContext();
+            let now = ctx.currentTime;
+            let vol = getMasterVolume();
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+
+            osc.type = 'sawtooth';
+            for (let i = 0; i < 4; i++) {
+                let t = now + (i * 1.2);
+                osc.frequency.linearRampToValueAtTime(400, t);
+                osc.frequency.linearRampToValueAtTime(900, t + 0.6);
+            }
+
+            gain.gain.setValueAtTime(1.0 * vol, now);
+            gain.gain.linearRampToValueAtTime(0.001, now + 5.0);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 5.0);
+        } catch(e) {}
+    }
+
+    function sendDiscordAlert(map, message) {
+        if (!map || !map.discord || !map.discord.startsWith('http')) return;
+        fetch(map.discord, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: message })
+        }).catch(e => {});
+    }
+
+    setInterval(() => {
+        document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('de-DE');
+    }, 1000);
+
+    if (maps.length > 0 && (!activeMapId || !maps.some(m => m.id === activeMapId))) {
+        activeMapId = maps[0].id;
+    }
+    renderTabs();
+
+    function toggleInputMode() {
+        isClockInputMode = !isClockInputMode;
+        document.getElementById('durationInputContainer').classList.toggle('hidden', isClockInputMode);
+        document.getElementById('clockInputContainer').classList.toggle('hidden', !isClockInputMode);
+        
+        const labelEl = document.getElementById('currentModeLabel');
+        const btnEl = document.querySelector('.btn-mode-toggle');
+        if (isClockInputMode) {
+            labelEl.innerHTML = "🕒 Eingabe-Modus: Exakte Zieluhrzeit";
+            btnEl.innerHTML = "🔄 Auf Anreisedauer wechseln";
+        } else {
+            labelEl.innerHTML = "⏱️ Eingabe-Modus: Anreisedauer (Minuten & Sekunden)";
+            btnEl.innerHTML = "🔄 Auf exakte Zieluhrzeit wechseln";
+        }
+    }
+
+    function toggleTimeEditMode() {
+        isTimeEditClockMode = !isTimeEditClockMode;
+        document.getElementById('timeEditDurationContainer').classList.toggle('hidden', isTimeEditClockMode);
+        document.getElementById('timeEditClockContainer').classList.toggle('hidden', !isTimeEditClockMode);
+        
+        const labelEl = document.getElementById('timeEditModeLabel');
+        const btnEl = document.querySelector('#timeEditModal .btn-mode-toggle');
+        if (isTimeEditClockMode) {
+            labelEl.innerHTML = "🕒 Eingabe-Modus: Exakte Zieluhrzeit";
+            btnEl.innerHTML = "🔄 Auf Anreisedauer wechseln";
+        } else {
+            labelEl.innerHTML = "⏱️ Eingabe-Modus: Anreisedauer (Min & Sek)";
+            btnEl.innerHTML = "🔄 Auf exakte Zieluhrzeit wechseln";
+        }
+    }
+
+    function renderTabs() {
+        const container = document.getElementById('browserTabsContainer');
+        let html = '';
+        maps.forEach(m => {
+            const isActive = m.id === activeMapId;
+            html += `
+                <div class="map-tab ${isActive ? 'active' : ''}" onclick="switchMap('${m.id}')">
+                    <span>🗺️ ${m.name} (X${m.speed || 1})</span>
+                    <button class="close-tab" onclick="event.stopPropagation(); deleteMap('${m.id}')">×</button>
+                </div>
+            `;
+        });
+        html += `<button class="btn-add-tab" onclick="openMapModal()">+</button>`;
+        container.innerHTML = html;
+
+        if (maps.length === 0) {
+            document.getElementById('activeMapContent').classList.add('hidden');
+            openMapModal();
+        } else {
+            document.getElementById('activeMapContent').classList.remove('hidden');
+            renderActiveMapDetails();
+            updateDefaultDuration();
+        }
+    }
+
+    function openMapModal() { document.getElementById('mapModal').classList.remove('hidden'); }
+    function closeMapModal() { document.getElementById('mapModal').classList.add('hidden'); }
+
+    function saveNewMap() {
+        const name = document.getElementById('modalMapName').value.trim();
+        const speed = parseInt(document.getElementById('modalMapSpeed').value) || 1;
+        const discord = document.getElementById('modalDiscord').value.trim();
+        if (!name) { alert("Bitte Namen eingeben!"); return; }
+
+        const newMap = { id: 'map_' + Date.now(), name, speed, discord };
+        maps.push(newMap);
+        activeMapId = newMap.id;
+        localStorage.setItem('cow_private_maps', JSON.stringify(maps));
+        localStorage.setItem('cow_active_private_map', activeMapId);
+        closeMapModal();
+        renderTabs();
+        renderTimers();
+    }
+
+    function deleteMap(mapId) {
+        if (!confirm("Map wirklich löschen?")) return;
+        maps = maps.filter(m => m.id !== mapId);
+        delete allTimers[mapId];
+        localStorage.setItem('cow_private_maps', JSON.stringify(maps));
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        activeMapId = maps.length > 0 ? maps[0].id : null;
+        renderTabs();
+        renderTimers();
+    }
+
+    function switchMap(mapId) {
+        activeMapId = mapId;
+        localStorage.setItem('cow_active_private_map', activeMapId);
+        renderTabs();
+        renderTimers();
+    }
+
+    function renderActiveMapDetails() {
+        const map = maps.find(m => m.id === activeMapId);
+        if (!map) return;
+        document.getElementById('activeMapTitle').innerText = "Aktive Map: " + map.name;
+        document.getElementById('activeMapSubInfo').innerText = `Geschwindigkeit: X${map.speed} | Discord: ${map.discord ? 'Aktiv' : 'Inaktiv'}`;
+        const discordBtn = document.getElementById('discordLinkBtn');
+        if (map.discord && map.discord.startsWith('http')) {
+            discordBtn.href = map.discord;
+            discordBtn.classList.remove('hidden');
+        } else {
+            discordBtn.classList.add('hidden');
+        }
+        updateDefaultDuration();
+    }
+
+    function updateDefaultDuration() {
+        document.getElementById('timerMin').value = 30;
+        document.getElementById('timerSec').value = 0;
+
+        const map = maps.find(m => m.id === activeMapId);
+        const speed = map ? (map.speed || 1) : 1;
+        const type = document.getElementById('timerType').value;
+        
+        let baseMin = type === 'luftwaffe' ? 15 : 30;
+        let intervalMinReal = baseMin / speed;
+        let textDisplay = intervalMinReal < 1 ? Math.round(intervalMinReal * 60) + " Sekunden" : intervalMinReal.toFixed(2).replace(/\.00$/, '') + " Minuten";
+        
+        let unitName = type === 'luftwaffe' ? 'Luftwaffe' : 'Standard';
+        document.getElementById('dynamicKampfrundeInfo').innerHTML = `Errechnete Kampfrunde (${unitName}) für Map X${speed}: <strong>${textDisplay}</strong>`;
+    }
+
+    function createNewTimer() {
+        if (!activeMapId) { alert("Bitte erst Map anlegen!"); return; }
+        const map = maps.find(m => m.id === activeMapId);
+        const speed = map.speed || 1;
+
+        const label = document.getElementById('timerLabel').value.trim() || "Unbenannter Counter";
+        const type = document.getElementById('timerType').value;
+        const hasInterval = document.getElementById('intervalActive').value === 'yes';
+
+        let targetTimestamp = 0;
+        let totalGameMinutes = 30;
+
+        if (isClockInputMode) {
+            const clockVal = document.getElementById('timerTargetClock').value;
+            if (!clockVal) { alert("Bitte Zieluhrzeit eingeben!"); return; }
+            const [h, m, s] = clockVal.split(':').map(Number);
+            let now = new Date();
+            let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+            if (targetDate.getTime() <= now.getTime()) targetDate.setDate(targetDate.getDate() + 1);
+            targetTimestamp = targetDate.getTime();
+            totalGameMinutes = (targetTimestamp - Date.now()) / 1000 / 60 * speed;
+        } else {
+            const min = parseFloat(document.getElementById('timerMin').value) || 0;
+            const sec = parseFloat(document.getElementById('timerSec').value) || 0;
+            const totalSec = (min * 60) + sec;
+            if (totalSec <= 0) { alert("Gültige Zeit eingeben!"); return; }
+            totalGameMinutes = totalSec / 60;
+            const realSeconds = Math.round(totalSec / speed);
+            targetTimestamp = Date.now() + (realSeconds * 1000);
+        }
+
+        let warnings = [];
+        for (let i = 0; i < 5; i++) {
+            const enabled = document.getElementById(`wEn${i}`).checked;
+            let wMin = parseFloat(document.getElementById(`wMin${i}`).value) || 0;
+            let wSec = parseFloat(document.getElementById(`wSec${i}`).value) || 0;
+            const alarmType = document.getElementById(`wType${i}`).value;
+            let totalWarnSec = (wMin * 60) + wSec;
+            if (enabled && totalWarnSec > 0) warnings.push({ seconds: totalWarnSec, alarmType: alarmType });
+        }
+        warnings.sort((a, b) => b.seconds - a.seconds);
+
+        let intervalWarnings = [];
+        for (let i = 0; i < 5; i++) {
+            const enabled = document.getElementById(`iwEn${i}`).checked;
+            let iwMin = parseFloat(document.getElementById(`iwMin${i}`).value) || 0;
+            let iwSec = parseFloat(document.getElementById(`iwSec${i}`).value) || 0;
+            const alarmType = document.getElementById(`iwType${i}`).value;
+            let totalIWSec = (iwMin * 60) + iwSec;
+            if (enabled && totalIWSec > 0) intervalWarnings.push({ seconds: totalIWSec, alarmType: alarmType });
+        }
+        intervalWarnings.sort((a, b) => b.seconds - a.seconds);
+
+        let baseIntervalMin = type === 'luftwaffe' ? 15 : 30;
+        const realIntervalSeconds = Math.round((baseIntervalMin * 60) / speed);
+
+        if (!allTimers[activeMapId]) allTimers[activeMapId] = [];
+
+        let newTimer = {
+            id: 't_' + Date.now(),
+            label: label,
+            type: type,
+            originalGameMinutes: totalGameMinutes,
+            targetTime: targetTimestamp,
+            intervalSeconds: realIntervalSeconds,
+            hasInterval: hasInterval,
+            isIntervalPhase: false,
+            intervalTargetTime: 0,
+            warnings: warnings,
+            triggeredWarnings: [],
+            intervalWarnings: intervalWarnings,
+            triggeredIntervalWarnings: [],
+            isRunning: true,
+            needsReset: false,
+            upgradeActive: false,
+            upgradeTargetTime: 0,
+            upgradeDurationSeconds: 0,
+            pausedUpgradeRemaining: 0
+        };
+
+        if (hasInterval) {
+            newTimer.intervalTargetTime = newTimer.targetTime + (realIntervalSeconds * 1000);
+        }
+
+        allTimers[activeMapId].push(newTimer);
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        document.getElementById('timerLabel').value = '';
+        renderTimers();
+    }
+
+    function adjustTimerTimeByTarget(timerId, seconds) {
+        const selectEl = document.getElementById('targetSelect-' + timerId);
+        const targetType = selectEl ? selectEl.value : 'main';
+
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer) return;
+
+        if (targetType === 'main') {
+            timer.targetTime += (seconds * 1000);
+            if (timer.hasInterval && !timer.isIntervalPhase) {
+                timer.intervalTargetTime = timer.targetTime + (timer.intervalSeconds * 1000);
+            }
+        } else if (targetType === 'interval') {
+            if (timer.hasInterval) {
+                timer.intervalTargetTime += (seconds * 1000);
+            }
+        } else if (targetType === 'upgrade') {
+            if (timer.upgradeActive) {
+                timer.upgradeTargetTime += (seconds * 1000);
+            } else {
+                timer.upgradeActive = true;
+                timer.upgradeTargetTime = Date.now() + (Math.abs(seconds) * 1000);
+            }
+        }
+
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        renderTimers();
+    }
+
+    function resetIntervalNow(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer && timer.hasInterval) {
+            timer.intervalTargetTime = Date.now() + (timer.intervalSeconds * 1000);
+            timer.triggeredIntervalWarnings = [];
+            timer.isIntervalPhase = true;
+            timer.needsReset = false;
+            document.body.classList.remove('screen-flash');
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
+
+    function openTimeEditModal(timerId, targetType) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer) return;
+
+        document.getElementById('timeEditTimerId').value = timerId;
+        document.getElementById('timeEditTargetType').value = targetType;
+
+        let titleText = "Anreisezeit ändern";
+        if (targetType === 'upgrade') titleText = "Einheiten-Aufwertung anpassen";
+        if (targetType === 'interval') titleText = "Intervall-Zeit anpassen";
+        document.getElementById('timeEditModalTitle').innerText = titleText;
+
+        isTimeEditClockMode = false;
+        document.getElementById('timeEditDurationContainer').classList.remove('hidden');
+        document.getElementById('timeEditClockContainer').classList.add('hidden');
+        document.getElementById('timeEditModeLabel').innerHTML = "⏱️ Eingabe-Modus: Anreisedauer (Min & Sek)";
+        document.querySelector('#timeEditModal .btn-mode-toggle').innerHTML = "🔄 Auf exakte Zieluhrzeit wechseln";
+
+        document.getElementById('timeEditMin').value = 30;
+        document.getElementById('timeEditSec').value = 0;
+        document.getElementById('timeEditModal').classList.remove('hidden');
+    }
+
+    function closeTimeEditModal() { document.getElementById('timeEditModal').classList.add('hidden'); }
+
+    function saveEditedTime() {
+        const timerId = document.getElementById('timeEditTimerId').value;
+        const targetType = document.getElementById('timeEditTargetType').value;
+
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer) return;
+
+        let targetTimestamp = 0;
+        const map = maps.find(m => m.id === activeMapId);
+        const speed = map ? (map.speed || 1) : 1;
+
+        if (isTimeEditClockMode) {
+            const clockVal = document.getElementById('timeEditTargetClock').value;
+            if (!clockVal) { alert("Bitte Uhrzeit eingeben!"); return; }
+            const [h, m, s] = clockVal.split(':').map(Number);
+            let now = new Date();
+            let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+            if (targetDate.getTime() <= now.getTime()) targetDate.setDate(targetDate.getDate() + 1);
+            targetTimestamp = targetDate.getTime();
+        } else {
+            const min = parseFloat(document.getElementById('timeEditMin').value) || 0;
+            const sec = parseFloat(document.getElementById('timeEditSec').value) || 0;
+            const totalSec = (min * 60) + sec;
+            if (totalSec <= 0) { alert("Gültige Zeit eingeben!"); return; }
+            const realSeconds = Math.round(totalSec / speed);
+            targetTimestamp = Date.now() + (realSeconds * 1000);
+        }
+
+        if (targetType === 'main') {
+            timer.targetTime = targetTimestamp;
+            timer.originalGameMinutes = (targetTimestamp - Date.now()) / 1000 / 60 * speed;
+            if (timer.hasInterval) timer.intervalTargetTime = timer.targetTime + (timer.intervalSeconds * 1000);
+            timer.triggeredWarnings = [];
+            timer.needsReset = false;
+            timer.isRunning = true;
+            document.body.classList.remove('screen-flash');
+        } else if (targetType === 'interval') {
+            timer.intervalTargetTime = targetTimestamp;
+            timer.triggeredIntervalWarnings = [];
+        } else if (targetType === 'upgrade') {
+            timer.upgradeActive = true;
+            timer.upgradeTargetTime = targetTimestamp;
+        }
+
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        closeTimeEditModal();
+        renderTimers();
+    }
+
+    function openAlarmEditModal(timerId, category, index) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer) return;
+
+        const warningList = category === 'main' ? timer.warnings : timer.intervalWarnings;
+        if (!warningList || !warningList[index]) return;
+
+        const w = warningList[index];
+        document.getElementById('editTimerId').value = timerId;
+        document.getElementById('editWarningCategory').value = category;
+        document.getElementById('editWarningIndex').value = index;
+        document.getElementById('editAlarmType').value = w.alarmType;
+        document.getElementById('editWarnMin').value = Math.floor(w.seconds / 60);
+        document.getElementById('editWarnSec').value = w.seconds % 60;
+        document.getElementById('alarmEditModal').classList.remove('hidden');
+    }
+
+    function closeAlarmEditModal() { document.getElementById('alarmEditModal').classList.add('hidden'); }
+
+    function saveEditedWarning() {
+        const timerId = document.getElementById('editTimerId').value;
+        const category = document.getElementById('editWarningCategory').value;
+        const index = parseInt(document.getElementById('editWarningIndex').value);
+        const alarmType = document.getElementById('editAlarmType').value;
+        const min = parseInt(document.getElementById('editWarnMin').value) || 0;
+        const sec = parseInt(document.getElementById('editWarnSec').value) || 0;
+        const totalSec = (min * 60) + sec;
+
+        if (totalSec <= 0) { alert("Bitte gültige Zeit eingeben!"); return; }
+
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            let targetList = category === 'main' ? timer.warnings : timer.intervalWarnings;
+            if (targetList && targetList[index]) {
+                targetList[index].seconds = totalSec;
+                targetList[index].alarmType = alarmType;
+                targetList.sort((a, b) => b.seconds - a.seconds);
+                localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+                closeAlarmEditModal();
+                renderTimers();
+            }
+        }
+    }
+
+    function toggleInterval(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            timer.hasInterval = !timer.hasInterval;
+            if (timer.hasInterval) timer.intervalTargetTime = timer.targetTime + (timer.intervalSeconds * 1000);
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
+
+    function togglePause(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            if (timer.isRunning) {
+                timer.pausedRemaining = Math.max(0, Math.round((timer.targetTime - Date.now()) / 1000));
+                timer.pausedIntervalRemaining = timer.hasInterval ? Math.max(0, Math.round((timer.intervalTargetTime - Date.now()) / 1000)) : 0;
+                if (timer.upgradeActive) timer.pausedUpgradeRemaining = Math.max(0, Math.round((timer.upgradeTargetTime - Date.now()) / 1000));
+                timer.isRunning = false;
+            } else {
+                timer.targetTime = Date.now() + (timer.pausedRemaining * 1000);
+                if (timer.hasInterval) timer.intervalTargetTime = Date.now() + (timer.pausedIntervalRemaining * 1000);
+                if (timer.upgradeActive) timer.upgradeTargetTime = Date.now() + (timer.pausedUpgradeRemaining * 1000);
+                timer.isRunning = true;
+            }
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
+
+    function resetTimerMain(timerId) {
+        const timers = allTimers[activeMapId] || [];
+        const timer = timers.find(t => t.id === timerId);
+        if (timer) {
+            timer.needsReset = false;
+            timer.triggeredWarnings = [];
+            timer.triggeredIntervalWarnings = [];
+            document.body.classList.remove('screen-flash');
+            
+            const map = maps.find(m => m.id === activeMapId);
+            const speed = map ? (map.speed || 1) : 1;
+            const realSeconds = Math.round(((timer.originalGameMinutes || 30) * 60) / speed);
+            timer.targetTime = Date.now() + (realSeconds * 1000);
+            timer.isIntervalPhase = false;
+            if (timer.hasInterval) timer.intervalTargetTime = timer.targetTime + (timer.intervalSeconds * 1000);
+            timer.isRunning = true;
+            localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+            renderTimers();
+        }
+    }
+
+    function deleteTimer(timerId) {
+        if (!activeMapId) return;
+        allTimers[activeMapId] = allTimers[activeMapId].filter(t => t.id !== timerId);
+        delete collapsedTimers[timerId];
+        localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+        localStorage.setItem('cow_collapsed_timers', JSON.stringify(collapsedTimers));
+        renderTimers();
+    }
+
+    setInterval(() => {
+        if (!activeMapId || !allTimers[activeMapId]) return;
+        const now = Date.now();
+        const map = maps.find(m => m.id === activeMapId);
+        let needsSave = false;
+        let anyExpired = false;
+
+        allTimers[activeMapId].forEach(timer => {
+            const card = document.getElementById('card-' + timer.id);
+            if (!card) return;
+
+            let remainingMain = timer.isRunning ? Math.max(0, Math.round((timer.targetTime - now) / 1000)) : timer.pausedRemaining;
+            let remainingInterval = timer.isRunning ? Math.max(0, Math.round((timer.intervalTargetTime - now) / 1000)) : timer.pausedIntervalRemaining;
+            let remainingUpgrade = timer.upgradeActive ? (timer.isRunning ? Math.max(0, Math.round((timer.upgradeTargetTime - now) / 1000)) : timer.pausedUpgradeRemaining) : 0;
+
+            const dispMain = card.querySelector('.clock-main');
+            if (dispMain) dispMain.innerText = formatTime(remainingMain);
+
+            const dispInterval = card.querySelector('.clock-interval');
+            if (dispInterval) {
+                if (!timer.hasInterval) {
+                    dispInterval.innerText = "Aus";
+                } else if (!timer.isIntervalPhase && remainingMain > 0) {
+                    dispInterval.innerText = "Wartet...";
+                } else {
+                    dispInterval.innerText = formatTime(remainingInterval);
+                }
+            }
+
+            const dispUpgrade = card.querySelector('.clock-upgrade');
+            if (dispUpgrade) {
+                if (!timer.upgradeActive) dispUpgrade.innerText = "Derzeit nicht aktiv";
+                else if (remainingUpgrade > 0) dispUpgrade.innerText = formatTime(remainingUpgrade);
+                else dispUpgrade.innerText = "Abgeschlossen!";
+            }
+
+            if (timer.upgradeActive && remainingUpgrade === 0 && timer.isRunning) {
+                timer.upgradeActive = false;
+                playDingDong();
+                speakText(`Aufwerten von Einheit ${timer.label} abgeschlossen!`);
+                sendDiscordAlert(map, `🔧 **EINHEITEN-AUFWERTUNG ABGESCHLOSSEN:** "${timer.label}" wurde erfolgreich aufgewertet!`);
+                needsSave = true;
+                renderTimers();
+            }
+
+            const expTimeEl = card.querySelector('.expiry-time');
+            if (expTimeEl) {
+                let targetActive = (!timer.isIntervalPhase) ? timer.targetTime : timer.intervalTargetTime;
+                expTimeEl.innerText = `Nächster Ablauf: ${new Date(targetActive).toLocaleTimeString('de-DE')}`;
+            }
+
+            if (!timer.isIntervalPhase) {
+                const nextAlarmEl = card.querySelector('.next-alarm-info');
+                let nextWarnText = "Kein weiterer Voralarm";
+                for (let w of timer.warnings) {
+                    if (remainingMain > w.seconds && !timer.triggeredWarnings.includes(w.seconds)) {
+                        let diff = remainingMain - w.seconds;
+                        nextWarnText = `Nächster Voralarm in ${formatTime(diff)}`;
+                        break;
+                    }
+                }
+                if (nextAlarmEl) nextAlarmEl.innerText = nextWarnText;
+
+                timer.warnings.forEach(w => {
+                    if (remainingMain === w.seconds && timer.isRunning && !timer.triggeredWarnings.includes(w.seconds)) {
+                        timer.triggeredWarnings.push(w.seconds);
+                        card.classList.add('warning-active');
+                        playDingDong();
+                        let timeStr = w.seconds >= 60 ? Math.floor(w.seconds/60) + "m " + (w.seconds%60) + "s" : w.seconds + " Sekunden";
+                        speakText(`${w.alarmType}! Counter ${timer.label} läuft in ${timeStr} aus.`);
+                        sendDiscordAlert(map, `⚠️ **${w.alarmType.toUpperCase()}:** "${timer.label}" läuft in ${timeStr} aus!`);
+                        setTimeout(() => card.classList.remove('warning-active'), 4000);
+                        needsSave = true;
+                        renderTimers();
+                    }
+                });
+
+                if (remainingMain === 0 && timer.isRunning && !timer.isIntervalPhase) {
+                    playAirRaidSirene();
+                    speakText(`Hauptalarm! Counter ${timer.label} ist am Ziel.`);
+                    sendDiscordAlert(map, `🚨 **HAUPTALARM:** "${timer.label}" ist am Ziel angekommen!`);
+
+                    if (timer.hasInterval) {
+                        timer.isIntervalPhase = true;
+                        timer.intervalTargetTime = Date.now() + (timer.intervalSeconds * 1000);
+                        timer.triggeredIntervalWarnings = [];
+                    } else {
+                        timer.needsReset = true;
+                        card.classList.add('expired');
+                        document.body.classList.add('screen-flash');
+                    }
+                    needsSave = true;
+                    renderTimers();
+                }
+            } 
+            else if (timer.hasInterval && timer.isIntervalPhase) {
+                const nextAlarmEl = card.querySelector('.next-alarm-info');
+                let nextIntervalWarnText = `Kampfrunde aktiv`;
+                
+                if (timer.intervalWarnings && timer.intervalWarnings.length > 0) {
+                    for (let iw of timer.intervalWarnings) {
+                        if (remainingInterval > iw.seconds && !timer.triggeredIntervalWarnings.includes(iw.seconds)) {
+                            let diff = remainingInterval - iw.seconds;
+                            nextIntervalWarnText = `Nächster Intervall-Alarm in ${formatTime(diff)}`;
+                            break;
+                        }
+                    }
+                }
+                if (nextAlarmEl) nextAlarmEl.innerText = nextIntervalWarnText;
+
+                if (timer.intervalWarnings) {
+                    timer.intervalWarnings.forEach(iw => {
+                        if (remainingInterval === iw.seconds && timer.isRunning && !timer.triggeredIntervalWarnings.includes(iw.seconds)) {
+                            timer.triggeredIntervalWarnings.push(iw.seconds);
+                            card.classList.add('warning-active');
+                            playDingDong();
+                            let timeStr = iw.seconds >= 60 ? Math.floor(iw.seconds/60) + "m " + (iw.seconds%60) + "s" : iw.seconds + " Sekunden";
+                            speakText(`${iw.alarmType}! Intervall für ${timer.label} endet in ${timeStr}.`);
+                            sendDiscordAlert(map, `⚔️ **${iw.alarmType.toUpperCase()}:** Intervall für "${timer.label}" endet in ${timeStr}!`);
+                            setTimeout(() => card.classList.remove('warning-active'), 4000);
+                            needsSave = true;
+                            renderTimers();
+                        }
+                    });
+                }
+
+                if (remainingInterval === 0 && timer.isRunning) {
+                    playAirRaidSirene();
+                    speakText(`Kampfrunde beendet für ${timer.label}. Nächste Runde startet sofort.`);
+                    sendDiscordAlert(map, `⚔️ **KAMPFRUNDE NEU START:** "${timer.label}" geht in die nächste Runde!`);
+
+                    timer.intervalTargetTime = Date.now() + (timer.intervalSeconds * 1000);
+                    timer.triggeredIntervalWarnings = [];
+                    needsSave = true;
+                    renderTimers();
+                }
+            }
+
+            if (timer.needsReset) anyExpired = true;
+        });
+
+        if (!anyExpired) document.body.classList.remove('screen-flash');
+        if (needsSave) localStorage.setItem('cow_private_timers', JSON.stringify(allTimers));
+    }, 1000);
+
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 1.0;
+            if (selectedVoiceName) {
+                let selectedVoice = availableVoices.find(v => v.name === selectedVoiceName);
+                if (selectedVoice) msg.voice = selectedVoice;
+            }
+            window.speechSynthesis.speak(msg);
+        }
+    }
+
+    function renderTimers() {
+        const container = document.getElementById('timersContainer');
+        if (!activeMapId || !allTimers[activeMapId] || allTimers[activeMapId].length === 0) {
+            container.innerHTML = `<p style="color:#777; text-align:center;">Keine Counter auf dieser Map aktiv.</p>`;
+            return;
+        }
+
+        let html = '';
+        const now = Date.now();
+        allTimers[activeMapId].forEach(t => {
+            const isCollapsed = collapsedTimers[t.id] || false;
+            const remainingMain = t.isRunning ? Math.max(0, Math.round((t.targetTime - now) / 1000)) : t.pausedRemaining;
+            const remainingInterval = t.isRunning ? Math.max(0, Math.round((t.intervalTargetTime - now) / 1000)) : t.pausedIntervalRemaining;
+            const remainingUpgrade = t.upgradeActive ? (t.isRunning ? Math.max(0, Math.round((t.upgradeTargetTime - now) / 1000)) : t.pausedUpgradeRemaining) : 0;
+
+            const badgeClass = t.type === 'luftwaffe' ? 'badge-luftwaffe' : 'badge-standard';
+            const badgeText = t.type === 'luftwaffe' ? '✈️ Luftwaffe' : '🛡️ Standard';
+            const intervalMinDisplay = (t.intervalSeconds / 60).toFixed(2).replace(/\.00$/, '');
+
+            let warnBadgesHtml = '';
+            if (t.warnings) {
+                t.warnings.forEach((w, idx) => {
+                    const isTriggered = t.triggeredWarnings.includes(w.seconds);
+                    let m = Math.floor(w.seconds / 60);
+                    let s = w.seconds % 60;
+                    let labelTime = m > 0 ? `${m}m ${s}s` : `${s}s`;
+                    warnBadgesHtml += `<span class="warn-badge ${isTriggered ? 'triggered' : ''}" onclick="openAlarmEditModal('${t.id}', 'main', ${idx})">⏰ ${labelTime} (${w.alarmType})</span>`;
+                });
+            }
+
+            let intervalWarnBadgesHtml = '';
+            if (t.hasInterval && t.intervalWarnings) {
+                t.intervalWarnings.forEach((iw, idx) => {
+                    const isTriggered = t.triggeredIntervalWarnings && t.triggeredIntervalWarnings.includes(iw.seconds);
+                    let m = Math.floor(iw.seconds / 60);
+                    let s = iw.seconds % 60;
+                    let labelTime = m > 0 ? `${m}m ${s}s` : `${s}s`;
+                    intervalWarnBadgesHtml += `<span class="warn-badge ${isTriggered ? 'triggered' : ''}" onclick="openAlarmEditModal('${t.id}', 'interval', ${idx})" style="border-color:#3b82f6;">⚔️ ${labelTime} (${iw.alarmType})</span>`;
+                });
+            }
+
+            let upgradeDisplayStr = !t.upgradeActive ? "Derzeit nicht aktiv" : (remainingUpgrade > 0 ? formatTime(remainingUpgrade) : "Abgeschlossen!");
+
+            html += `
+                <div class="timer-card ${t.needsReset ? 'expired' : ''} ${isCollapsed ? 'collapsed' : ''}" id="card-${t.id}">
+                    <div class="timer-header-row">
+                        <div>
+                            <span class="badge ${badgeClass}">${badgeText}</span> 
+                            <strong style="font-size:1.1rem; margin-left:8px;">${t.label}</strong>
+                            <span style="cursor:pointer; color:var(--neon-blue); font-size:12px; margin-left:6px;" onclick="openRenameModal('${t.id}')" title="Counter umbenennen">✎</span>
+                            ${isCollapsed ? `<span style="margin-left: 15px; font-family: monospace; color: var(--neon-green); font-weight: bold;">[Rest: ${formatTime(remainingMain)}]</span>` : ''}
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <button onclick="toggleTimerCollapse('${t.id}')" style="background:#18181b; border:1px solid #3f3f46; padding:6px 12px; font-size:11px;">${isCollapsed ? '▼ Ausklappen' : '▲ Einklappen'}</button>
+                            <button onclick="toggleInterval('${t.id}')" style="background:${t.hasInterval ? '#1e3a8a' : '#18181b'}; border-color:${t.hasInterval ? '#3b82f6' : '#3f3f46'}; padding:6px 12px; font-size:11px;">${t.hasInterval ? '⚔️ Intervall AN' : '⚔️ Intervall AUS'}</button>
+                            <button onclick="togglePause('${t.id}')" style="background:#18181b; border:1px solid #3f3f46; padding:6px 12px; font-size:11px;">${t.isRunning ? '⏸️ Pause' : '▶️ Weiter'}</button>
+                            <button onclick="deleteTimer('${t.id}')" style="background:#7f1d1d; border:1px solid #ef4444; color:#fff; padding:6px 12px; font-size:11px;">🗑️ Löschen</button>
+                        </div>
+                    </div>
+
+                    <div class="clocks-grid">
+                        <div class="clock-box">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>⏱️ Anreise / Rest</span>
+                                <span style="cursor:pointer; color:var(--neon-blue); font-size:10px;" onclick="openTimeEditModal('${t.id}', 'main')">✎ Anreisezeit ändern</span>
+                            </label>
+                            <div class="timer-display clock-main">${formatTime(remainingMain)}</div>
+                        </div>
+                        <div class="clock-box">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>⚔️ Kampfrunde (${intervalMinDisplay}m)</span>
+                                ${t.hasInterval ? `<span style="cursor:pointer; color:var(--neon-blue); font-size:10px;" onclick="openTimeEditModal('${t.id}', 'interval')">✎ Intervall ändern</span>` : ''}
+                            </label>
+                            <div class="timer-display interval-clock clock-interval">${!t.hasInterval ? 'Aus' : (!t.isIntervalPhase && remainingMain > 0 ? 'Wartet...' : formatTime(remainingInterval))}</div>
+                        </div>
+                        <div class="clock-box">
+                            <label style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>🔧 Einheiten aufwerten</span>
+                                <span style="cursor:pointer; color:var(--neon-yellow); font-size:10px;" onclick="openTimeEditModal('${t.id}', 'upgrade')">${t.upgradeActive ? '✎ Ändern' : '+ Starten'}</span>
+                            </label>
+                            <div class="timer-display upgrade-clock clock-upgrade">${upgradeDisplayStr}</div>
+                        </div>
+                    </div>
+
+                    <div class="timer-meta-info">
+                        <span class="expiry-time">Nächster Ablauf: ${new Date(!t.isIntervalPhase ? t.targetTime : t.intervalTargetTime).toLocaleTimeString('de-DE')}</span>
+                        <span class="next-alarm-info">Nächster Alarm: Berechne...</span>
+                    </div>
+
+                    <div class="warnings-bar">
+                        ${warnBadgesHtml}
+                        ${intervalWarnBadgesHtml}
+                    </div>
+
+                    <div class="control-panel-bottom">
+                        <div class="control-panel-row">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="margin:0; font-size:11px; color:var(--neon-green);">Ziel für Schnell-Anpassung:</label>
+                                <select id="targetSelect-${t.id}" style="width:160px; margin:0; padding:6px; font-size:12px; background:#09090b; border-color:#3f3f46;">
+                                    <option value="main">⏱️ Anreisezeit</option>
+                                    ${t.hasInterval ? '<option value="interval">⚔️ Kampfrunde</option>' : ''}
+                                    <option value="upgrade">🔧 Aufwerten</option>
+                                </select>
+                            </div>
+                            <div class="control-buttons-group">
+                                <button onclick="adjustTimerTimeByTarget('${t.id}', -600)">-10m</button>
+                                <button onclick="adjustTimerTimeByTarget('${t.id}', -60)">-1m</button>
+                                <button onclick="adjustTimerTimeByTarget('${t.id}', -1)">-1s</button>
+                                <button onclick="adjustTimerTimeByTarget('${t.id}', 1)">+1s</button>
+                                <button onclick="adjustTimerTimeByTarget('${t.id}', 60)">+1m</button>
+                                <button onclick="adjustTimerTimeByTarget('${t.id}', 600)">+10m</button>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                            <div>
+                                ${t.hasInterval ? `<button onclick="resetIntervalNow('${t.id}')" style="background:#1e3a8a; border:1px solid #3b82f6; color:#fff; padding:6px 12px; font-size:12px; font-weight:bold;">🔄 Kampfrunde auf 0 setzen</button>` : ''}
+                            </div>
+                            <div>
+                                ${t.needsReset ? `<button onclick="resetTimerMain('${t.id}')" style="background:var(--neon-green); color:#000; padding:8px 16px; font-size:13px; font-weight:bold;">⚡ Haupt-Reset</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function formatTime(totalSec) {
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    renderTimers();
+</script>
+
+</body>
+</html>
